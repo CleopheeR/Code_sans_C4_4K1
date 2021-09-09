@@ -4,26 +4,65 @@ from graph_tool.all import *
 from Gestion_Fichiers import *
 from Special_graphs import *
 
+def FreeO4(g, v1, adjMat):
+    n = g.vertex_index[v1]+1
+    i1 = g.vertex_index[v1]
+    
+    for i2 in range(n):
+        #i2 = g.vertex_index[v2]
+        if i2==i1:
+            continue
+        if not(adjMat[i2][i1]):
+        #if (v2 in v1.out_neighbors())): 
+            #for v3 in g.vertices():
+            for i3 in range(n):
+                #if not(v3 in v1.out_neighbors()) and (v3!=v1) and not (v3 in v2.out_neighbors()) and (v3!=v2):
+                if i3 == i1 or i3 == i2:
+                    continue
+                if not(adjMat[i3][i1]) and  not (adjMat[i3][i2]):
+                    #for v4 in g.vertices():
+                    for i4 in range(n):
+                        #if not (v4 in v1.out_neighbors()) and (v4!=v1) and not (v4 in v2.out_neighbors()) and (v4!=v2) and (not v4 in v3.out_neighbors()) and (v4!=v3):
+                        if i4 == i1 or i4 == i2 or i4 == i3:
+                            continue
+                        if not (adjMat[i4][i1]) and not(adjMat[i4][i2]) and not(adjMat[i4][i3]):
+                            return False
 
 
-def FreeC4O4(g,v1):
+def FreeC4O4(g,v1, adjMat):
+    n = g.vertex_index[v1]+1
+    
     #Retourne true si v1 n'est pas inclus dans un C4
+    i1 = g.vertex_index[v1]
+    
     for v2 in v1.out_neighbors() :
-        if v2!=v1:
+        i2 = g.vertex_index[v2]
+        if i2!=i1:
             for v3 in v1.out_neighbors() :
-                if (v3!=v1) and (v3!=v2) and (not(v3 in v2.out_neighbors())):
+                i3 = g.vertex_index[v3]
+                if i3==i1 or i3==i2:
+                    continue
+                if not(adjMat[i3][i2]):# in v2.out_neighbors())):
                     for v4 in v2.out_neighbors() :
-                        if (v4!=v1) and (v4!=v2) and (v4!=v3) and (v4 in v3.out_neighbors()) and (not(v4 in v1.out_neighbors())):
+                        i4 = g.vertex_index[v4]
+                        if i4==i1 or i4==i2 or i4==i3:
+                            continue
+                        if adjMat[i4][i3] and not(adjMat[i4][i1]):##and (v4 in v3.out_neighbors()) and (not(v4 in v1.out_neighbors())):
                             return False
-    for v2 in g.vertices():
-        if (not (v2 in v1.out_neighbors())) and (v2!=v1):
-            for v3 in g.vertices():
-                if not(v3 in v1.out_neighbors()) and (v3!=v1) and not (v3 in v2.out_neighbors()) and (v3!=v2):
-                    for v4 in g.vertices():
-                        if not (v4 in v1.out_neighbors()) and (v4!=v1) and not (v4 in v2.out_neighbors()) and (v4!=v2) and (not v4 in v3.out_neighbors()) and (v4!=v3):
+   
+    for i2 in range(n):
+        if i2==i1:
+            continue
+        if not(adjMat[i2][i1]):
+            for i3 in range(i2+1,n):
+                if i3 == i1 or i3 == i2:
+                    continue
+                if not(adjMat[i3][i1]) and  not (adjMat[i3][i2]):
+                    for i4 in range(i3+1,n):
+                        if i4 == i1 or i4 == i2 or i4 == i3:
+                            continue
+                        if not (adjMat[i4][i1]) and not(adjMat[i4][i2]) and not(adjMat[i4][i3]):
                             return False
-                            
-                                                                                                                       
     return True
 
 
@@ -85,7 +124,7 @@ def sousens_nonord_k(k, n):
 
 
 
-def attacheavecnombrefixedarretes(g,m):
+def attacheavecnombrefixedarretes(g,m, adjMat):
     """Fonction qui test si on peut rajoute un sommet v de degre m a g. 
     Si le graphe resultant n'appartiens pas a Free(C4;O4)
     ou que v a un jumeau ou qu'il est complet a g
@@ -93,7 +132,7 @@ def attacheavecnombrefixedarretes(g,m):
     if m==0:
         G=copy.copy(g)
         v=G.add_vertex()
-        if FreeC4O4(G,v)==True :
+        if FreeC4O4(G,v, adjMat)==True :
             if aunjumeau(G,v)==False:
                 return False
         return True 
@@ -113,7 +152,7 @@ def attacheavecnombrefixedarretes(g,m):
                 w = G.vertex(i-1)
                 G.add_edge(v,w)
             #Tester g 
-            if FreeC4O4(G,v)==True :
+            if FreeC4O4(G,v, adjMat)==True :
                 if aunjumeau(G,v)==False:
                     for w in g.vertices():
                         if not(w in v.out_neighbors()):
@@ -194,21 +233,37 @@ def ToutLesGraphsAnSommets(n):
             #Regardons d'abord sans arrete suplementaire 
             GNonConnex=copy.copy(g)
             q=GNonConnex.add_vertex()
-            if FreeC4O4(GNonConnex,q)==True:
+            for (u,v) in g.get_edges():
+                adjMat[u][v] = True
+                adjMat[v][u] = True
+            if FreeC4O4(GNonConnex,q, adjMat)==True:
                 Dico[ReccupDegre(GNonConnex)]=[GNonConnex]
                 
-            #J'atteche les sommets 
+            #J'atteche les sommets
+            lToRemove = [] # liste des arêtes de l'adjacency matrix à enlever au prochain tour de boucle
             for P in LP :
+    
                 #Creer une copie G de g
                 G=copy.copy(g)
                 #Rajouter un sommet a G
                 v=G.add_vertex()
                 #Rajouter toutes les aretes entre v et les sommets de g correspondants aux indices de P
+                for (u,v) in lToRemove:
+                    adjMat[u][v] = False
+                    adjMat[v][u] = False
+
+                lToRemove = []
                 for i in P :
+
                     w = G.vertex(i-1)
                     G.add_edge(v,w)
+                    
+                    adjMat[n-1][i-1] = True
+                    adjMat[i-1][n-1] = True
+                    lToRemove.append((n-1, i-1))
+
                 #Tester g dans FreeC4O4 et aussi pas isomorphe a un autre 
-                if FreeC4O4(G,v)==True:
+                if FreeC4O4(G,v, adjMat)==True:
                     LDG=ReccupDegre(G)
                     ilyalememedansDico=False
                     #si la cle existe je dois verifier si il y a un isomorphisme
@@ -233,7 +288,6 @@ def ToutLesGraphsAnSommets(n):
 
 def ToutLesGraphsAnSommets_Par_Fichier(n):
     """Cette fonction renvois une liste de graphs a n sommets appartenants a Free(C4;O4)"""
-
     #Je regarde si ceux d'avant ont etes creaient sinon je fait un appelle par reccurent 
     L=[]
     if n==1:
@@ -272,26 +326,41 @@ def ToutLesGraphsAnSommets_Par_Fichier(n):
                 print("Nous somme sur le ",i+1,"eme graphe sur", len(lnmoinsun), "graphes")
 
             g=copy.copy(lnmoinsun[i])
+            adjMat = [[False]*n for i in range(n)]
             #g contiens n-1 commets 
 
             #Regardons d'abord sans arrete suplementaire 
             GNonConnex=copy.copy(g)
             q=GNonConnex.add_vertex()
-            if FreeC4O4(GNonConnex,q)==True:
+            for (u,v) in g.get_edges():
+                adjMat[u][v] = True
+                adjMat[v][u] = True
+            if FreeC4O4(GNonConnex,q, adjMat)==True: #TODO on cherche un O3...
                 Dico[ReccupDegre(GNonConnex)]=[GNonConnex]
                 
             #J'atteche les sommets 
+            lToRemove = [] # liste des arêtes de l'adjacency matrix à enlever au prochain tour de boucle
             for P in LP :
                 #Creer une copie G de g
                 G=copy.copy(g)
                 #Rajouter un sommet a G
                 v=G.add_vertex()
                 #Rajouter toutes les aretes entre v et les sommets de g correspondants aux indices de P
+                for (uu,vv) in lToRemove:
+                    adjMat[uu][vv] = False
+                    adjMat[vv][uu] = False
+
+                lToRemove = []
+                
                 for i in P :
                     w = G.vertex(i-1)
                     G.add_edge(v,w)
+                    assert(G.vertex_index[v] == n-1 and G.vertex_index[w] == i-1)
+                    adjMat[n-1][i-1] = True
+                    adjMat[i-1][n-1] = True
+                    lToRemove.append((n-1, i-1))
                 #Tester g dans FreeC4O4 et aussi pas isomorphe a un autre 
-                if FreeC4O4(G,v)==True:
+                if FreeC4O4(G,v, adjMat)==True:
                     LDG=ReccupDegre(G)
                     ilyalememedansDico=False
                     #si la cle existe je dois verifier si il y a un isomorphisme
