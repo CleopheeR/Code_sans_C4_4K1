@@ -1,8 +1,9 @@
 import copy
 import time
+import sys
 from graph_tool.all import *
 from Gestion_Fichiers import *
-from Special_graphs import *
+#from Special_graphs import *
 from Graph_dans_fichier_v4 import *
 
 
@@ -113,12 +114,15 @@ def Blow_up_etendu(n):
 
 
 def main():
-    n=int(input("Entrez le nombre de sommets : "))
-    Supertest=input("Voulez-vous generer les graphs (G) ou les traiters (T) :")
+    #n=int(input("Entrez le nombre de sommets : "))
+    n = int(sys.argv[1])
+    Supertest = sys.argv[2]
+    m = 0
+    #Supertest=input("Voulez-vous generer les graphs (G) ou les traiters (T) :")
     if Supertest == "G":
         L=ToutLesGraphsAnSommets_Par_Fichier(n)
         print("il y a ", len(L)," graphes à ",n, "sommets. ")
-        Jevoislesgraphs=input("Voulez-vous juste les generer (G) ou aussi les affichers (A) :")
+        Jevoislesgraphs="G"#input("Voulez-vous juste les generer (G) ou aussi les affichers (A) :")
         if Jevoislesgraphs=="A" : 
             for i in range(len(L)) :
                 print(L[i])
@@ -126,7 +130,8 @@ def main():
                     print(e)
 
     else :
-        Juste_blow_up=input("Voulez-vous juste verrfier qu'ils donnent un blow-up (B) ou aussi si il donne un graphe identifé (I)")
+        Juste_blow_up = sys.argv[2]
+        #Juste_blow_up=input("Voulez-vous juste verrfier qu'ils donnent un blow-up (B) ou aussi si il donne un graphe identifé (I)")
         if Juste_blow_up == "B" : 
             L=Est_Blow_up_sans_generer(n)
         else :
