@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <vector>
 #include <utility>
+#include <fstream>
+#include <iostream>
 
 #ifndef DEF_GRAPH_HH
 #define DEF_GRAPH_HH
@@ -11,12 +13,13 @@ using namespace std;
 class Graph
 {
     public:
-        Graph() {}
+        Graph() {
+            adjMat = NULL;
+        }
 
 
         Graph(const Graph& g)
         {
-
             init(g.nbVert, g.nbEdge);
             for (int u = 0; u < g.nbVert; u++)
             {
@@ -31,9 +34,45 @@ class Graph
             }
         }
 
+        Graph& operator=(const Graph& g)
+        {
+            init(g.nbVert, g.nbEdge);
+            for (int u = 0; u < g.nbVert; u++)
+            {
+                for (int v : g.adjList[u])
+                    adjMat[u][v] = true;
+            }
+
+            for (int u = 0; u < g.nbVert; u++)
+            {
+                adjList[u] = g.adjList[u];
+                degreeList[u] = g.degreeList[u];
+            }
+            return *this;
+        }
+
+
+        Graph (ifstream &f)
+        {
+            int n, m;
+            f >> n >> m;
+            init(n, m);
+            nbEdge = 0; // car ajouté par add_edge
+            for (int i = 0; i < m; i++)
+            {
+                char virgule;
+                int u, v;
+                f >> u >> virgule >> v;
+
+                add_edge(u,v);
+            }
+        }
+
 
         ~Graph()
         {
+            if (adjMat == NULL)
+                return;
             for (int i = 0; i < nbVert; i++)
                 free(adjMat[i]);
             free(adjMat);

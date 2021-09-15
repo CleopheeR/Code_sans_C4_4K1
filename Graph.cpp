@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 
 #include "Graph.hh"
 
@@ -84,6 +85,19 @@ void Graph::remove_last_edge(int u, int v)
     degreeList[i-1]--;
 
     //TODO ça peut s'optimiser quels endroits on a enlever ou rajouté un pour faire l'opération inverse, si jamais
+}
+
+
+void Graph::print_in_file(ofstream &f) const
+{
+    f << nbVert << " " << nbEdge;
+    for (int i = 0; i < nbVert; i++)
+    {
+        for (int y : adjList[i])
+            if (i > y)
+                f << "\t" << i << ";" << y;
+    }
+    f << endl;
 }
 
 void Graph::print(void) const

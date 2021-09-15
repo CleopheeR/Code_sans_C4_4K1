@@ -78,12 +78,34 @@ vector<Graph> load_from_file(const string &filename)
 {
     vector<Graph> res;
     ifstream file(filename);
+    int nbGraph;
+    if (file.peek() == EOF)
+        return res;
+    file >> nbGraph;
+
+    res.resize(nbGraph);
+    for (int i = 0; i < nbGraph; i++)
+    {
+        res[i] = Graph(file);
+    }
 
     return res;
 }
 
+void save_to_file(const string &filename, const vector<Graph> &graphList)
+{
+    vector<Graph> res;
+    ofstream file(filename);
+    int nbGraph = graphList.size();
 
-vector<Graph> gen_graphs(int nbVert)
+    file << nbGraph << endl;
+
+    for (const Graph& g : graphList)
+        g.print_in_file(file);
+}
+
+
+vector<LightGraph> gen_graphs(int nbVert)
 {
     vector<Graph> res;
 
@@ -103,13 +125,16 @@ vector<Graph> gen_graphs(int nbVert)
             adjMat[i] = (bool*) malloc(sizeof(bool)*nbVert);
         */
 
-        char nbStr[10];
         stringstream fileMinusName;
         fileMinusName << "Alexgraphedelataille";
         fileMinusName << nbVert-1 << ".txt";
         vector<Graph> listMinus = load_from_file(fileMinusName.str());
         if (listMinus.empty())
-            listMinus = gen_graphs(nbVert-1);
+        {
+            cerr << "Lancer avant la taille -1 \n";
+            exit(3);
+            //listMinus = gen_graphs(nbVert-1);
+        }
 
         cout << "j'ai généré/trouvé les graphes à " << nbVert-1 << " somets : il y en a " << listMinus.size() << endl;
 
@@ -187,6 +212,11 @@ vector<Graph> gen_graphs(int nbVert)
         g.print();
     }
     */
+    stringstream fileName;
+    fileName << "Alexgraphedelataille";
+    fileName << nbVert << ".txt";
+
+    save_to_file(fileName.str(), res);
     return res;
 
 }
