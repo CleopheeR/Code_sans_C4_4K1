@@ -92,33 +92,38 @@ vector<Graph> load_from_file(const string &filename)
     return res;
 }
 
-void save_to_file(const string &filename, const vector<Graph> &graphList)
+void save_to_file(const string &filename, const map<vector<int>, vector<Graph>> &graphList)
 {
     vector<Graph> res;
     ofstream file(filename);
-    int nbGraph = graphList.size();
+    //int nbGraph = graphList.size();
+    int nbGraph = 0;
+    for (const auto& inDict : graphList)
+        nbGraph += inDict.second.size();
 
     file << nbGraph << endl;
 
-    for (const Graph& g : graphList)
-        g.print_in_file(file);
+    for (const auto& inDict : graphList)
+        for (const Graph &g : inDict.second)
+            g.print_in_file(file);
 }
 
 
-vector<LightGraph> gen_graphs(int nbVert)
+vector<Graph> gen_graphs(int nbVert)
 {
     vector<Graph> res;
+    map<vector<int>, vector<Graph>> deglist2Graphs;
 
     if (nbVert == 1)
     {
         Graph g;
         g.init(1, 0);
         res.push_back(g);
+        //TODO res cas = 1... :p
     }
 
     else //TODO cas n == 2 utile ?
     {
-        map<vector<int>, vector<Graph>> deglist2Graphs;
         /*
         bool **adjMat = (bool**) malloc(sizeof(bool*)*nbVert);
         for (int i = 0; i < nbVert; i++)
@@ -198,9 +203,11 @@ vector<LightGraph> gen_graphs(int nbVert)
 
             }
         }
+        /*
         for (const auto &inDict : deglist2Graphs)
             for (const Graph& g : inDict.second)
                 res.push_back(g);
+        */
 
     }
 
@@ -216,7 +223,7 @@ vector<LightGraph> gen_graphs(int nbVert)
     fileName << "Alexgraphedelataille";
     fileName << nbVert << ".txt";
 
-    save_to_file(fileName.str(), res);
+    save_to_file(fileName.str(), deglist2Graphs);
     return res;
 
 }

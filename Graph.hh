@@ -78,6 +78,7 @@ class Graph
             free(adjMat);
         }
 
+        void print_in_file(ofstream &f) const;
 
         void init(int n, int m);
         int nbVert;

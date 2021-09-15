@@ -81,7 +81,7 @@ bool aunjumeau(const Graph& g, int v)
 }//TODO coder
 
 
-bool gen_iso_matching(const Graph &g1, const LightGraph &g2, /*const vector<vector<int>> &v1ToV2PossibleMatches, vector<int> &v1ToV2Matches, bool* isMatched,*/ int v1)
+bool gen_iso_matching(const Graph &g1, const Graph &g2, /*const vector<vector<int>> &v1ToV2PossibleMatches, vector<int> &v1ToV2Matches, bool* isMatched,*/ int v1)
 {
     while (v1 < g1.nbVert && v1ToV2PossibleMatches[v1].size() == 1)
         v1++;
@@ -147,7 +147,7 @@ bool gen_iso_matching(const Graph &g1, const LightGraph &g2, /*const vector<vect
     return false;
 }
 
-bool are_isomorphic(const Graph &g1, const LightGraph &g2)
+bool are_isomorphic(const Graph &g1, const Graph &g2)
 {
     if (firstTime)
     {
