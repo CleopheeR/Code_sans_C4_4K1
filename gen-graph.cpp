@@ -92,14 +92,11 @@ vector<Graph> load_from_file(const string &filename)
     return res;
 }
 
-void save_to_file(const string &filename, const map<vector<int>, vector<Graph>> &graphList)
+void save_to_file(const string &filename, const map<vector<int>, vector<Graph>> &graphList, int nbGraph)
 {
     vector<Graph> res;
     ofstream file(filename);
     //int nbGraph = graphList.size();
-    int nbGraph = 0;
-    for (const auto& inDict : graphList)
-        nbGraph += inDict.second.size();
 
     file << nbGraph << endl;
 
@@ -118,8 +115,7 @@ vector<Graph> gen_graphs(int nbVert)
     {
         Graph g;
         g.init(1, 0);
-        res.push_back(g);
-        //TODO res cas = 1... :p
+        deglist2Graphs[g.degreeList].push_back(g);
     }
 
     else //TODO cas n == 2 utile ?
@@ -138,7 +134,7 @@ vector<Graph> gen_graphs(int nbVert)
         {
             cerr << "Lancer avant la taille -1 \n";
             exit(3);
-            //listMinus = gen_graphs(nbVert-1);
+            listMinus = gen_graphs(nbVert-1);
         }
 
         cout << "j'ai généré/trouvé les graphes à " << nbVert-1 << " somets : il y en a " << listMinus.size() << endl;
@@ -211,7 +207,11 @@ vector<Graph> gen_graphs(int nbVert)
 
     }
 
-    cout  << "Il y a " << res.size() << " graphes à " << nbVert << " sommets.\n";
+    int nbGraph = 0;
+    for (const auto& inDict : deglist2Graphs)
+        nbGraph += inDict.second.size();
+
+    cout  << "Il y a " << nbGraph << " graphes à " << nbVert << " sommets.\n";
     /*
     for (auto & g : res)
     {
@@ -223,7 +223,7 @@ vector<Graph> gen_graphs(int nbVert)
     fileName << "Alexgraphedelataille";
     fileName << nbVert << ".txt";
 
-    save_to_file(fileName.str(), deglist2Graphs);
+    save_to_file(fileName.str(), deglist2Graphs, nbGraph);
     return res;
 
 }
