@@ -74,22 +74,55 @@ bool free_C4_O4(const Graph& g, int n)
 }
 
 
-bool aunjumeau(const Graph& g, int v)
+bool a_un_jumeau(const Graph& g, int v)
 {
+    memset(checkeVoisins, 0, g.nbVert);
+
+    for (int w = 0; w < g.nbVert; w++)
+    {
+        if (v == w || g.adjList[v].size() != g.adjList[v].size() || !g.adjMat[v][w])
+            continue;
+        int nbNeighb = g.adjList[v].size();
+
+        int cptNotZero = 0;
+        for (int x : g.adjList[v])
+            checkeVoisins[x] = true;
+
+        for (int y : g.adjList[w])
+        {
+            if (!checkeVoisins[y])
+                cptNotZero++;
+        }
+        if (cptNotZero == 1)
+            return true;
+
+    }
 
     return false;
-}//TODO coder
+}
+
+bool est_fixeur(const Graph& g, int v)
+{
+
+
+}
 
 
 bool gen_iso_matching(const Graph &g1, const Graph &g2, /*const vector<vector<int>> &v1ToV2PossibleMatches, vector<int> &v1ToV2Matches, bool* isMatched,*/ int v1)
 {
+    /*cerr << "---------------\n";
+    g1.print();
+    g2.print();
+    */
     while (v1 < g1.nbVert && v1ToV2PossibleMatches[v1].size() == 1)
         v1++;
 
     if (v1 == g1.nbVert)
     {
+        return true;
+        /*
         //cout << "-------------------\n";
-        for (int u1 = 0; u1 < g1.nbVert; u1++) //TODO un tour de moins ?
+        for (int u1 = g1.nbVert-1; u1 < g1.nbVert; u1++) //TODO un tour de moins ?
         {
             int u2 = v1ToV2Matches[u1];
             int doublons = 0; // On xore, si ça fait 0 à la fin, c'est good !
@@ -131,6 +164,8 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, /*const vector<vector<in
         }
 
         return true;
+        */
+
     }
 
     for (int match : v1ToV2PossibleMatches[v1])
@@ -139,8 +174,51 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, /*const vector<vector<in
             continue;
         v1ToV2Matches[v1] = match;
         isMatched[match] = true;
-        if (gen_iso_matching(g1, g2,/* v1ToV2PossibleMatches, v1ToV2Matches, isMatched,*/ v1+1))
+
+        int u1 = v1;
+        int u2 = match;
+        int nbNeighb = g1.adjList[u1].size();
+        //bool* checkeVoisins = (bool*) calloc(g1.nbVert, sizeof(bool));
+        memset(checkeVoisins, 0, g1.nbVert);
+        //cout << u1 << " VS " << u2 << " ===> " << g1.adjList[u1].size() << " VS " << g2.adjList[u2].size() << endl;
+        assert(g1.adjList[u1].size() == g2.adjList[u2].size());
+
+        int nbGreater = 0;
+        for (int x : g1.adjList[u1])
+        {
+            //cout << "\t"<<g1.adjList[u1][i] << "->" << v1ToV2Matches[g1.adjList[u1][i]] <<  " = " << g2.adjList[u2][i] << "\n";
+            if (x <= u1 || v1ToV2PossibleMatches[x].size() == 1)
+            {
+                assert(!checkeVoisins[v1ToV2Matches[x]]);
+                checkeVoisins[v1ToV2Matches[x]] = true;
+            }
+            else
+                nbGreater++;
+
+        }
+        //cout << " doublons = " << doublons << endl;
+
+
+        for (int v2 : g2.adjList[u2])
+        {
+            if (!checkeVoisins[v2])
+            {
+                if (isMatched[v2])
+                    nbGreater = -17;
+                //free(checkeVoisins);
+                //memset(checkeVoisins, 0, g1.nbVert);
+                nbGreater--;
+            }
+        }
+        //cerr << "Tring to match " << u1 << " with " << match << " and greater = " << nbGreater << endl;
+
+
+
+        if (nbGreater == 0 && gen_iso_matching(g1, g2,/* v1ToV2PossibleMatches, v1ToV2Matches, isMatched,*/ v1+1))
+        {
+            //cerr << "VICTOIRE\n";
             return true;
+        }
         isMatched[match] = false;
     }
 
@@ -189,6 +267,8 @@ bool are_isomorphic(const Graph &g1, const Graph &g2)
     }
 
     vector<int> degreeNeighb1(g1.nbVert), degreeNeighb2(g1.nbVert);
+    vector<int> uniqueMatchVertices;
+    uniqueMatchVertices.reserve(g1.nbVert);
     for (int v1 = 0; v1 < g1.nbVert; v1++)
     {
         //v1ToV2PossibleMatches[v1].reserve(g1.nbVert); //TODO reserver au tout début une fois pour toute
@@ -231,7 +311,24 @@ bool are_isomorphic(const Graph &g1, const Graph &g2)
         if (v1ToV2PossibleMatches[v1].size() == 1)
         {
             v1ToV2Matches[v1] = v1ToV2PossibleMatches[v1][0];
+            if (isMatched[v1ToV2Matches[v1]])
+                return false; // Two vertices must be matched to the same one in g2.
             isMatched[v1ToV2Matches[v1]] = true;
+            uniqueMatchVertices.push_back(v1);
+        }
+    }
+
+    int nbUnique = uniqueMatchVertices.size();
+    for (int i1 = 0; i1 < nbUnique; i1++)
+    {
+        int u1 = uniqueMatchVertices[i1];
+        int v1 = v1ToV2Matches[u1];
+        for (int i2 = i1+1; i2 < nbUnique; i2++)
+        {
+            int u2 = uniqueMatchVertices[i2];
+            int v2 = v1ToV2Matches[u2];
+            if (g1.adjMat[u1][u2] ^ g2.adjMat[v1][v2])
+                return false;
         }
     }
 
