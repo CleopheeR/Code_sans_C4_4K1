@@ -23,8 +23,9 @@ class Graph
             init(g.nbVert, g.nbEdge);
             for (int u = 0; u < g.nbVert; u++)
             {
-                for (int v : g.adjList[u])
-                    adjMat[u][v] = true;
+                adjMat[u] = g.adjMat[u];
+                //for (int v : g.adjList[u])
+                //    adjMat[u][v] = true;
             }
 
             for (int u = 0; u < g.nbVert; u++)
@@ -39,8 +40,9 @@ class Graph
             init(g.nbVert, g.nbEdge);
             for (int u = 0; u < g.nbVert; u++)
             {
-                for (int v : g.adjList[u])
-                    adjMat[u][v] = true;
+                adjMat[u] = g.adjMat[u];
+                //for (int v : g.adjList[u])
+                //    adjMat[u][v] = true;
             }
 
             for (int u = 0; u < g.nbVert; u++)
@@ -71,11 +73,13 @@ class Graph
 
         ~Graph()
         {
-            if (adjMat == NULL)
+            if (adjMat)
+                free(adjMat);
+            /*if (adjMat == NULL)
                 return;
             for (int i = 0; i < nbVert; i++)
                 free(adjMat[i]);
-            free(adjMat);
+            free(adjMat);*/
         }
 
         void print_in_file(ofstream &f) const;
@@ -85,7 +89,7 @@ class Graph
         int nbEdge;
         vector<vector<int>> adjList;
 
-        bool **adjMat;
+        int *adjMat;
         vector<int> degreeList;
 
 

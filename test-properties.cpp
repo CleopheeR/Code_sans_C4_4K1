@@ -11,22 +11,24 @@ vector<vector<int>> v1ToV2PossibleMatches(1000);
 vector<int> v1ToV2Matches(1000);
 bool firstTime = true;
 
+#define are_neighb(g, u, v) (g.adjMat[u]&(1<<v))
+
 bool free_O4(const Graph& g, int n)
 {
     int v1 = n-1;
     for (int v2 = 0; v2 < n-1; v2++)
     {
-        if (g.adjMat[v2][v1])
+        if (are_neighb(g,v2,v1))//g.adjMat[v2][v1])
             continue;
 
         for (int v3 = v2+1; v3 < n-1; v3++)
         {
-            if (g.adjMat[v3][v1] || g.adjMat[v3][v2])
+            if (are_neighb(g, v3, v1) || are_neighb(g, v3, v2))//g.adjMat[v3][v1] || g.adjMat[v3][v2])
                 continue;
 
             for (int v4 = v3+1; v4 < n-1; v4++)
             {
-                if (!g.adjMat[v4][v3] && !g.adjMat[v4][v2] && !g.adjMat[v4][v1])
+                if (!are_neighb(g, v4, v3) && !are_neighb(g, v4, v2) && !are_neighb(g, v4, v1))//!g.adjMat[v4][v3] && !g.adjMat[v4][v2] && !g.adjMat[v4][v1])
                     return false;
             }
         }
@@ -50,14 +52,15 @@ bool free_C4(const Graph& g, int n)
         {
             //if (v3 == v2)
             //    break;
-            if (v3 == v2 || g.adjMat[v3][v2])
+            if (v3 == v2 || are_neighb(g, v3, v2))//g.adjMat[v3][v2])
                 continue;
 
             for (const int v4 : g.adjList[v3])
             {
                 if (v4 == v1 || v4 == v2 || v4 == v3)
                     continue;
-                if (g.adjMat[v4][v2] && !g.adjMat[v4][v1])
+                //if (g.adjMat[v4][v2] && !g.adjMat[v4][v1])
+                if (are_neighb(g, v4, v2) && !are_neighb(g, v4, v1))
                     return false;
             }
 
@@ -80,7 +83,7 @@ bool a_un_jumeau(const Graph& g, int v)
 
     for (int w = 0; w < g.nbVert; w++)
     {
-        if (v == w || g.adjList[v].size() != g.adjList[v].size() || !g.adjMat[v][w])
+        if (v == w || g.adjList[v].size() != g.adjList[v].size() || !are_neighb(g, v, w))//!g.adjMat[v][w])
             continue;
         int nbNeighb = g.adjList[v].size();
 
@@ -327,7 +330,8 @@ bool are_isomorphic(const Graph &g1, const Graph &g2)
         {
             int u2 = uniqueMatchVertices[i2];
             int v2 = v1ToV2Matches[u2];
-            if (g1.adjMat[u1][u2] ^ g2.adjMat[v1][v2])
+            //if (g1.adjMat[u1][u2] ^ g2.adjMat[v1][v2])
+            if (!are_neighb(g1, u1, u2) ^ !are_neighb(g2, v1, v2))
                 return false;
         }
     }

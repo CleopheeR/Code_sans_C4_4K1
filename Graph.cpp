@@ -8,9 +8,11 @@ void Graph::init(int n, int m)
 {
     nbVert = n;
     nbEdge = m;
-    adjMat = (bool**) malloc(sizeof(bool*)*n);
-    for (int i = 0; i < nbVert; i++)
-        adjMat[i] = (bool*) calloc(sizeof(bool),n);
+    //adjMat = (bool**) malloc(sizeof(bool*)*n);
+    adjMat = (int*) calloc(sizeof(int),n);
+
+    //for (int i = 0; i < nbVert; i++)
+    //    adjMat[i] = (bool*) calloc(sizeof(bool),n);
 
     //degreeList = (int*) calloc(n,sizeof(int));
     degreeList.resize(n, 0);
@@ -27,8 +29,12 @@ void Graph::copy_and_add_new_vertex(const Graph& g)
 
     for (int u = 0; u < g.nbVert; u++)
     {
+        /*
         for (int v : g.adjList[u])
-            adjMat[u][v] = true;
+            adjMat[u] |= (1<<v);
+            //adjMat[u][v] = true;
+        */
+        adjMat[u] = g.adjMat[u];
     }
 
 
@@ -46,8 +52,11 @@ void Graph::add_edge(int u, int v)
     int nbNeighbU = adjList[u].size();
     int nbNeighbV = adjList[v].size();
 
-    adjMat[u][v] = true;
-    adjMat[v][u] = true;
+
+    adjMat[u] |= (1<<v);
+    adjMat[v] |= (1<<u);
+    //adjMat[u][v] = true;
+    //adjMat[v][u] = true;
     adjList[u].push_back(v);
     adjList[v].push_back(u);
 
@@ -70,8 +79,10 @@ void Graph::remove_last_edge(int u, int v)
     int nbNeighbU = adjList[u].size();
     int nbNeighbV = adjList[v].size();
 
-    adjMat[u][v] = true;
-    adjMat[v][u] = true;
+    adjMat[u] ^= (1<<v);
+    adjMat[v] ^= (1<<u);
+    //adjMat[u][v] = false;
+    //adjMat[v][u] = false;
     adjList[u].pop_back();
     adjList[v].pop_back();
 
