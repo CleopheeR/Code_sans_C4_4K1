@@ -6,6 +6,7 @@
 
 #include "Graph.hh"
 #include "gen-graph.hh"
+#include "fixage.hh"
 #include "test-properties.hh"
 #include "compare_with_cleophee.hh"
 //#include <cstdlib>
@@ -20,6 +21,7 @@ int main(int argc, char* argv[])
 
     if (testOrGen == 'G')
     {
+        exit(3);
         vector<Graph> graphList;
         graphList = gen_graphs(nbVert);
 
@@ -62,8 +64,9 @@ int main(int argc, char* argv[])
     }
 
 
-    else
+    else if (testOrGen == 'F')
     {
+         gen_fixeurs(nbVert);
 
 
 

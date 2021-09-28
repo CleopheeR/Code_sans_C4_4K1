@@ -43,6 +43,14 @@ void gen_subsets(int k, int n, vector<vector<int>> &listRes)
                 l[z] = l[z-1]+1;
         }
     }
+/*
+    for (const auto &combi : listRes)
+    {
+        for (int x : combi)
+            cout << x << " ";
+        cout << endl;
+    }
+*/
 }
 
 
@@ -89,6 +97,26 @@ vector<Graph> load_from_file(const string &filename)
         res[i] = Graph(file);
     }
 
+/*
+    long long nbTwinTotal = 0;
+    long long  nbGraphWithTwin = 0;
+    for (const Graph& g : res)
+    {
+        int curNbTwin = 0;
+        for (int i = 0; i < g.nbVert; i++)
+        {
+            curNbTwin += nb_twin(g, i);
+        }
+        nbTwinTotal += curNbTwin/2;
+        if (curNbTwin)
+            nbGraphWithTwin++;
+    }
+
+    cerr << (long double)nbGraphWithTwin*100 / res.size() << "\% graphs with twins and on average " << (long double) nbTwinTotal / res.size() << " twins per graph and " << (long double) nbTwinTotal << " twins per twin-containing graph\n";
+    cerr << res[0].nbVert << " " <<  (long double)nbGraphWithTwin*100 / res.size() << " " << (long double) nbTwinTotal / res.size() << " " << (long double) nbTwinTotal << "\n";
+*/
+
+
     return res;
 }
 
@@ -108,6 +136,11 @@ void save_to_file(const string &filename, const map<vector<int>, vector<Graph>> 
 
 vector<Graph> gen_graphs(int nbVert)
 {
+    int nbGraphPerComp[5] = {0,0,0,0,0};
+    int nbFreeGraphPerComp[5] = {0,0,0,0,0};
+    int nbGraphFree = 0;
+    int nbPassedIso = 0;
+    int nbGraphTried = 0;
     vector<Graph> res;
     map<vector<int>, vector<Graph>> deglist2Graphs;
 
@@ -175,11 +208,18 @@ vector<Graph> gen_graphs(int nbVert)
             Graph gNew;
             gNew.copy_and_add_new_vertex(g); //TODO garder le retour, un sommet ?
 
+            int nbComp = nb_connected_comp(gNew);
+            nbGraphPerComp[nbComp]++;
+
+            nbGraphTried++;
             //TODO adjMat
             //
-            if (free_C4_O4(gNew, nbVert))
+            if (nbComp && free_C4_O4(gNew, nbVert))
             {
-                check_if_seen_and_add(gNew, deglist2Graphs);
+                nbGraphFree++;
+                nbFreeGraphPerComp[nbComp]++;
+                if (check_if_seen_and_add(gNew, deglist2Graphs))
+                    nbPassedIso++;
             }
             //TODO ajouter à la liste et dans un dico
 
@@ -190,9 +230,15 @@ vector<Graph> gen_graphs(int nbVert)
                 for (int newNeighb : newEdgesList)
                     gWithEdges.add_edge(nbVert-1, newNeighb-1);
 
-                if (free_C4_O4(gWithEdges, nbVert))
+                nbComp = nb_connected_comp(gWithEdges);
+                nbGraphPerComp[nbComp]++;
+                nbGraphTried++;
+                if (nbComp && free_C4_O4(gWithEdges, nbVert))
                 {
-                    check_if_seen_and_add(gWithEdges, deglist2Graphs);
+                    nbGraphFree++;
+                    nbFreeGraphPerComp[nbComp]++;
+                    if (check_if_seen_and_add(gWithEdges, deglist2Graphs))
+                        nbPassedIso++;
                     //TODO refléchir : si déjà vu, alors il existe des combinaisons avec plus d'arêtes qui sont possibles ?!
 
                 }
@@ -224,6 +270,18 @@ vector<Graph> gen_graphs(int nbVert)
     fileName << nbVert << ".txt";
 
     save_to_file(fileName.str(), deglist2Graphs, nbGraph);
+    for (int i = 1; i < 5; i++)
+        cerr << "nb graphes avec " << i << " composantes connexes : " << nbGraphPerComp[i] << endl;
+    for (int i = 1; i < 4; i++)
+        cerr << "nb free graphes avec " << i << " composantes connexes : " << nbFreeGraphPerComp[i] << endl;
+    cerr << nbPassedIso << " out of " << nbGraphFree << " were not isomorphic\n";
+
+    cerr << nbVert << " " << nbGraphTried << " " << nbGraphFree << " " << nbPassedIso << " ";
+    for (int i = 1; i < 5; i++)
+        cerr << nbGraphPerComp[i] << " ";
+    for (int i = 1; i < 4; i++)
+        cerr << nbFreeGraphPerComp[i] << " ";
+    cerr << endl;
     return res;
 
 }
