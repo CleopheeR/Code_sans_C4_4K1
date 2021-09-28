@@ -15,6 +15,7 @@ class Graph
     public:
         Graph() {
             adjMat = NULL;
+            vertsCol = NULL;
         }
 
 
@@ -33,6 +34,15 @@ class Graph
                 adjList[u] = g.adjList[u];
                 degreeList[u] = g.degreeList[u];
             }
+            degreeList.back() = g.degreeList.back(); //for the hash
+            if (g.vertsCol)
+            {
+                vertsCol = (int*) malloc(g.nbVert*sizeof(int));
+                for (int u = 0; u < g.nbVert; u++)
+                    vertsCol[u] = g.vertsCol[u];
+            }
+            else
+                vertsCol = NULL;
         }
 
         Graph& operator=(const Graph& g)
@@ -50,6 +60,15 @@ class Graph
                 adjList[u] = g.adjList[u];
                 degreeList[u] = g.degreeList[u];
             }
+            degreeList.back() = g.degreeList.back(); //for the hash
+            if (g.vertsCol)
+            {
+                vertsCol = (int*) malloc(g.nbVert*sizeof(int));
+                for (int u = 0; u < g.nbVert; u++)
+                    vertsCol[u] = g.vertsCol[u];
+            }
+            else
+                vertsCol = NULL;
             return *this;
         }
 
@@ -68,6 +87,7 @@ class Graph
 
                 add_edge(u,v);
             }
+            vertsCol = NULL;
         }
 
 
@@ -75,6 +95,8 @@ class Graph
         {
             if (adjMat)
                 free(adjMat);
+            if (vertsCol)
+                free(vertsCol);
             /*if (adjMat == NULL)
                 return;
             for (int i = 0; i < nbVert; i++)
@@ -91,11 +113,15 @@ class Graph
 
         int *adjMat;
         vector<int> degreeList;
+        int *vertsCol;
 
 
         void copy_and_add_new_vertex(const Graph&); //TODO ou bien renvoie un Graphe autre
         void add_edge(int u, int v);
         void remove_last_edge(int u, int v);
+
+
+        void compute_hashes(void);
 
         void print(void) const;
         //TODO copie...

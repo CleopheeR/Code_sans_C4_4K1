@@ -11,9 +11,11 @@
 
 
 #include "Graph.hh"
+#include "gen-graph.hh"
 #include "test-properties.hh"
 
 using namespace std;
+
 
 //TODO idée : stocker aussi somme des degrés des voisins ? (bof, peu portable sauf si double indirection...)
 
@@ -97,7 +99,7 @@ vector<Graph> load_from_file(const string &filename)
         res[i] = Graph(file);
     }
 
-/*
+
     long long nbTwinTotal = 0;
     long long  nbGraphWithTwin = 0;
     for (const Graph& g : res)
@@ -208,16 +210,18 @@ vector<Graph> gen_graphs(int nbVert)
             Graph gNew;
             gNew.copy_and_add_new_vertex(g); //TODO garder le retour, un sommet ?
 
-            int nbComp = nb_connected_comp(gNew);
-            nbGraphPerComp[nbComp]++;
+            int nbComp = 1+0*nb_connected_comp(gNew);
+            //nbGraphPerComp[nbComp]++;
 
             nbGraphTried++;
             //TODO adjMat
             //
             if (nbComp && free_C4_O4(gNew, nbVert))
             {
-                nbGraphFree++;
-                nbFreeGraphPerComp[nbComp]++;
+                //nbGraphFree++;
+                //nbFreeGraphPerComp[nbComp]++;
+                //if (gNew.vertsCol == NULL)
+                gNew.compute_hashes();
                 if (check_if_seen_and_add(gNew, deglist2Graphs))
                     nbPassedIso++;
             }
@@ -230,13 +234,16 @@ vector<Graph> gen_graphs(int nbVert)
                 for (int newNeighb : newEdgesList)
                     gWithEdges.add_edge(nbVert-1, newNeighb-1);
 
-                nbComp = nb_connected_comp(gWithEdges);
-                nbGraphPerComp[nbComp]++;
+                /*
+                 * nbComp = nb_connected_comp(gWithEdges);
+                nbGraphPerComp[nbComp]++;*/
                 nbGraphTried++;
                 if (nbComp && free_C4_O4(gWithEdges, nbVert))
                 {
                     nbGraphFree++;
                     nbFreeGraphPerComp[nbComp]++;
+                    //if (gWithEdges.vertsCol == NULL)
+                    gWithEdges.compute_hashes();
                     if (check_if_seen_and_add(gWithEdges, deglist2Graphs))
                         nbPassedIso++;
                     //TODO refléchir : si déjà vu, alors il existe des combinaisons avec plus d'arêtes qui sont possibles ?!
@@ -270,6 +277,7 @@ vector<Graph> gen_graphs(int nbVert)
     fileName << nbVert << ".txt";
 
     save_to_file(fileName.str(), deglist2Graphs, nbGraph);
+    /*
     for (int i = 1; i < 5; i++)
         cerr << "nb graphes avec " << i << " composantes connexes : " << nbGraphPerComp[i] << endl;
     for (int i = 1; i < 4; i++)
@@ -282,6 +290,7 @@ vector<Graph> gen_graphs(int nbVert)
     for (int i = 1; i < 4; i++)
         cerr << nbFreeGraphPerComp[i] << " ";
     cerr << endl;
+    */
     return res;
 
 }
