@@ -56,6 +56,7 @@ void gen_subsets(int k, int n, vector<vector<int>> &listRes)
 }
 
 
+//bool check_if_seen_and_add(const Graph& g, unordered_map<vector<int>, vector<Graph>, vector_hash> &dico)
 bool check_if_seen_and_add(const Graph& g, map<vector<int>, vector<Graph>> &dico)
 {
     //vector<int> degList;
@@ -122,6 +123,7 @@ vector<Graph> load_from_file(const string &filename)
     return res;
 }
 
+//void save_to_file(const string &filename, const unordered_map<vector<int>, vector<Graph>, vector_hash> &graphList, int nbGraph)
 void save_to_file(const string &filename, const map<vector<int>, vector<Graph>> &graphList, int nbGraph)
 {
     vector<Graph> res;
@@ -144,6 +146,7 @@ vector<Graph> gen_graphs(int nbVert)
     int nbPassedIso = 0;
     int nbGraphTried = 0;
     vector<Graph> res;
+    //unordered_map<vector<int>, vector<Graph>, vector_hash> deglist2Graphs;
     map<vector<int>, vector<Graph>> deglist2Graphs;
 
     if (nbVert == 1)
