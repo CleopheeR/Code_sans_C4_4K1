@@ -99,7 +99,7 @@ vector<Graph> load_from_file(const string &filename)
         res[i] = Graph(file);
     }
 
-
+    /*
     long long nbTwinTotal = 0;
     long long  nbGraphWithTwin = 0;
     for (const Graph& g : res)
