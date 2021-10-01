@@ -314,10 +314,9 @@ def ToutLesGraphsAnSommets_Par_Fichier(n):
         L=[]
         Dico = {}
         #Je genere tout les ensembles ordones de taille m d'entier de 1 a taille(n) P. Ils vont etre les somemts a attacher 
-        LP=[]
+        LP=[[]]
         for m in range(1,n):
             LP=LP+sousens_nonord_k(m,n-1)
-
 
 
         print("je dois racrocher un sommets a ", len(lnmoinsun), 'graphes')
