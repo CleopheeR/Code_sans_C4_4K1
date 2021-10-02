@@ -16,16 +16,13 @@ void Graph::init(int n, int m)
     //for (int i = 0; i < nbVert; i++)
     //    adjMat[i] = (bool*) calloc(sizeof(bool),n);
 
-    //degreeList = (int*) calloc(n,sizeof(int));
-    degreeList.resize(n+1, 0);
-
     //adjList = (vector<int>*) malloc(sizeof(vector<int>)*n);
     adjList.resize(n);
 }
 
 
 
-void Graph::copy_and_add_new_vertex(const Graph& g)
+void Graph::copy_and_add_new_vertex(const Graph& g, vector<int> &degreeList)
 {
     init(g.nbVert+1, g.nbEdge);
 
@@ -43,13 +40,15 @@ void Graph::copy_and_add_new_vertex(const Graph& g)
     for (int u = 0; u < g.nbVert; u++)
     {
         adjList[u] = g.adjList[u];
-        degreeList[u+1] = g.degreeList[u];
+        //degreeList[u+1] = g.degreeList[u];
     }
+    for (int u = g.nbVert; u > 0; u--)
+        degreeList[u] = degreeList[u-1];
     degreeList[0] = 0;
-    degreeList.back() = g.degreeList.back(); //for the hash
+    //degreeList.back() = g.degreeList.back(); //for the hash
 }
 
-void Graph::add_edge(int u, int v)
+void Graph::add_edge(int u, int v, vector<int> &degreeList)
 {
     nbEdge++;
     int nbNeighbU = adjList[u].size();
@@ -76,7 +75,7 @@ void Graph::add_edge(int u, int v)
     degreeList[i-1]++;
 }
 
-void Graph::remove_last_edge(int u, int v)
+void Graph::remove_last_edge(int u, int v, vector<int> &degreeList)
 {
     nbEdge--;
     int nbNeighbU = adjList[u].size();
@@ -117,9 +116,9 @@ void Graph::print_in_file(ofstream &f) const
 void Graph::print(void) const
 {
     cout << nbVert << " vertices and " << nbEdge << " edges.\n";
-    for (int x : degreeList)
-        cout << x << " ";
-    cout << endl;
+    //for (int x : degreeeList)
+        //cout << x << " ";
+    //cout << endl;
     for (int i = 0; i < nbVert; i++)
     {
         for (int y : adjList[i])
@@ -164,7 +163,7 @@ inline int my_hash3(int colours[], const vector<int> &adjList)
     return newCol;
 }
 
-void Graph::compute_hashes(void)
+void Graph::compute_hashes(vector<int> &degreeList)
 {
     const int nbMaxVertices = 30;
     int cols[nbMaxVertices], prevCols[nbMaxVertices];
@@ -173,7 +172,7 @@ void Graph::compute_hashes(void)
 
     for (int i = 0; i < 3; i++)
     {
-        std::swap(cols, prevCols);
+        swap(cols, prevCols);
         for (int u = 0; u < nbVert; u++)
             cols[u] = my_hash2(prevCols, adjList[u]);
 

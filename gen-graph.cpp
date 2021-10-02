@@ -8,6 +8,7 @@
 #include <string>
 #include <cstdio>
 #include <cstring>
+#include <algorithm>
 
 
 #include "Graph.hh"
@@ -57,22 +58,15 @@ void gen_subsets(int k, int n, vector<vector<int>> &listRes)
 
 
 //bool check_if_seen_and_add(const Graph& g, unordered_map<vector<int>, vector<Graph>, vector_hash> &dico)
-bool check_if_seen_and_add(const Graph& g, map<vector<int>, vector<Graph>> &dico)
+bool check_if_seen_and_add(Graph& g, vector<int> &degreeList, map<vector<int>, vector<Graph>> &dico)
 {
-    //vector<int> degList;
-    //degList.reserve(g.vertices().size())
-    //for (const Vertex& v : g.vertices)
-    //    degList.push_back(v.out_degree());
-
-    //sort(degList.begin(), degList.end());
-
     /*
     cout << "checking...\n";
     for (int x : g.degreeList)
         cout << x << " ";
     cout << endl;
     */
-    for (const Graph& gSeen : dico[g.degreeList])
+    for (const Graph& gSeen : dico[degreeList])
     {
         if (are_isomorphic(g, gSeen))
             return false;
@@ -80,8 +74,7 @@ bool check_if_seen_and_add(const Graph& g, map<vector<int>, vector<Graph>> &dico
 
     //cout << "   accepting :)\n";
 
-    dico[g.degreeList].push_back(g);
-
+    dico[degreeList].push_back(g);
     return true;
 }
 
@@ -146,6 +139,9 @@ vector<Graph> gen_graphs(int nbVert)
     int nbPassedIso = 0;
     int nbGraphTried = 0;
     vector<Graph> res;
+    vector<int> degreeList, curDegreeList;
+    curDegreeList.resize(nbVert+1);
+    degreeList.resize(nbVert+1);
     //unordered_map<vector<int>, vector<Graph>, vector_hash> deglist2Graphs;
     map<vector<int>, vector<Graph>> deglist2Graphs;
 
@@ -153,7 +149,7 @@ vector<Graph> gen_graphs(int nbVert)
     {
         Graph g;
         g.init(1, 0);
-        deglist2Graphs[g.degreeList].push_back(g);
+        deglist2Graphs[{0}].push_back(g);
     }
 
     else //TODO cas n == 2 utile ?
@@ -197,7 +193,21 @@ vector<Graph> gen_graphs(int nbVert)
         int cptGraph = 0;
         for (const Graph& g : listMinus)
         {
-            /*
+            degreeList.assign(nbVert+1, 0);
+            for (int u = 0; u < nbVert-1; u++)
+            {
+                for (int v = u+1; v < nbVert-1; v++)
+                {
+                    if (are_neighb(g, u,v))
+                    {
+                        degreeList[u]++;
+                        degreeList[v]++;
+                    }
+                }
+            }
+            sort(degreeList.begin(), degreeList.begin()+nbVert-1);
+
+                        /*
             for (int i = 0; i < nbVert; i++)
                 memset(adjMat[i], 0, nbVert);
             for (const auto& edge : g.get_edges())
@@ -211,7 +221,8 @@ vector<Graph> gen_graphs(int nbVert)
             if (cptGraph%100 == 0)
                 cout << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << listMinus.size() << endl;
             Graph gNew;
-            gNew.copy_and_add_new_vertex(g); //TODO garder le retour, un sommet ?
+            gNew.copy_and_add_new_vertex(g, degreeList); //TODO garder le retour, un sommet ?
+
 
             int nbComp = 1+0*nb_connected_comp(gNew);
             //nbGraphPerComp[nbComp]++;
@@ -223,9 +234,8 @@ vector<Graph> gen_graphs(int nbVert)
             {
                 //nbGraphFree++;
                 //nbFreeGraphPerComp[nbComp]++;
-                //if (gNew.vertsCol == NULL)
-                gNew.compute_hashes();
-                if (check_if_seen_and_add(gNew, deglist2Graphs))
+                gNew.compute_hashes(degreeList);
+                if (check_if_seen_and_add(gNew, degreeList, deglist2Graphs))
                     nbPassedIso++;
             }
             //TODO ajouter à la liste et dans un dico
@@ -233,9 +243,13 @@ vector<Graph> gen_graphs(int nbVert)
 
             for (const vector<int> &newEdgesList : listSubsetsEdges)
             {
+                for (int i = 0; i < nbVert; i++)
+                    curDegreeList[i] = degreeList[i];
                 Graph gWithEdges = gNew;
                 for (int newNeighb : newEdgesList)
-                    gWithEdges.add_edge(nbVert-1, newNeighb-1);
+                    gWithEdges.add_edge(nbVert-1, newNeighb-1, curDegreeList);
+
+
 
                 /*
                  * nbComp = nb_connected_comp(gWithEdges);
@@ -245,9 +259,8 @@ vector<Graph> gen_graphs(int nbVert)
                 {
                     nbGraphFree++;
                     nbFreeGraphPerComp[nbComp]++;
-                    //if (gWithEdges.vertsCol == NULL)
-                    gWithEdges.compute_hashes();
-                    if (check_if_seen_and_add(gWithEdges, deglist2Graphs))
+                    gWithEdges.compute_hashes(curDegreeList);
+                    if (check_if_seen_and_add(gWithEdges, curDegreeList, deglist2Graphs))
                         nbPassedIso++;
                     //TODO refléchir : si déjà vu, alors il existe des combinaisons avec plus d'arêtes qui sont possibles ?!
 

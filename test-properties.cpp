@@ -23,8 +23,6 @@ vector<int> listColours1(nbMaxVertices), listColours2(nbMaxVertices);
 
 
 
-#define are_neighb(g, u, v) (g.adjMat[u]&(1<<v))
-
 int my_hash(int colours[], const vector<int> &adjList, int u)
 {
 

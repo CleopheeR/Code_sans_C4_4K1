@@ -3,11 +3,13 @@
 #include <utility>
 #include <fstream>
 #include <iostream>
+#include <cassert>
 
 #ifndef DEF_GRAPH_HH
 #define DEF_GRAPH_HH
 
 
+#define are_neighb(g, u, v) (g.adjMat[u]&(1<<v))
 using namespace std;
 
 class Graph
@@ -32,9 +34,7 @@ class Graph
             for (int u = 0; u < g.nbVert; u++)
             {
                 adjList[u] = g.adjList[u];
-                degreeList[u] = g.degreeList[u];
             }
-            degreeList.back() = g.degreeList.back(); //for the hash
             if (g.vertsCol)
             {
                 vertsCol = (int*) malloc(g.nbVert*sizeof(int));
@@ -52,15 +52,11 @@ class Graph
             {
                 adjMat[u] = g.adjMat[u];
                 //for (int v : g.adjList[u])
-                //    adjMat[u][v] = true;
+                    //adjMat[u][v] = true;
             }
 
             for (int u = 0; u < g.nbVert; u++)
-            {
                 adjList[u] = g.adjList[u];
-                degreeList[u] = g.degreeList[u];
-            }
-            degreeList.back() = g.degreeList.back(); //for the hash
             if (g.vertsCol)
             {
                 vertsCol = (int*) malloc(g.nbVert*sizeof(int));
@@ -78,14 +74,21 @@ class Graph
             int n, m;
             f >> n >> m;
             init(n, m);
-            nbEdge = 0; // car ajouté par add_edge
+            nbEdge = m; // car ajouté par add_edge
             for (int i = 0; i < m; i++)
             {
                 char virgule;
                 int u, v;
                 f >> u >> virgule >> v;
 
-                add_edge(u,v);
+                adjMat[u] |= (1<<v);
+                adjMat[v] |= (1<<u);
+                adjList[u].push_back(v);
+                adjList[v].push_back(u);
+
+
+
+                //add_edge(u,v);
             }
             vertsCol = NULL;
         }
@@ -107,21 +110,23 @@ class Graph
         void print_in_file(ofstream &f) const;
 
         void init(int n, int m);
+
+
+
         int nbVert;
         int nbEdge;
         vector<vector<int>> adjList;
 
         int *adjMat;
-        vector<int> degreeList;
         int *vertsCol;
 
 
-        void copy_and_add_new_vertex(const Graph&); //TODO ou bien renvoie un Graphe autre
-        void add_edge(int u, int v);
-        void remove_last_edge(int u, int v);
+        void copy_and_add_new_vertex(const Graph&, vector<int> &degreeList); //TODO ou bien renvoie un Graphe autre
+        void add_edge(int u, int v, vector<int> &degreeeList);
+        void remove_last_edge(int u, int v, vector<int> &degreeeList);
 
 
-        void compute_hashes(void);
+        void compute_hashes(vector<int> &degreeeList);
 
         void print(void) const;
         //TODO copie...
