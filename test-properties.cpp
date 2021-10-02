@@ -80,6 +80,15 @@ int nb_connected_comp(const Graph& g)
     return nbComp;
 }
 
+bool has_twin(const Graph &g, int v)
+{
+    assert(v == g.nbVert-1);
+    for (int u = 0; u < g.nbVert-1; u++)
+        if ((g.adjMat[u]^g.adjMat[v]) == ((1<<u) ^ (1<<v)))
+            return true;
+    return false;
+}
+
 bool free_O4(const Graph& g, int n)
 {
     int v1 = n-1;
