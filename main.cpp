@@ -21,7 +21,6 @@ int main(int argc, char* argv[])
 
     if (testOrGen == 'G')
     {
-        exit(3);
         vector<Graph> graphList;
         graphList = gen_graphs(nbVert);
 
