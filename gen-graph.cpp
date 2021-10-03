@@ -224,7 +224,7 @@ vector<Graph> gen_graphs(int nbVert)
             gNew.copy_and_add_new_vertex(g, degreeList); //TODO garder le retour, un sommet ?
 
 
-            int nbComp = 1+0*nb_connected_comp(gNew);
+            int nbComp = 1;//+0*nb_connected_comp(gNew);
             //nbGraphPerComp[nbComp]++;
 
             nbGraphTried++;
@@ -235,6 +235,8 @@ vector<Graph> gen_graphs(int nbVert)
                 //nbGraphFree++;
                 //nbFreeGraphPerComp[nbComp]++;
                 gNew.compute_hashes(degreeList);
+                nbGraphFree++;
+                nbFreeGraphPerComp[nbComp]++;
                 if (check_if_seen_and_add(gNew, degreeList, deglist2Graphs))
                     nbPassedIso++;
             }

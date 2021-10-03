@@ -32,12 +32,8 @@ void Graph::init(int n, int m)
 {
     nbVert = n;
     nbEdge = m;
-    //adjMat = (bool**) malloc(sizeof(bool*)*n);
     adjMat = (int*) calloc(sizeof(int),n);
     vertsCol = NULL;
-
-    //for (int i = 0; i < nbVert; i++)
-    //    adjMat[i] = (bool*) calloc(sizeof(bool),n);
 }
 
 const vector<int>& Graph::get_neighb(int u) const
@@ -56,7 +52,6 @@ void Graph::copy_and_add_new_vertex(const Graph& g, vector<int> &degreeList)
     for (int u = g.nbVert; u > 0; u--)
         degreeList[u] = degreeList[u-1];
     degreeList[0] = 0;
-    //degreeList.back() = g.degreeList.back(); //for the hash
 }
 
 void Graph::add_edge(int u, int v, vector<int> &degreeList)
@@ -70,8 +65,6 @@ void Graph::add_edge(int u, int v, vector<int> &degreeList)
 
     adjMat[u] |= (1<<v);
     adjMat[v] |= (1<<u);
-    //adjMat[u][v] = true;
-    //adjMat[v][u] = true;
 
     int n1 = min(nbNeighbU, nbNeighbV);
     int n2 = max(nbNeighbU, nbNeighbV);
@@ -96,17 +89,15 @@ void Graph::remove_last_edge(int u, int v, vector<int> &degreeList)
 
     adjMat[u] ^= (1<<v);
     adjMat[v] ^= (1<<u);
-    //adjMat[u][v] = false;
-    //adjMat[v][u] = false;
 
     int n1 = min(nbNeighbU, nbNeighbV);
     int n2 = max(nbNeighbU, nbNeighbV);
 
     int i = 0;
     while (degreeList[i++] < n1);
-    degreeList[i-1]--;
+        degreeList[i-1]--;
     while(degreeList[i++] < n2);
-    degreeList[i-1]--;
+        degreeList[i-1]--;
 
     //TODO ça peut s'optimiser quels endroits on a enlever ou rajouté un pour faire l'opération inverse, si jamais
 }
@@ -196,6 +187,5 @@ void Graph::compute_hashes(vector<int> &degreeList)
         vertsCol[u] = cols[u];
         xorAll ^= prevCols[u];
     }
-    //degreeList.back() = xorAll;
     degreeList.back() = xorAll;
 }

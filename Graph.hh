@@ -84,11 +84,6 @@ class Graph
                 free(adjMat);
             if (vertsCol)
                 free(vertsCol);
-            /*if (adjMat == NULL)
-                return;
-            for (int i = 0; i < nbVert; i++)
-                free(adjMat[i]);
-            free(adjMat);*/
         }
 
         void print_in_file(ofstream &f) const;
