@@ -9,42 +9,6 @@
 #include "gen-graph.hh"
 
 
-/*
-bool is_fixeur(const Graph &g, const vector<vector<int>> &listSubsetsEdges)
-{
-    for (const vector<int> &newEdgesList : listSubsetsEdges)
-    {
-        if (listSubsetsEdges.size() == g.nbVert)
-            continue;
-        bool isUniversal = false;
-        for (int u : newEdgesList)
-            if (g.adjList[u-1].size() == g.nbVert-1)
-                isUniversal = true;
-        if (isUniversal)
-            continue;
-
-        Graph gWithEdges;
-        gWithEdges.copy_and_add_new_vertex(g); //TODO garder le retour, un sommet ?
-
-        for (int newNeighb : newEdgesList)
-            gWithEdges.add_edge(gWithEdges.nbVert-1, newNeighb-1);
-
-        if (!free_C4_O4(gWithEdges, gWithEdges.nbVert-1))
-            continue;
-
-        if (has_twin(gWithEdges, gWithEdges.nbVert-1))
-            continue;
-
-        return false;
-    }
-
-    return true;
-}
-*/
-
-
-
-
 
 bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int>> &listSubsetsEdges, bool prefixeurTest, map<vector<int>, vector<Graph>> &fixeurDict, map<vector<int>, vector<Graph>> &prefixeurDict)
 {
