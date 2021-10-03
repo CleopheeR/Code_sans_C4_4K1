@@ -95,9 +95,9 @@ void Graph::remove_last_edge(int u, int v, vector<int> &degreeList)
 
     int i = 0;
     while (degreeList[i++] < n1);
-        degreeList[i-1]--;
+    degreeList[i-1]--;
     while(degreeList[i++] < n2);
-        degreeList[i-1]--;
+    degreeList[i-1]--;
 
     //TODO ça peut s'optimiser quels endroits on a enlever ou rajouté un pour faire l'opération inverse, si jamais
 }
