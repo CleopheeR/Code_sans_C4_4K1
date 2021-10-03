@@ -46,24 +46,20 @@ bool is_fixeur(const Graph &g, const vector<vector<int>> &listSubsetsEdges)
 
 
 
-bool is_pre_or_fixeur(Graph &g, const vector<int> &degreeList, const vector<vector<int>> &listSubsetsEdges, bool prefixeurTest, map<vector<int>, vector<Graph>> &fixeurDict, map<vector<int>, vector<Graph>> &prefixeurDict)
+bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int>> &listSubsetsEdges, bool prefixeurTest, map<vector<int>, vector<Graph>> &fixeurDict, map<vector<int>, vector<Graph>> &prefixeurDict)
 {
-    vector<int> curDegreeList;
-    curDegreeList.resize(g.nbVert+1);
-
-
     bool printDebug = false;
     for (const vector<int> &newEdgesList : listSubsetsEdges)
     {
         if (newEdgesList.size() == g.nbVert)
             continue;
 
-        for (int i = 0; i < g.nbVert; i++)
-            curDegreeList[i] = degreeList[i];
+        //for (int i = 0; i < g.nbVert; i++)
+        //    curDegreeList[i] = degreeList[i];
         Graph gWithEdges;
-        gWithEdges.copy_and_add_new_vertex(g, curDegreeList); //TODO garder le retour, un sommet ?
+        gWithEdges.copy_and_add_new_vertex(g); //TODO garder le retour, un sommet ?
         for (int u : newEdgesList)
-            gWithEdges.add_edge(gWithEdges.nbVert-1, u-1, curDegreeList);
+            gWithEdges.add_edge(gWithEdges.nbVert-1, u-1);
         if (printDebug)
         {
             gWithEdges.print();
@@ -77,7 +73,6 @@ bool is_pre_or_fixeur(Graph &g, const vector<int> &degreeList, const vector<vect
             continue;
         }
         if (!free_C4(gWithEdges, gWithEdges.nbVert) || !free_O4(gWithEdges, gWithEdges.nbVert))
-        //if (!free_C4_O4(gWithEdges, gWithEdges.nbVert))
         {
             if (printDebug)
                 cerr << "cond1\n";
@@ -91,7 +86,9 @@ bool is_pre_or_fixeur(Graph &g, const vector<int> &degreeList, const vector<vect
 
         bool isGBigPreFixeur = false;
 
-            //TODO compute hash!
+        //TODO ici calculer degreelist et hash
+
+        //TODO compute hash!
         for (const Graph& gSeen : prefixeurDict[degreeList])
         {
             if (are_isomorphic(gWithEdges, gSeen))
@@ -129,7 +126,7 @@ map<vector<int>, vector<Graph>> gen_fixeurs(int nbVert)
 
     map<vector<int>, vector<Graph>> fixeursPlus, prefixeursPlus;
 
-    vector<int> degreeList(nbVert);
+    vector<int> degreeList(nbVert+1);
 
     stringstream fileName;
     fileName << "Alexgraphedelataille";
@@ -152,19 +149,22 @@ map<vector<int>, vector<Graph>> gen_fixeurs(int nbVert)
     int cptGraph = 0;
     for (Graph& g : listGraphs)
     {
-        degreeList.assign(g.nbVert, 0);
-        for (int u = 0; u < g.nbVert; u++)
-        {
-            for (int v = u+1; v < g.nbVert; v++)
-            {
-                if (are_neighb(g, u,v))
-                {
-                    degreeList[u]++;
-                    degreeList[v]++;
-                }
-            }
-        }
-        sort(degreeList.begin(), degreeList.begin()+g.nbVert);
+        //degreeList.assign(g.nbVert, 0);
+        /*
+           for (int u = 0; u < g.nbVert; u++)
+           {
+           for (int v = u+1; v < g.nbVert; v++)
+           {
+           if (are_neighb(g, u,v))
+           {
+           degreeList[u]++;
+           degreeList[v]++;
+           }
+           }
+
+           }
+           sort(degreeList.begin(), degreeList.begin()+g.nbVert);
+           */
 
 
         cptGraph++;
@@ -173,6 +173,9 @@ map<vector<int>, vector<Graph>> gen_fixeurs(int nbVert)
 
         if (is_pre_or_fixeur(g, degreeList, listSubsetsEdges, false, fixeursPlus, prefixeursPlus))
         {
+            for (int i = 0; i < g.nbVert; i++)
+                degreeList[i] = g.get_neighb(i).size();
+            g.compute_hashes(degreeList);
             cerr << "YYYYYYYYYYYYYYYYEEEEEEEEESSSSSSSSSS\n";
             deglist2Fixeurs[degreeList].push_back(g);
         }
@@ -191,5 +194,4 @@ map<vector<int>, vector<Graph>> gen_fixeurs(int nbVert)
     //TODO change
 
     return deglist2Fixeurs;
-
 }

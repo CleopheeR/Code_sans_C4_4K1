@@ -139,8 +139,7 @@ vector<Graph> gen_graphs(int nbVert)
     int nbPassedIso = 0;
     int nbGraphTried = 0;
     vector<Graph> res;
-    vector<int> degreeList, curDegreeList;
-    curDegreeList.resize(nbVert+1);
+    vector<int> degreeList;
     degreeList.resize(nbVert+1);
     //unordered_map<vector<int>, vector<Graph>, vector_hash> deglist2Graphs;
     map<vector<int>, vector<Graph>> deglist2Graphs;
@@ -187,6 +186,7 @@ vector<Graph> gen_graphs(int nbVert)
         int cptGraph = 0;
         for (const Graph& g : listMinus)
         {
+            /*
             degreeList.assign(nbVert+1, 0);
             for (int u = 0; u < nbVert-1; u++)
             {
@@ -200,13 +200,12 @@ vector<Graph> gen_graphs(int nbVert)
                 }
             }
             sort(degreeList.begin(), degreeList.begin()+nbVert-1);
-
+            */
             cptGraph++;
             if (cptGraph%100 == 0)
                 cout << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << listMinus.size() << endl;
             Graph gNew;
-            gNew.copy_and_add_new_vertex(g, degreeList); //TODO garder le retour, un sommet ?
-
+            gNew.copy_and_add_new_vertex(g);//, degreeList); //TODO garder le retour, un sommet ?
 
             int nbComp = 1;//+0*nb_connected_comp(gNew);
             //nbGraphPerComp[nbComp]++;
@@ -214,6 +213,11 @@ vector<Graph> gen_graphs(int nbVert)
             nbGraphTried++;
             if (nbComp && free_C4_O4(gNew, nbVert))
             {
+                for (int i = 0; i < gNew.nbVert; i++)
+                    degreeList[i] = gNew.get_neighb(i).size();
+                sort(degreeList.begin(), degreeList.begin()+(gNew.nbVert));
+
+
                 //nbGraphFree++;
                 //nbFreeGraphPerComp[nbComp]++;
                 gNew.compute_hashes(degreeList);
@@ -227,12 +231,11 @@ vector<Graph> gen_graphs(int nbVert)
 
             for (const vector<int> &newEdgesList : listSubsetsEdges)
             {
-                for (int i = 0; i < nbVert; i++)
-                    curDegreeList[i] = degreeList[i];
+                //for (int i = 0; i < nbVert; i++)
+                    //curDegreeList[i] = degreeList[i];
                 Graph gWithEdges = gNew;
                 for (int newNeighb : newEdgesList)
-                    gWithEdges.add_edge(nbVert-1, newNeighb-1, curDegreeList);
-
+                    gWithEdges.add_edge(nbVert-1, newNeighb-1);//, curDegreeList);
 
 
                 /*
@@ -241,10 +244,15 @@ vector<Graph> gen_graphs(int nbVert)
                 nbGraphTried++;
                 if (nbComp && free_C4_O4(gWithEdges, nbVert))
                 {
+                    for (int i = 0; i < gWithEdges.nbVert; i++)
+                        degreeList[i] = gWithEdges.get_neighb(i).size();
+                    sort(degreeList.begin(), degreeList.begin()+gWithEdges.nbVert);
+
+
                     nbGraphFree++;
                     nbFreeGraphPerComp[nbComp]++;
-                    gWithEdges.compute_hashes(curDegreeList);
-                    if (check_if_seen_and_add(gWithEdges, curDegreeList, deglist2Graphs))
+                    gWithEdges.compute_hashes(degreeList);
+                    if (check_if_seen_and_add(gWithEdges, degreeList, deglist2Graphs))
                         nbPassedIso++;
                     //TODO refléchir : si déjà vu, alors il existe des combinaisons avec plus d'arêtes qui sont possibles ?!
 

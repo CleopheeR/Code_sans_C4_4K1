@@ -100,8 +100,8 @@ class Graph
 
         const vector<int>& get_neighb(int u) const;
 
-        void copy_and_add_new_vertex(const Graph&, vector<int> &degreeList); //TODO ou bien renvoie un Graphe autre
-        void add_edge(int u, int v, vector<int> &degreeeList);
+        void copy_and_add_new_vertex(const Graph&);//, vector<int> &degreeList); //TODO ou bien renvoie un Graphe autre
+        void add_edge(int u, int v);//, vector<int> &degreeeList);
         void remove_last_edge(int u, int v, vector<int> &degreeeList);
 
 

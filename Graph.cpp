@@ -41,7 +41,7 @@ const vector<int>& Graph::get_neighb(int u) const
     return adjListGlobal[adjMat[u]];
 }
 
-void Graph::copy_and_add_new_vertex(const Graph& g, vector<int> &degreeList)
+void Graph::copy_and_add_new_vertex(const Graph& g)//, vector<int> &degreeList)
 {
     init(g.nbVert+1, g.nbEdge);
 
@@ -49,12 +49,12 @@ void Graph::copy_and_add_new_vertex(const Graph& g, vector<int> &degreeList)
         adjMat[u] = g.adjMat[u];
 
 
-    for (int u = g.nbVert; u > 0; u--)
-        degreeList[u] = degreeList[u-1];
-    degreeList[0] = 0;
+    //for (int u = g.nbVert; u > 0; u--)
+    //    degreeList[u] = degreeList[u-1];
+    //degreeList[0] = 0;
 }
 
-void Graph::add_edge(int u, int v, vector<int> &degreeList)
+void Graph::add_edge(int u, int v)//, vector<int> &degreeList)
 {
     nbEdge++;
     const vector<int> &adjListU = get_neighb(u);
@@ -69,6 +69,7 @@ void Graph::add_edge(int u, int v, vector<int> &degreeList)
     int n1 = min(nbNeighbU, nbNeighbV);
     int n2 = max(nbNeighbU, nbNeighbV);
 
+    /*
     int i = 0;
     while (i < nbVert && degreeList[i] <= n1)
         i++;
@@ -77,6 +78,7 @@ void Graph::add_edge(int u, int v, vector<int> &degreeList)
     while(i < nbVert && degreeList[i] <= n2)
         i++;
     degreeList[i-1]++;
+    */
 }
 
 void Graph::remove_last_edge(int u, int v, vector<int> &degreeList)
