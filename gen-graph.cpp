@@ -152,14 +152,8 @@ vector<Graph> gen_graphs(int nbVert)
         deglist2Graphs[{0}].push_back(g);
     }
 
-    else //TODO cas n == 2 utile ?
+    else
     {
-        /*
-        bool **adjMat = (bool**) malloc(sizeof(bool*)*nbVert);
-        for (int i = 0; i < nbVert; i++)
-            adjMat[i] = (bool*) malloc(sizeof(bool)*nbVert);
-        */
-
         stringstream fileMinusName;
         fileMinusName << "Alexgraphedelataille";
         fileMinusName << nbVert-1 << ".txt";
@@ -206,15 +200,6 @@ vector<Graph> gen_graphs(int nbVert)
                 }
             }
             sort(degreeList.begin(), degreeList.begin()+nbVert-1);
-
-                        /*
-            for (int i = 0; i < nbVert; i++)
-                memset(adjMat[i], 0, nbVert);
-            for (const auto& edge : g.get_edges())
-            {
-                adjMat[edge.first][edge.second] = true;
-                adjMat[edge.second][edge.first] = true;
-            }
             */
 
             cptGraph++;
@@ -228,8 +213,6 @@ vector<Graph> gen_graphs(int nbVert)
             //nbGraphPerComp[nbComp]++;
 
             nbGraphTried++;
-            //TODO adjMat
-            //
             if (nbComp && free_C4_O4(gNew, nbVert))
             {
                 //nbGraphFree++;

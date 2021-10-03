@@ -92,7 +92,7 @@ bool free_O4(const Graph& g, int n)
     int v1 = n-1;
     for (int v2 = 0; v2 < n-1; v2++)
     {
-        if (are_neighb(g,v2,v1))//g.adjMat[v2][v1])
+        if (are_neighb(g,v2,v1))
             continue;
 
         for (int v3 = v2+1; v3 < n-1; v3++)
