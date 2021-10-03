@@ -200,7 +200,6 @@ vector<Graph> gen_graphs(int nbVert)
                 }
             }
             sort(degreeList.begin(), degreeList.begin()+nbVert-1);
-            */
 
             cptGraph++;
             if (cptGraph%100 == 0)
