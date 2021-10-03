@@ -27,14 +27,8 @@ class Graph
             for (int u = 0; u < g.nbVert; u++)
             {
                 adjMat[u] = g.adjMat[u];
-                //for (int v : g.adjList[u])
-                //    adjMat[u][v] = true;
             }
 
-            for (int u = 0; u < g.nbVert; u++)
-            {
-                adjList[u] = g.adjList[u];
-            }
             if (g.vertsCol)
             {
                 vertsCol = (int*) malloc(g.nbVert*sizeof(int));
@@ -51,12 +45,8 @@ class Graph
             for (int u = 0; u < g.nbVert; u++)
             {
                 adjMat[u] = g.adjMat[u];
-                //for (int v : g.adjList[u])
-                    //adjMat[u][v] = true;
             }
 
-            for (int u = 0; u < g.nbVert; u++)
-                adjList[u] = g.adjList[u];
             if (g.vertsCol)
             {
                 vertsCol = (int*) malloc(g.nbVert*sizeof(int));
@@ -83,12 +73,6 @@ class Graph
 
                 adjMat[u] |= (1<<v);
                 adjMat[v] |= (1<<u);
-                adjList[u].push_back(v);
-                adjList[v].push_back(u);
-
-
-
-                //add_edge(u,v);
             }
             vertsCol = NULL;
         }
@@ -115,11 +99,11 @@ class Graph
 
         int nbVert;
         int nbEdge;
-        vector<vector<int>> adjList;
 
         int *adjMat;
         int *vertsCol;
 
+        const vector<int>& get_neighb(int u) const;
 
         void copy_and_add_new_vertex(const Graph&, vector<int> &degreeList); //TODO ou bien renvoie un Graphe autre
         void add_edge(int u, int v, vector<int> &degreeeList);
@@ -131,6 +115,11 @@ class Graph
         void print(void) const;
         //TODO copie...
 };
+
+
+
+void init_adjListGlobal(int n);
+void free_adjListGlobal(void);
 
 #endif
 

@@ -65,7 +65,7 @@ int nb_connected_comp(const Graph& g)
         {
             int v = toDo.front();
             toDo.pop();
-            for (int w : g.adjList[v])
+            for (int w : g.get_neighb(v))
             {
                 if (!isSeen[w])
                 {
@@ -116,18 +116,18 @@ bool free_C4(const Graph& g, int n)
 {
     int v1 = n-1;
 
-    for (const int v2 : g.adjList[v1])
+    for (const int v2 : g.get_neighb(v1))
     {
         if (v1 == v2) //TODO facultatif si graphe simple
             continue;
 
 
-        for (const int v3 : g.adjList[v1])
+        for (const int v3 : g.get_neighb(v1))
         {
             if (v3 == v2 || are_neighb(g, v3, v2))
                 continue;
 
-            for (const int v4 : g.adjList[v3])
+            for (const int v4 : g.get_neighb(v3))
             {
                 if (v4 == v1 || v4 == v2 || v4 == v3)
                     continue;
@@ -172,12 +172,12 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i)
         isMatched[match] = true;
 
         int u2 = match;
-        int nbNeighb = g1.adjList[u1].size();
+        int nbNeighb = g1.get_neighb(u1).size();
         memset(checkeVoisins, 0, g1.nbVert);
 
 
         int nbGreater = 0;
-        for (int x : g1.adjList[u1])
+        for (int x : g1.get_neighb(u1))
         {
             if (indexInIsoOrder[x] <= iU1 || v1ToV2PossibleMatches[x].size() == 1)
             {
@@ -190,7 +190,7 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i)
         }
 
 
-        for (int v2 : g2.adjList[u2])
+        for (int v2 : g2.get_neighb(u2))
         {
             if (!checkeVoisins[v2])
             {
@@ -277,11 +277,16 @@ bool are_isomorphic(const Graph &g1, const Graph &g2)
     int curNbBucketSize = 0;
     for (int v1 = 0; v1 < g1.nbVert; v1++)
     {
-        vertIsoOrderToExplore[v1] = 1000*g1.adjList[v1].size()+v1;
+        vertIsoOrderToExplore[v1] = 1000*g1.get_neighb(v1).size()+v1;
         v1ToV2PossibleMatches[v1].resize(0);
         for (int v2 = 0; v2 < g2.nbVert; v2++)
-            if (g1.vertsCol[v1] == g2.vertsCol[v2] && g1.adjList[v1].size() == g2.adjList[v2].size())
+        {
+            if (g1.vertsCol[v1] == g2.vertsCol[v2] && g1.get_neighb(v1).size() == g2.get_neighb(v2).size())
+            {
+
                 v1ToV2PossibleMatches[v1].push_back(v2);
+            }
+        }
 
         curNbBucketSize += v1ToV2PossibleMatches[v1].size();
         if (v1ToV2PossibleMatches[v1].empty())

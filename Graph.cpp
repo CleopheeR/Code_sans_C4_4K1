@@ -5,6 +5,29 @@
 
 #include "Graph.hh"
 
+vector<int> *adjListGlobal;
+
+void init_adjListGlobal(int n)
+{
+    adjListGlobal = (vector<int>*) malloc(sizeof(*adjListGlobal)*((1<<n)));
+
+    for (int i = 0; i < (1<<n); i++)
+    {
+        vector<int> cur;
+        for (int j = 0; j < n; j++)
+        {
+            if (i & (1<<j))
+                cur.push_back(j);
+        }
+        swap(cur, adjListGlobal[i]);
+    }
+}
+
+void free_adjListGlobal(void)
+{
+    free(adjListGlobal);
+}
+
 void Graph::init(int n, int m)
 {
     nbVert = n;
@@ -15,33 +38,21 @@ void Graph::init(int n, int m)
 
     //for (int i = 0; i < nbVert; i++)
     //    adjMat[i] = (bool*) calloc(sizeof(bool),n);
-
-    //adjList = (vector<int>*) malloc(sizeof(vector<int>)*n);
-    adjList.resize(n);
 }
 
-
+const vector<int>& Graph::get_neighb(int u) const
+{
+    return adjListGlobal[adjMat[u]];
+}
 
 void Graph::copy_and_add_new_vertex(const Graph& g, vector<int> &degreeList)
 {
     init(g.nbVert+1, g.nbEdge);
 
     for (int u = 0; u < g.nbVert; u++)
-    {
-        /*
-        for (int v : g.adjList[u])
-            adjMat[u] |= (1<<v);
-            //adjMat[u][v] = true;
-        */
         adjMat[u] = g.adjMat[u];
-    }
 
 
-    for (int u = 0; u < g.nbVert; u++)
-    {
-        adjList[u] = g.adjList[u];
-        //degreeList[u+1] = g.degreeList[u];
-    }
     for (int u = g.nbVert; u > 0; u--)
         degreeList[u] = degreeList[u-1];
     degreeList[0] = 0;
@@ -51,16 +62,16 @@ void Graph::copy_and_add_new_vertex(const Graph& g, vector<int> &degreeList)
 void Graph::add_edge(int u, int v, vector<int> &degreeList)
 {
     nbEdge++;
-    int nbNeighbU = adjList[u].size();
-    int nbNeighbV = adjList[v].size();
+    const vector<int> &adjListU = get_neighb(u);
+    const vector<int> &adjListV = get_neighb(v);
+    int nbNeighbU = adjListU.size();
+    int nbNeighbV = adjListV.size();
 
 
     adjMat[u] |= (1<<v);
     adjMat[v] |= (1<<u);
     //adjMat[u][v] = true;
     //adjMat[v][u] = true;
-    adjList[u].push_back(v);
-    adjList[v].push_back(u);
 
     int n1 = min(nbNeighbU, nbNeighbV);
     int n2 = max(nbNeighbU, nbNeighbV);
@@ -78,15 +89,15 @@ void Graph::add_edge(int u, int v, vector<int> &degreeList)
 void Graph::remove_last_edge(int u, int v, vector<int> &degreeList)
 {
     nbEdge--;
-    int nbNeighbU = adjList[u].size();
-    int nbNeighbV = adjList[v].size();
+    const vector<int> &adjListU = get_neighb(u);
+    const vector<int> &adjListV = get_neighb(v);
+    int nbNeighbU = adjListU.size();
+    int nbNeighbV = adjListV.size();
 
     adjMat[u] ^= (1<<v);
     adjMat[v] ^= (1<<u);
     //adjMat[u][v] = false;
     //adjMat[v][u] = false;
-    adjList[u].pop_back();
-    adjList[v].pop_back();
 
     int n1 = min(nbNeighbU, nbNeighbV);
     int n2 = max(nbNeighbU, nbNeighbV);
@@ -106,7 +117,7 @@ void Graph::print_in_file(ofstream &f) const
     f << nbVert << " " << nbEdge;
     for (int i = 0; i < nbVert; i++)
     {
-        for (int y : adjList[i])
+        for (int y : get_neighb(i))
             if (i > y)
                 f << "\t" << i << ";" << y;
     }
@@ -121,7 +132,7 @@ void Graph::print(void) const
     //cout << endl;
     for (int i = 0; i < nbVert; i++)
     {
-        for (int y : adjList[i])
+        for (int y : get_neighb(i))
             if (i > y)
                 cout << i << ";" << y << "\t";
     }
@@ -168,13 +179,13 @@ void Graph::compute_hashes(vector<int> &degreeList)
     const int nbMaxVertices = 30;
     int cols[nbMaxVertices], prevCols[nbMaxVertices];
     for (int u = 0; u < nbVert; u++)
-        cols[u] = adjList[u].size();
+        cols[u] = get_neighb(u).size();
 
     for (int i = 0; i < 3; i++)
     {
         swap(cols, prevCols);
         for (int u = 0; u < nbVert; u++)
-            cols[u] = my_hash2(prevCols, adjList[u]);
+            cols[u] = my_hash2(prevCols, get_neighb(u));
 
     }
     if (vertsCol == NULL)

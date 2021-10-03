@@ -21,6 +21,7 @@ int main(int argc, char* argv[])
 
     if (testOrGen == 'G')
     {
+        init_adjListGlobal(nbVert);
         vector<Graph> graphList;
         graphList = gen_graphs(nbVert);
 
@@ -65,6 +66,7 @@ int main(int argc, char* argv[])
 
     else if (testOrGen == 'F')
     {
+        init_adjListGlobal(nbVert+1);
          gen_fixeurs(nbVert);
 
 
@@ -72,6 +74,7 @@ int main(int argc, char* argv[])
 
     }
 
+    free_adjListGlobal();
 
 
     return 0;
