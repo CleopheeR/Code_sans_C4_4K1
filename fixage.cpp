@@ -1,4 +1,5 @@
 #include <sstream>
+#include <iostream>
 #include <fstream>
 #include <cassert>
 #include <algorithm>
@@ -9,9 +10,12 @@
 #include "gen-graph.hh"
 
 
+vector<int> bigDegreeList;
 
-bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int>> &listSubsetsEdges, bool prefixeurTest, map<vector<int>, vector<Graph>> &fixeurDict, map<vector<int>, vector<Graph>> &prefixeurDict)
+bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int>> &listSubsetsEdges, bool prefixeurTest, map<vector<int>, vector<Graph>> &fixeurDict, map<vector<int>, vector<Graph>> &prefixeurPlusDict)
 {
+    if (bigDegreeList.empty())
+        bigDegreeList.resize(g.nbVert+2);
     bool printDebug = false;
     for (const vector<int> &newEdgesList : listSubsetsEdges)
     {
@@ -47,13 +51,16 @@ bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int
         if (!prefixeurTest)
             return false;
 
-
         bool isGBigPreFixeur = false;
 
         //TODO ici calculer degreelist et hash
 
         //TODO compute hash!
-        for (const Graph& gSeen : prefixeurDict[degreeList])
+        for (int i = 0; i < gWithEdges.nbVert; i++)
+            bigDegreeList[i] = gWithEdges.get_neighb(i).size();
+        sort(bigDegreeList.begin(), bigDegreeList.begin()+gWithEdges.nbVert);
+        gWithEdges.compute_hashes(bigDegreeList);
+        for (const Graph& gSeen : prefixeurPlusDict[bigDegreeList])
         {
             if (are_isomorphic(gWithEdges, gSeen))
             {
@@ -65,8 +72,9 @@ bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int
         if (isGBigPreFixeur)
             continue;
 
+        /*
         bool isGBigFixeur = false;
-        for (const Graph& gSeen : fixeurDict[degreeList])
+        for (const Graph& gSeen : prefixeurPlusDict[degreeList])
         {
             if (are_isomorphic(gWithEdges, gSeen))
             {
@@ -77,6 +85,7 @@ bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int
         if (isGBigFixeur)
             continue;
 
+        */
         return false;
     }
 
@@ -88,9 +97,10 @@ map<vector<int>, vector<Graph>> gen_fixeurs(int nbVert)
 {
     map<vector<int>, vector<Graph>> deglist2Fixeurs;
 
-    map<vector<int>, vector<Graph>> fixeursPlus, prefixeursPlus;
+    map<vector<int>, vector<Graph>> deglist2PrefixeursPlus;
 
     vector<int> degreeList(nbVert+1);
+    vector<int> degreeListPlus(nbVert+2);
 
     stringstream fileName;
     fileName << "Alexgraphedelataille";
@@ -101,6 +111,31 @@ map<vector<int>, vector<Graph>> gen_fixeurs(int nbVert)
         cerr << "Erreur : lancer avant la génération de la même taille \n";
         exit(3);
     }
+
+    stringstream fileNamePlus;
+    fileNamePlus << "Alexfixeursdelataille";
+    fileNamePlus << nbVert+1 << ".txt";
+
+    ifstream filePlus(fileNamePlus.str());
+    int nbPlus;
+    if (filePlus.peek() != EOF)
+    {
+        Graph gLu;
+        filePlus >> nbPlus;
+
+        cerr << "ohlalal : " << nbPlus << endl;
+        for (int i = 0; i < nbPlus; i++)
+        {
+            gLu = Graph(filePlus);
+            for (int u = 0; u < gLu.nbVert; u++)
+                degreeListPlus[u] = gLu.get_neighb(u).size();
+            sort(degreeListPlus.begin(), degreeListPlus.begin()+gLu.nbVert);
+            gLu.compute_hashes(degreeListPlus);
+            deglist2PrefixeursPlus[degreeListPlus].push_back(gLu);
+        }
+    }
+
+
 
     cout << "j'ai généré/trouvé les graphes à " << nbVert << " somets : il y en a " << listGraphs.size() << endl;
 
@@ -135,7 +170,7 @@ map<vector<int>, vector<Graph>> gen_fixeurs(int nbVert)
         if (cptGraph%1000 == 0)
             cerr << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << listGraphs.size() << endl;
 
-        if (is_pre_or_fixeur(g, degreeList, listSubsetsEdges, false, fixeursPlus, prefixeursPlus))
+        if (is_pre_or_fixeur(g, degreeList, listSubsetsEdges, true, deglist2PrefixeursPlus, deglist2PrefixeursPlus))
         {
             for (int i = 0; i < g.nbVert; i++)
                 degreeList[i] = g.get_neighb(i).size();
