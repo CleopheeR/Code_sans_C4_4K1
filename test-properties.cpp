@@ -118,8 +118,8 @@ bool free_C4(const Graph& g, int n)
 
     for (const int v2 : g.get_neighb(v1))
     {
-        if (v1 == v2) //TODO facultatif si graphe simple
-            continue;
+        //if (v1 == v2) //TODO facultatif si graphe simple
+            //continue;
 
 
         for (const int v3 : g.get_neighb(v1))
@@ -129,7 +129,7 @@ bool free_C4(const Graph& g, int n)
 
             for (const int v4 : g.get_neighb(v3))
             {
-                if (v4 == v1 || v4 == v2 || v4 == v3)
+                if (v4 == v1 || v4 == v2)// || v4 == v3)
                     continue;
                 if (are_neighb(g, v4, v2) && !are_neighb(g, v4, v1))
                     return false;

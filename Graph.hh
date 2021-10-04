@@ -21,7 +21,7 @@ class Graph
         }
 
 
-        Graph(const Graph& g)
+        inline Graph(const Graph& g)
         {
             init(g.nbVert, g.nbEdge);
             for (int u = 0; u < g.nbVert; u++)
@@ -39,7 +39,7 @@ class Graph
                 vertsCol = NULL;
         }
 
-        Graph& operator=(const Graph& g)
+        inline Graph& operator=(const Graph& g)
         {
             init(g.nbVert, g.nbEdge);
             for (int u = 0; u < g.nbVert; u++)
