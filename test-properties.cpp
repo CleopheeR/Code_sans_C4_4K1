@@ -116,20 +116,49 @@ bool free_C4(const Graph& g, int n)
 {
     int v1 = n-1;
 
-    for (const int v2 : g.get_neighb(v1))
+    const vector<int> &neighb1 = g.get_neighb(v1);
+    int nbNeighb1 = neighb1.size();
+    for (int i2 = 0; i2 < nbNeighb1; i2++)
     {
+        const int v2 = neighb1[i2];
         //if (v1 == v2) //TODO facultatif si graphe simple
             //continue;
 
 
-        for (const int v3 : g.get_neighb(v1))
+        for (int i3 = i2+1; i3 < nbNeighb1; i3++)
         {
-            if (v3 == v2 || are_neighb(g, v3, v2))
+            const int v3 = neighb1[i3];
+            if (are_neighb(g, v3, v2))
                 continue;
 
+            /*
+            const vector<int> &neighb3 = g.get_neighb(v3);
+            const vector<int> &neighb2 = g.get_neighb(v2);
+
+            if (neighb2.size() < neighb3.size())
+            {
+                for (const int v4 : g.get_neighb(v2))
+                {
+                    if (v4 == v1 || v4 == v3)// || v4 == v3)
+                        continue;
+                    if (are_neighb(g, v4, v3) && !are_neighb(g, v4, v1))
+                        return false;
+                }
+            }
+            else
+            {
+                for (const int v4 : g.get_neighb(v3))
+                {
+                    if (v4 == v1 || v4 == v2)// || v4 == v3)
+                        continue;
+                    if (are_neighb(g, v4, v2) && !are_neighb(g, v4, v1))
+                        return false;
+                }
+            }
+            */
             for (const int v4 : g.get_neighb(v3))
             {
-                if (v4 == v1 || v4 == v2)// || v4 == v3)
+                if (v4 == v1)// || v4 == v2)// || v4 == v3)
                     continue;
                 if (are_neighb(g, v4, v2) && !are_neighb(g, v4, v1))
                     return false;
