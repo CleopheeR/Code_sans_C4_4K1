@@ -167,7 +167,7 @@ vector<Graph> gen_graphs(int nbVert)
 
         cout << "j'ai généré/trouvé les graphes à " << nbVert-1 << " somets : il y en a " << listMinus.size() << endl;
 
-        vector<vector<int>> listSubsetsEdges;
+        vector<vector<int>> listSubsetsEdges = {{}};
         for (int m = 1; m < nbVert; m++)
             gen_subsets(m, nbVert-1, listSubsetsEdges);
 
@@ -175,12 +175,17 @@ vector<Graph> gen_graphs(int nbVert)
         Graph gNew, gWithEdges;
         gNew.init(nbVert, -1);
         gWithEdges.init(nbVert, -1);
+        int nbMaxVertices = 32;
+        bool isTwin[nbMaxVertices];
+        bool isInList[nbMaxVertices];
+
+        int nbComp = 1;//+0*nb_connected_comp(gNew);
         for (const Graph& g : listMinus)
         {
             cptGraph++;
             if (cptGraph%100 == 0)
                 cout << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << listMinus.size() << endl;
-            gNew.copy_and_add_new_vertex(g);//TODO garder le retour, un sommet ?
+            /*gNew.copy_and_add_new_vertex(g);//TODO garder le retour, un sommet ?
 
             int nbComp = 1;//+0*nb_connected_comp(gNew);
             //nbGraphPerComp[nbComp]++;
