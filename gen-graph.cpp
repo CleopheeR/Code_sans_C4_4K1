@@ -142,7 +142,6 @@ vector<Graph> gen_graphs(int nbVert)
     vector<Graph> res;
     vector<int> degreeList;
     degreeList.resize(nbVert+1);
-    //unordered_map<vector<int>, vector<Graph>, vector_hash> deglist2Graphs;
     sparse_hash_map<vector<int>, vector<Graph>> deglist2Graphs;
 
     if (nbVert == 1)
@@ -168,22 +167,9 @@ vector<Graph> gen_graphs(int nbVert)
 
         cout << "j'ai généré/trouvé les graphes à " << nbVert-1 << " somets : il y en a " << listMinus.size() << endl;
 
-        vector<vector<int>> listSubsetsEdges; //TODO compléter
+        vector<vector<int>> listSubsetsEdges;
         for (int m = 1; m < nbVert; m++)
             gen_subsets(m, nbVert-1, listSubsetsEdges);
-
-        /*
-        cout << " DEBUT\n";
-        for (auto &x : listSubsetsEdges)
-        {
-            for (auto& y : x)
-            {
-                cout << y << " ";
-            }
-            cout << endl;
-        }
-        cout << " FIN\n";
-        */
 
         int cptGraph = 0;
         Graph gNew, gWithEdges;
@@ -191,26 +177,10 @@ vector<Graph> gen_graphs(int nbVert)
         gWithEdges.init(nbVert, -1);
         for (const Graph& g : listMinus)
         {
-            /*
-            degreeList.assign(nbVert+1, 0);
-            for (int u = 0; u < nbVert-1; u++)
-            {
-                for (int v = u+1; v < nbVert-1; v++)
-                {
-                    if (are_neighb(g, u,v))
-                    {
-                        degreeList[u]++;
-                        degreeList[v]++;
-                    }
-                }
-            }
-            sort(degreeList.begin(), degreeList.begin()+nbVert-1);
-            */
             cptGraph++;
             if (cptGraph%100 == 0)
                 cout << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << listMinus.size() << endl;
-            //Graph gNew;
-            gNew.copy_and_add_new_vertex(g);//, degreeList); //TODO garder le retour, un sommet ?
+            gNew.copy_and_add_new_vertex(g);//TODO garder le retour, un sommet ?
 
             int nbComp = 1;//+0*nb_connected_comp(gNew);
             //nbGraphPerComp[nbComp]++;
@@ -231,17 +201,13 @@ vector<Graph> gen_graphs(int nbVert)
                 if (check_if_seen_and_add(gNew, degreeList, deglist2Graphs))
                     nbPassedIso++;
             }
-            //TODO ajouter à la liste et dans un dico
 
 
             for (const vector<int> &newEdgesList : listSubsetsEdges)
             {
-                //for (int i = 0; i < nbVert; i++)
-                    //curDegreeList[i] = degreeList[i];
-                //Graph gWithEdges = gNew;
                 gWithEdges.copy_and_add_new_vertex(g);
                 for (int newNeighb : newEdgesList)
-                    gWithEdges.add_edge(nbVert-1, newNeighb-1);//, curDegreeList);
+                    gWithEdges.add_edge(nbVert-1, newNeighb-1);
 
 
                 /*
@@ -266,12 +232,6 @@ vector<Graph> gen_graphs(int nbVert)
 
             }
         }
-        /*
-        for (const auto &inDict : deglist2Graphs)
-            for (const Graph& g : inDict.second)
-                res.push_back(g);
-        */
-
     }
 
     int nbGraph = 0;
@@ -279,13 +239,7 @@ vector<Graph> gen_graphs(int nbVert)
         nbGraph += inDict.second.size();
 
     cout  << "Il y a " << nbGraph << " graphes à " << nbVert << " sommets.\n";
-    /*
-    for (auto & g : res)
-    {
-        cout << "hihi\n";
-        g.print();
-    }
-    */
+
     stringstream fileName;
     fileName << "Alexgraphedelataille";
     fileName << nbVert << ".txt";

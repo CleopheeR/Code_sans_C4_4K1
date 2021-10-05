@@ -25,8 +25,6 @@ bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int
         if (newEdgesList.size() == g.nbVert)
             continue;
 
-        //for (int i = 0; i < g.nbVert; i++)
-        //    curDegreeList[i] = degreeList[i];
         gWithEdges.copy_and_add_new_vertex(g); //TODO garder le retour, un sommet ?
         for (int u : newEdgesList)
             gWithEdges.add_edge(gWithEdges.nbVert-1, u-1);
@@ -55,9 +53,6 @@ bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int
 
         bool isGBigPreFixeur = false;
 
-        //TODO ici calculer degreelist et hash
-
-        //TODO compute hash!
         for (int i = 0; i < gWithEdges.nbVert; i++)
             bigDegreeList[i] = gWithEdges.get_neighb(i).size();
         sort(bigDegreeList.begin(), bigDegreeList.begin()+gWithEdges.nbVert);
@@ -74,20 +69,6 @@ bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int
         if (isGBigPreFixeur)
             continue;
 
-        /*
-        bool isGBigFixeur = false;
-        for (const Graph& gSeen : prefixeurPlusDict[degreeList])
-        {
-            if (are_isomorphic(gWithEdges, gSeen))
-            {
-                isGBigFixeur = true;
-                break;
-            }
-        }
-        if (isGBigFixeur)
-            continue;
-
-        */
         return false;
     }
 
@@ -150,24 +131,6 @@ sparse_hash_map<vector<int>, vector<Graph>> gen_fixeurs(int nbVert)
     int cptGraph = 0;
     for (Graph& g : listGraphs)
     {
-        //degreeList.assign(g.nbVert, 0);
-        /*
-           for (int u = 0; u < g.nbVert; u++)
-           {
-           for (int v = u+1; v < g.nbVert; v++)
-           {
-           if (are_neighb(g, u,v))
-           {
-           degreeList[u]++;
-           degreeList[v]++;
-           }
-           }
-
-           }
-           sort(degreeList.begin(), degreeList.begin()+g.nbVert);
-           */
-
-
         cptGraph++;
         if (cptGraph%1000 == 0)
             cerr << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << listGraphs.size() << endl;
@@ -192,7 +155,6 @@ sparse_hash_map<vector<int>, vector<Graph>> gen_fixeurs(int nbVert)
     fixeursFileName << nbVert << ".txt";
 
     save_to_file(fixeursFileName.str(), deglist2Fixeurs, nbGraph);
-    //TODO change
 
     return deglist2Fixeurs;
 }

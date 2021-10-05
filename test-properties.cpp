@@ -22,33 +22,6 @@ int indexInIsoOrder[nbMaxVertices];
 vector<int> listColours1(nbMaxVertices), listColours2(nbMaxVertices);
 
 
-
-int my_hash(int colours[], const vector<int> &adjList, int u)
-{
-
-    int tmpVals[nbMaxVertices];
-    for (int i = 0; i < adjList.size(); i++)
-        tmpVals[i] = colours[adjList[i]];
-    sort(tmpVals, tmpVals+adjList.size());
-
-    int newCol = 0;
-    for (int i = 0; i < adjList.size(); i++)
-    {
-        newCol ^= (newCol << 5) + (newCol >> 2) + tmpVals[i];
-        /*
-        //newCol ^=colours[adjList[i]];
-        int curCol = colours[adjList[i]];
-        //newCol ^= curCol;
-
-        if (curCol%2)
-            newCol ^= (curCol << 16);
-        else
-            newCol ^= curCol;
-        */
-    }
-    return newCol;
-}
-
 int nb_connected_comp(const Graph& g)
 {
     int nbComp = 0;
@@ -131,32 +104,7 @@ bool free_C4(const Graph& g, int n)
             if (are_neighb(g, v3, v2))
                 continue;
 
-            /*
-            const vector<int> &neighb3 = g.get_neighb(v3);
-            const vector<int> &neighb2 = g.get_neighb(v2);
-
-            if (neighb2.size() < neighb3.size())
-            {
-                for (const int v4 : g.get_neighb(v2))
-                {
-                    if (v4 == v1 || v4 == v3)// || v4 == v3)
-                        continue;
-                    if (are_neighb(g, v4, v3) && !are_neighb(g, v4, v1))
-                        return false;
-                }
-            }
-            else
-            {
-                for (const int v4 : g.get_neighb(v3))
-                {
-                    if (v4 == v1 || v4 == v2)// || v4 == v3)
-                        continue;
-                    if (are_neighb(g, v4, v2) && !are_neighb(g, v4, v1))
-                        return false;
-                }
-            }
-            */
-            for (const int v4 : g.get_neighb(v3))
+           for (const int v4 : g.get_neighb(v3))
             {
                 if (v4 == v1)// || v4 == v2)// || v4 == v3)
                     continue;
@@ -196,32 +144,7 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i)
     for (int match : v1ToV2PossibleMatches[v1])
     {
         if (isMatched[match])
-            continue;
-        v1ToV2Matches[v1] = match;
-        isMatched[match] = true;
-
-        int u2 = match;
-        int nbNeighb = g1.get_neighb(u1).size();
-        memset(checkeVoisins, 0, g1.nbVert);
-
-
-        int nbGreater = 0;
-        for (int x : g1.get_neighb(u1))
-        {
-            if (indexInIsoOrder[x] <= iU1 || v1ToV2PossibleMatches[x].size() == 1)
-            {
-                assert(!checkeVoisins[v1ToV2Matches[x]]);
-                checkeVoisins[v1ToV2Matches[x]] = true;
-            }
-            else
-                nbGreater++;
-
-        }
-
-
-        for (int v2 : g2.get_neighb(u2))
-        {
-            if (!checkeVoisins[v2])
+           if (!checkeVoisins[v2])
             {
                 if (isMatched[v2])
                     nbGreater = -17;
