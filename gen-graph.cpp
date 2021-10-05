@@ -186,6 +186,9 @@ vector<Graph> gen_graphs(int nbVert)
         */
 
         int cptGraph = 0;
+        Graph gNew, gWithEdges;
+        gNew.init(nbVert, -1);
+        gWithEdges.init(nbVert, -1);
         for (const Graph& g : listMinus)
         {
             /*
@@ -206,7 +209,7 @@ vector<Graph> gen_graphs(int nbVert)
             cptGraph++;
             if (cptGraph%100 == 0)
                 cout << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << listMinus.size() << endl;
-            Graph gNew;
+            //Graph gNew;
             gNew.copy_and_add_new_vertex(g);//, degreeList); //TODO garder le retour, un sommet ?
 
             int nbComp = 1;//+0*nb_connected_comp(gNew);
@@ -235,7 +238,8 @@ vector<Graph> gen_graphs(int nbVert)
             {
                 //for (int i = 0; i < nbVert; i++)
                     //curDegreeList[i] = degreeList[i];
-                Graph gWithEdges = gNew;
+                //Graph gWithEdges = gNew;
+                gWithEdges.copy_and_add_new_vertex(g);
                 for (int newNeighb : newEdgesList)
                     gWithEdges.add_edge(nbVert-1, newNeighb-1);//, curDegreeList);
 

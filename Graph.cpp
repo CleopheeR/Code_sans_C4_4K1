@@ -36,17 +36,21 @@ void Graph::init(int n, int m)
     vertsCol = NULL;
 }
 
-const vector<int>& Graph::get_neighb(int u) const
-{
-    return adjListGlobal[adjMat[u]];
-}
+
 
 void Graph::copy_and_add_new_vertex(const Graph& g)//, vector<int> &degreeList)
 {
-    init(g.nbVert+1, g.nbEdge);
+    if (adjMat == NULL)
+        init(g.nbVert+1, g.nbEdge);
+    else
+    {
+        nbVert = g.nbVert+1;
+        nbEdge = g.nbEdge;
+    }
 
     for (int u = 0; u < g.nbVert; u++)
         adjMat[u] = g.adjMat[u];
+    adjMat[g.nbVert] = 0;
 
 
     //for (int u = g.nbVert; u > 0; u--)
@@ -57,17 +61,21 @@ void Graph::copy_and_add_new_vertex(const Graph& g)//, vector<int> &degreeList)
 void Graph::add_edge(int u, int v)//, vector<int> &degreeList)
 {
     nbEdge++;
+
+    adjMat[u] ^= (1<<v);
+    adjMat[v] ^= (1<<u);
+
+    //TODO bitwise xor vs bitwise or
+    /*
     const vector<int> &adjListU = get_neighb(u);
     const vector<int> &adjListV = get_neighb(v);
     int nbNeighbU = adjListU.size();
     int nbNeighbV = adjListV.size();
 
 
-    adjMat[u] |= (1<<v);
-    adjMat[v] |= (1<<u);
-
     int n1 = min(nbNeighbU, nbNeighbV);
     int n2 = max(nbNeighbU, nbNeighbV);
+    */
 
     /*
     int i = 0;

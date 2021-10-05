@@ -16,6 +16,9 @@ bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int
 {
     if (bigDegreeList.empty())
         bigDegreeList.resize(g.nbVert+2);
+    static Graph gWithEdges;
+    if (gWithEdges.adjMat == NULL)
+        gWithEdges.init(g.nbVert+1, -1);
     bool printDebug = false;
     for (const vector<int> &newEdgesList : listSubsetsEdges)
     {
@@ -24,7 +27,6 @@ bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int
 
         //for (int i = 0; i < g.nbVert; i++)
         //    curDegreeList[i] = degreeList[i];
-        Graph gWithEdges;
         gWithEdges.copy_and_add_new_vertex(g); //TODO garder le retour, un sommet ?
         for (int u : newEdgesList)
             gWithEdges.add_edge(gWithEdges.nbVert-1, u-1);
