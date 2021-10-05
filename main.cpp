@@ -2,6 +2,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <fstream>
 //#include <map>
 
 #include "Graph.hh"
@@ -70,6 +71,24 @@ int main(int argc, char* argv[])
          gen_fixeurs(nbVert);
 
 
+
+
+    }
+
+    else if (testOrGen == 'S') //statistics
+    {
+        stringstream fileName;
+        fileName << "Alexgraphedelataille";
+        fileName << nbVert << ".txt";
+        vector<Graph> list = load_from_file(fileName.str());
+
+        vector<int> cpt((nbVert*nbVert)/2+1, 0);
+        for (const Graph &g : list)
+            cpt[g.nbEdge]++;
+
+        for (int i = 0; i < cpt.size(); i++)
+            if (cpt[i] != 0)
+                cout << i << ": " << cpt[i] << endl;
 
 
     }
