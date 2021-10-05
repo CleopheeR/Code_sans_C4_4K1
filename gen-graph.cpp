@@ -132,6 +132,88 @@ void save_to_file(const string &filename, const sparse_hash_map<vector<int>, vec
 }
 
 
+void gen_twin_list(const Graph &g, vector<vector<int>> &twinLists, bool* isTwin, int nbVert)
+{
+    twinLists.clear();
+    memset(isTwin, 0, nbVert-1);
+
+    int lastTwin = -1;
+    for (int v1 = 0; v1 < nbVert-1; v1++)
+    {
+        if (isTwin[v1])
+            continue;
+        for (int v2 : g.get_neighb(v1))
+        {
+            if (v2 > v1 && (g.adjMat[v1] ^ g.adjMat[v2]) == ((1<<v1)^(1<<v2)))
+            {
+                if (lastTwin != v1)
+                {
+                    lastTwin = v1;
+                    twinLists.push_back({v1, v2});
+                }
+                else
+                {
+                    twinLists.back().push_back(v2);
+                }
+                isTwin[v2] = true;
+                lastTwin = v1;
+            }
+        }
+    }
+
+}
+
+
+void gen_twin_list2(const Graph &g, vector<vector<int>> &twinLists, bool* isTwin, int nbVert)
+{
+    for (int i = 0; i < nbVert; i++)
+        isTwin[i] = false;
+
+    int lastTwin = -1;
+    for (int v1 = 0; v1 < nbVert-1; v1++)
+    {
+        if (isTwin[v1])
+            continue;
+        for (int v2 =v1+1; v2 < nbVert-1; v2++)
+        {
+            if (g.adjMat[v1] == g.adjMat[v2])// == ((1<<v1)^(1<<v2)))
+            {
+                if (lastTwin != v1)
+                {
+                    lastTwin = v1;
+                    twinLists.push_back({v1, v2});
+                }
+                else
+                {
+                    twinLists.back().push_back(v2);
+                }
+                isTwin[v2] = true;
+                lastTwin = v1;
+            }
+        }
+    }
+
+}
+
+bool can_discard_edgelist(const vector<int> &newEdgesList, const vector<vector<int>> &twinLists, bool* isInList, int nbVert)
+{
+    memset(isInList, 0, nbVert-1);
+    for (int newNeighb : newEdgesList)
+        isInList[newNeighb] = true;
+
+    for (const vector<int> &curTwins : twinLists)
+    {
+        for (int i = 1; i < curTwins.size(); i++)
+        {
+            if (!isInList[curTwins[i-1]] && isInList[curTwins[i]])
+                return true;
+        }
+    }
+
+    return false;
+}
+
+
 vector<Graph> gen_graphs(int nbVert)
 {
     int nbGraphPerComp[5] = {0,0,0,0,0};
@@ -212,62 +294,26 @@ vector<Graph> gen_graphs(int nbVert)
             */
 
 
-            twinLists.clear();
-            for (int i = 0; i < nbVert; i++)
-                isTwin[i] = false;
+            gen_twin_list(g, twinLists, isTwin, nbVert);
+            gen_twin_list2(g, twinLists, isTwin, nbVert);
+            //for (int i = 0; i < nbVert; i++)
+            //    isTwin[i] = false;
 
-            int lastTwin = -1;
-            for (int v1 = 0; v1 < nbVert-1; v1++)
+
+
+            //for (const vector<int> &newEdgesList : listSubsetsEdges)
+            for (int code = 0; code < (1<< (nbVert-1)); code++)
             {
-                if (isTwin[v1])
-                    continue;
-                for (int v2 : g.get_neighb(v1))
-                {
-                    if (v2 > v1 && (g.adjMat[v1] ^ g.adjMat[v2]) == ((1<<v1)^(1<<v2)))
-                    {
-                        if (lastTwin != v1)
-                        {
-                            lastTwin = v1;
-                            twinLists.push_back({v1, v2});
-                        }
-                        else
-                        {
-                            twinLists.back().push_back(v2);
-                        }
-                        isTwin[v2] = true;
-                        lastTwin = v1;
-                    }
-                }
-            }
-
-
-            for (const vector<int> &newEdgesList : listSubsetsEdges)
-            {
-                for (int i = 0; i < nbVert; i++)
-                    isInList[i] = false;
+                const vector<int> &newEdgesList = adjListGlobal[code];
+                //for (int i = 0; i < nbVert; i++)
+                    //isInList[i] = false;
+                    //
+                    //
                 gWithEdges.copy_and_add_new_vertex(g);
                 for (int newNeighb : newEdgesList)
-                {
-                    gWithEdges.add_edge(nbVert-1, newNeighb-1);
-                    isInList[newNeighb-1] = true;
-                }
+                    gWithEdges.add_edge(nbVert-1, newNeighb);
 
-                bool refuseBecauseTwins = false;
-                for (const vector<int> &curTwins : twinLists)
-                {
-                    for (int i = 1; i < curTwins.size(); i++)
-                    {
-                        if (isInList[curTwins[i]] && !isInList[curTwins[i-1]])
-                        {
-                                refuseBecauseTwins = true;
-                            break;
-                        }
-
-                    }
-                    if (refuseBecauseTwins)
-                        break;
-                }
-
+                bool refuseBecauseTwins = can_discard_edgelist(newEdgesList, twinLists, isInList, nbVert);
                 if (refuseBecauseTwins)
                 {
                    //cerr << "lol YEAH\n";
