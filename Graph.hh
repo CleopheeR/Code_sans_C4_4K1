@@ -4,9 +4,36 @@
 #include <fstream>
 #include <iostream>
 #include <cassert>
+#include <vector>
+
+using namespace std;
 
 #ifndef DEF_GRAPH_HH
 #define DEF_GRAPH_HH
+
+extern vector<int> *adjListGlobal;
+
+inline void init_adjListGlobal(int n)
+{
+    adjListGlobal = (vector<int>*) malloc(sizeof(*adjListGlobal)*((1<<n)));
+
+    for (int i = 0; i < (1<<n); i++)
+    {
+        vector<int> cur;
+        for (int j = 0; j < n; j++)
+        {
+            if (i & (1<<j))
+                cur.push_back(j);
+        }
+        swap(cur, adjListGlobal[i]);
+    }
+}
+
+inline void free_adjListGlobal(void)
+{
+    free(adjListGlobal);
+}
+
 
 
 #define are_neighb(g, u, v) (g.adjMat[u]&(1<<v))
@@ -98,7 +125,11 @@ class Graph
         int *adjMat;
         int *vertsCol;
 
-        const vector<int>& get_neighb(int u) const;
+        //const vector<int>& get_neighb(int u) const;
+       inline const vector<int>& get_neighb(int u) const
+        {
+            return adjListGlobal[adjMat[u]];
+        }
 
         void copy_and_add_new_vertex(const Graph&);//, vector<int> &degreeList); //TODO ou bien renvoie un Graphe autre
         void add_edge(int u, int v);//, vector<int> &degreeeList);
@@ -113,8 +144,8 @@ class Graph
 
 
 
-void init_adjListGlobal(int n);
-void free_adjListGlobal(void);
+//void init_adjListGlobal(int n);
+//void free_adjListGlobal(void);
 
 #endif
 
