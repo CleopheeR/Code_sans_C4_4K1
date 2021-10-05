@@ -144,6 +144,33 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i)
     for (int match : v1ToV2PossibleMatches[v1])
     {
         if (isMatched[match])
+            continue;
+        v1ToV2Matches[v1] = match;
+        isMatched[match] = true;
+
+        int u2 = match;
+        int nbNeighb = g1.get_neighb(u1).size();
+        memset(checkeVoisins, 0, g1.nbVert);
+
+
+        int nbGreater = 0;
+        for (int x : g1.get_neighb(u1))
+        {
+            if (indexInIsoOrder[x] <= iU1 || v1ToV2PossibleMatches[x].size() == 1)
+            {
+                assert(!checkeVoisins[v1ToV2Matches[x]]);
+                checkeVoisins[v1ToV2Matches[x]] = true;
+            }
+            else
+                nbGreater++;
+
+        }
+
+
+        for (int v2 : g2.get_neighb(u2))
+        {
+            if (!checkeVoisins[v2])
+
            if (!checkeVoisins[v2])
             {
                 if (isMatched[v2])
