@@ -13,27 +13,6 @@ using namespace std;
 
 extern vector<int> *adjListGlobal;
 
-inline void init_adjListGlobal(int n)
-{
-    adjListGlobal = (vector<int>*) malloc(sizeof(*adjListGlobal)*((1<<n)));
-
-    for (int i = 0; i < (1<<n); i++)
-    {
-        vector<int> cur;
-        for (int j = 0; j < n; j++)
-        {
-            if (i & (1<<j))
-                cur.push_back(j);
-        }
-        swap(cur, adjListGlobal[i]);
-    }
-}
-
-inline void free_adjListGlobal(void)
-{
-    free(adjListGlobal);
-}
-
 
 
 #define are_neighb(g, u, v) (g.adjMat[u]&(1<<v))
@@ -144,8 +123,8 @@ class Graph
 
 
 
-//void init_adjListGlobal(int n);
-//void free_adjListGlobal(void);
+void init_adjListGlobal(int n);
+void free_adjListGlobal(void);
 
 #endif
 

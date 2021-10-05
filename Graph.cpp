@@ -7,26 +7,6 @@
 
 vector<int> *adjListGlobal;
 
-void init_adjListGlobal(int n)
-{
-    adjListGlobal = (vector<int>*) malloc(sizeof(*adjListGlobal)*((1<<n)));
-
-    for (int i = 0; i < (1<<n); i++)
-    {
-        vector<int> cur;
-        for (int j = 0; j < n; j++)
-        {
-            if (i & (1<<j))
-                cur.push_back(j);
-        }
-        swap(cur, adjListGlobal[i]);
-    }
-}
-
-void free_adjListGlobal(void)
-{
-    free(adjListGlobal);
-}
 
 void Graph::init(int n, int m)
 {
@@ -199,3 +179,26 @@ void Graph::compute_hashes(vector<int> &degreeList)
     }
     degreeList.back() = xorAll;
 }
+
+void init_adjListGlobal(int n)
+{
+    adjListGlobal = (vector<int>*) malloc(sizeof(*adjListGlobal)*((1<<n)));
+
+    for (int i = 0; i < (1<<n); i++)
+    {
+        vector<int> cur;
+        for (int j = 0; j < n; j++)
+        {
+            if (i & (1<<j))
+                cur.push_back(j);
+        }
+        swap(cur, adjListGlobal[i]);
+    }
+}
+
+void free_adjListGlobal(void)
+{
+    free(adjListGlobal);
+}
+
+
