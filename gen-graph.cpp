@@ -144,6 +144,8 @@ vector<Graph> gen_graphs(int nbVert)
     degreeList.resize(nbVert+1);
     sparse_hash_map<vector<int>, vector<Graph>> deglist2Graphs;
 
+    vector<vector<int>> twinLists;
+
     if (nbVert == 1)
     {
         Graph g;
@@ -207,12 +209,73 @@ vector<Graph> gen_graphs(int nbVert)
                     nbPassedIso++;
             }
 
+            */
+
+
+            twinLists.clear();
+            for (int i = 0; i < nbVert; i++)
+                isTwin[i] = false;
+
+            int lastTwin = -1;
+            for (int v1 = 0; v1 < nbVert-1; v1++)
+            {
+                if (isTwin[v1])
+                    continue;
+                for (int v2 : g.get_neighb(v1))
+                {
+                    if (v2 > v1 && (g.adjMat[v1] ^ g.adjMat[v2]) == ((1<<v1)^(1<<v2)))
+                    {
+                        if (lastTwin != v1)
+                        {
+                            lastTwin = v1;
+                            twinLists.push_back({v1, v2});
+                        }
+                        else
+                        {
+                            twinLists.back().push_back(v2);
+                        }
+                        isTwin[v2] = true;
+                        lastTwin = v1;
+                    }
+                }
+            }
+
 
             for (const vector<int> &newEdgesList : listSubsetsEdges)
             {
+                for (int i = 0; i < nbVert; i++)
+                    isInList[i] = false;
                 gWithEdges.copy_and_add_new_vertex(g);
                 for (int newNeighb : newEdgesList)
+                {
                     gWithEdges.add_edge(nbVert-1, newNeighb-1);
+                    isInList[newNeighb-1] = true;
+                }
+
+                bool refuseBecauseTwins = false;
+                for (const vector<int> &curTwins : twinLists)
+                {
+                    for (int i = 1; i < curTwins.size(); i++)
+                    {
+                        if (isInList[curTwins[i]] && !isInList[curTwins[i-1]])
+                        {
+                                refuseBecauseTwins = true;
+                            break;
+                        }
+
+                    }
+                    if (refuseBecauseTwins)
+                        break;
+                }
+
+                if (refuseBecauseTwins)
+                {
+                   //cerr << "lol YEAH\n";
+                    continue;
+                }
+
+
+
 
 
                 /*
