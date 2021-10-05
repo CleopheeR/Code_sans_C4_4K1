@@ -788,7 +788,7 @@ public:
     typedef T*             pointer;
     typedef T&             reference;
 
-    explicit Two_d_iterator(row_it curr) : row_current(curr), col_current(0)
+    explicit Two_d_iterator(const row_it &curr) : row_current(curr), col_current(0)
     {
         if (row_current && !row_current->is_marked())
         {
@@ -797,7 +797,7 @@ public:
         }
     }
 
-    explicit Two_d_iterator(row_it curr, col_it col) : row_current(curr), col_current(col)
+    explicit Two_d_iterator(const row_it &curr, col_it col) : row_current(curr), col_current(col)
     {
         assert(col);
     }
@@ -839,7 +839,7 @@ public:
         }
     }
 
-    friend size_t operator-(iterator l, iterator f)
+    friend size_t operator-(const iterator &l, iterator f)
     {
         if (f.row_current->is_marked())
             return 0;
