@@ -37,7 +37,7 @@ class Graph
 
             if (g.vertsCol)
             {
-                vertsCol = (int*) malloc(g.nbVert*sizeof(int));
+                vertsCol = (char*) malloc(g.nbVert*sizeof(char));
                 for (int u = 0; u < g.nbVert; u++)
                     vertsCol[u] = g.vertsCol[u];
             }
@@ -55,7 +55,7 @@ class Graph
 
             if (g.vertsCol)
             {
-                vertsCol = (int*) malloc(g.nbVert*sizeof(int));
+                vertsCol = (char*) malloc(g.nbVert*sizeof(char));
                 for (int u = 0; u < g.nbVert; u++)
                     vertsCol[u] = g.vertsCol[u];
             }
@@ -102,7 +102,7 @@ class Graph
         int nbEdge;
 
         int *adjMat;
-        int *vertsCol;
+        char *vertsCol;
 
         //const vector<int>& get_neighb(int u) const;
        inline const vector<int>& get_neighb(int u) const
@@ -116,7 +116,7 @@ class Graph
         void remove_last_edge(int u, int v, vector<int> &degreeeList);
 
 
-        void compute_hashes(vector<int> &degreeeList);
+        void compute_hashes(vector<char> &degreeeList);
 
         void print(void) const;
         //TODO copie...

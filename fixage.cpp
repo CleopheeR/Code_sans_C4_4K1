@@ -90,7 +90,7 @@ bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int
         for (int i = 0; i < gWithEdges.nbVert; i++)
             bigDegreeList[i] = gWithEdges.get_neighb(i).size();
         sort(bigDegreeList.begin(), bigDegreeList.begin()+gWithEdges.nbVert);
-        gWithEdges.compute_hashes(bigDegreeList);
+        //gWithEdges.compute_hashes(bigDegreeList);
         for (const Graph& gSeen : prefixeurPlusDict[bigDegreeList])
         {
             if (are_isomorphic(gWithEdges, gSeen))
