@@ -7,7 +7,7 @@
 
 #include "Graph.hh"
 #include "gen-graph.hh"
-#include "fixage.hh"
+//#include "fixage.hh"
 #include "test-properties.hh"
 #include "compare_with_cleophee.hh"
 //#include <cstdlib>
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     else if (testOrGen == 'F')
     {
         init_adjListGlobal(nbVert+1);
-         gen_fixeurs(nbVert);
+         //gen_fixeurs(nbVert);
 
 
 

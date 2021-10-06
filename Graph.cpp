@@ -166,7 +166,7 @@ inline int my_hash3(int colours[], const vector<int> &adjList)
         //newCol ^=colours[adjList[i]];
         int curCol = colours[adjList[i]];
         if (curCol%2)
-            newCol ^= (curCol << 16);
+            newCol ^= (curCol << 4);
         else
             newCol ^= curCol;
 
@@ -174,7 +174,7 @@ inline int my_hash3(int colours[], const vector<int> &adjList)
     return newCol;
 }
 
-void Graph::compute_hashes(vector<int> &degreeList)
+void Graph::compute_hashes(vector<char> &degreeList)
 {
     int cols[NBMAXVERT], prevCols[NBMAXVERT];
     for (int u = 0; u < nbVert; u++)
@@ -184,11 +184,11 @@ void Graph::compute_hashes(vector<int> &degreeList)
     {
         swap(cols, prevCols);
         for (int u = 0; u < nbVert; u++)
-            cols[u] = my_hash2(prevCols, get_neighb(u));
+            cols[u] = my_hash3(prevCols, get_neighb(u));
 
     }
     if (vertsCol == NULL)
-        vertsCol = (int*) malloc(nbVert*sizeof(int));
+        vertsCol = (char*) malloc(nbVert*sizeof(char));
     int xorAll = 0;
     for (int u = 0; u < nbVert; u++)
     {

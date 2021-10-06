@@ -10,8 +10,8 @@
 namespace std
 {
     template<>
-struct hash<vector<int>> {
-    inline size_t operator()(const vector<int> &v) const {
+struct hash<vector<char>> {
+    inline size_t operator()(const vector<char> &v) const {
         int ret = 0;
         //int nbElem = v.size();
     //for (int i = 0; i < nbElem; i++)
@@ -30,13 +30,13 @@ using spp::sparse_hash_map;
 vector<Graph> gen_graphs(int nbVert);
 
 //bool check_if_seen_and_add(const Graph& g, unordered_map<vector<int>, vector<Graph>, vector_hash> &dico);
-bool check_if_seen_and_add(Graph& g, vector<int> &degreeList, sparse_hash_map<vector<int>, vector<Graph>> &dico);
+bool check_if_seen_and_add(Graph& g, vector<int> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico);
 
 
 vector<Graph> load_from_file(const string &filename);
 
 //void save_to_file(const string &filename, const unordered_map<vector<int>, vector<Graph>, vector_hash> &graphList, int nbGraph);
-void save_to_file(const string &filename, const sparse_hash_map<vector<int>, vector<Graph>> &graphList, int nbGraph);
+void save_to_file(const string &filename, const sparse_hash_map<vector<char>, vector<Graph>> &graphList, int nbGraph);
 
 
 void gen_subsets(int k, int n, vector<vector<int>> &listRes);

@@ -10,6 +10,8 @@
 #include <cstring>
 #include <algorithm>
 
+#include <bitset>
+
 
 #include "sparsepp/spp.h"
 #include "Graph.hh"
@@ -51,7 +53,7 @@ void gen_subsets(int k, int n, vector<vector<int>> &listRes)
 
 
 //bool check_if_seen_and_add(const Graph& g, unordered_map<vector<int>, vector<Graph>, vector_hash> &dico)
-bool check_if_seen_and_add(Graph& g, vector<int> &degreeList, sparse_hash_map<vector<int>, vector<Graph>> &dico)
+bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico)
 {
     for (const Graph& gSeen : dico[degreeList])
     {
@@ -102,7 +104,7 @@ vector<Graph> load_from_file(const string &filename)
 }
 
 //void save_to_file(const string &filename, const unordered_map<vector<int>, vector<Graph>, vector_hash> &graphList, int nbGraph)
-void save_to_file(const string &filename, const sparse_hash_map<vector<int>, vector<Graph>> &graphList, int nbGraph)
+void save_to_file(const string &filename, const sparse_hash_map<vector<char>, vector<Graph>> &graphList, int nbGraph)
 {
     vector<Graph> res;
     ofstream file(filename);
@@ -222,9 +224,9 @@ vector<Graph> gen_graphs(int nbVert)
     int nbPassedIso = 0;
     int nbGraphTried = 0;
     vector<Graph> res;
-    vector<int> degreeList;
+    vector<char> degreeList;
     degreeList.resize(nbVert+1);
-    sparse_hash_map<vector<int>, vector<Graph>> deglist2Graphs;
+    sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs;
 
     long long sizeTotalTwinVector = 0;
     vector<long long> twinLists;
@@ -268,7 +270,7 @@ vector<Graph> gen_graphs(int nbVert)
     {
         Graph g;
         g.init(1, 0);
-        vector<int> vv(1, 0);
+        vector<char> vv(1, 0);
         deglist2Graphs[vv].push_back(g);
     }
 
@@ -367,6 +369,7 @@ vector<Graph> gen_graphs(int nbVert)
         cerr << nbFreeGraphPerComp[i] << " ";
     cerr << endl;
     */
+
     return res;
 
 }
