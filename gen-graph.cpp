@@ -278,6 +278,48 @@ inline bool can_discard_edgelist(const vector<long long> &twinLists2, int *isTwi
 }
 
 
+inline void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert)
+{
+    pathList.clear();
+
+    int puissV1 = 1, puissV2;
+    for (int v1 = 0; v1 < nbVert-2; v1++)
+    {
+        puissV2 = puissV1;
+        int adj1 = g.adjMat[v1];
+        for (int v2 = v1+1; v2 < nbVert-1; v2++)
+        {
+            puissV2 *= 2;
+            int adj2 = g.adjMat[v2];
+
+            if ((adj1 & puissV2) == 0 && (adj2 & puissV1) == 0)
+            {
+                int commonAdj = adj1 & adj2;
+                if (commonAdj)
+                {
+                    long long truc = puissV1^puissV2;
+                    truc = (truc << 32) + commonAdj;
+                    pathList.push_back(truc);
+                }
+            }
+        }
+        puissV1 *= 2;
+    }
+}
+
+inline bool detect_C4(const vector<long long> &pathList, int code)
+{
+    for (long long p2 : pathList)
+    {
+        int uv = p2 >> 32;
+        int commonAdj = p2;
+
+        if (((code & uv) == uv) && ((code&commonAdj) != commonAdj))
+            return true;
+    }
+    return false;
+}
+
 vector<Graph> gen_graphs(int nbVert)
 {
     const int puissNewVert = (1<<(nbVert-1));
@@ -296,6 +338,8 @@ vector<Graph> gen_graphs(int nbVert)
     vector<vector<int>> twinLists;
     vector<long long> twinLists2;
     twinLists2.reserve(NBMAXVERT*NBMAXVERT);
+    vector<long long> pathLength2;
+    pathLength2.reserve(NBMAXVERT);
 
     const int nbEdgeCombi = (1<<(nbVert-1));
 
@@ -394,6 +438,11 @@ vector<Graph> gen_graphs(int nbVert)
             twinLists2.clear();
             gen_twin_list(g, twinLists2, nbVert);
             sizeTotalTwinVector += twinLists2.size();
+
+
+            gen_P2_list(g, pathLength2, nbVert);
+
+
             //gen_twin_list2(g, twinLists2, nbVert);
             //for (int i = 0; i < nbVert; i++)
             //    isTwin[i] = false;
@@ -413,6 +462,11 @@ vector<Graph> gen_graphs(int nbVert)
                    //cerr << "lol YEAH\n";
                     continue;
                 }
+
+
+                bool refuseBecauseC4 = detect_C4(pathLength2, code);
+                if (refuseBecauseC4)
+                    continue;
                 /*
                 gWithEdges.copy_and_add_new_vertex(g);
                 for (int newNeighb : newEdgesList)
@@ -434,7 +488,7 @@ vector<Graph> gen_graphs(int nbVert)
                  * nbComp = nb_connected_comp(gWithEdges);
                 nbGraphPerComp[nbComp]++;*/
                 nbGraphTried++;
-                if (nbComp && free_C4_O4(gWithEdges, nbVert))
+                if (nbComp && free_O4(gWithEdges, nbVert))
                 {
                     for (int i = 0; i < gWithEdges.nbVert; i++)
                         degreeList[i] = gWithEdges.get_neighb(i).size();
