@@ -123,8 +123,7 @@ void Graph::print(void) const
 
 inline int my_hash2(int colours[], const vector<int> &adjList)
 {
-    const int nbMaxVertices = 30;
-    int tmpVals[nbMaxVertices];
+    int tmpVals[NBMAXVERT];
     for (int i = 0; i < adjList.size(); i++)
         tmpVals[i] = colours[adjList[i]];
     sort(tmpVals, tmpVals+adjList.size());
@@ -157,8 +156,7 @@ inline int my_hash3(int colours[], const vector<int> &adjList)
 
 void Graph::compute_hashes(vector<int> &degreeList)
 {
-    const int nbMaxVertices = 30;
-    int cols[nbMaxVertices], prevCols[nbMaxVertices];
+    int cols[NBMAXVERT], prevCols[NBMAXVERT];
     for (int u = 0; u < nbVert; u++)
         cols[u] = get_neighb(u).size();
 

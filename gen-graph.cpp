@@ -228,6 +228,11 @@ vector<Graph> gen_graphs(int nbVert)
 
     vector<vector<int>> twinLists;
 
+    bool isTwin[NBMAXVERT];
+    bool isInList[NBMAXVERT];
+
+
+
     if (nbVert == 1)
     {
         Graph g;
@@ -259,10 +264,6 @@ vector<Graph> gen_graphs(int nbVert)
         Graph gNew, gWithEdges;
         gNew.init(nbVert, -1);
         gWithEdges.init(nbVert, -1);
-        int nbMaxVertices = 32;
-        bool isTwin[nbMaxVertices];
-        bool isInList[nbMaxVertices];
-
         int nbComp = 1;//+0*nb_connected_comp(gNew);
         for (const Graph& g : listMinus)
         {

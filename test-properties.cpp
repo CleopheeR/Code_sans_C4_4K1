@@ -8,18 +8,17 @@
 #include "Graph.hh"
 
 
-const int nbMaxVertices = 63;
 
-bool isMatched[nbMaxVertices];
-bool checkeVoisins[nbMaxVertices];
-vector<vector<int>> v1ToV2PossibleMatches(nbMaxVertices);
-vector<int> v1ToV2Matches(nbMaxVertices);
+bool isMatched[NBMAXVERT];
+bool checkeVoisins[NBMAXVERT];
+vector<vector<int>> v1ToV2PossibleMatches(NBMAXVERT);
+vector<int> v1ToV2Matches(NBMAXVERT);
 bool firstTime = true;
 
-int vertIsoOrderToExplore[nbMaxVertices];
-int indexInIsoOrder[nbMaxVertices];
+int vertIsoOrderToExplore[NBMAXVERT];
+int indexInIsoOrder[NBMAXVERT];
 
-vector<int> listColours1(nbMaxVertices), listColours2(nbMaxVertices);
+vector<int> listColours1(NBMAXVERT), listColours2(NBMAXVERT);
 
 
 int nb_connected_comp(const Graph& g)
@@ -199,8 +198,8 @@ bool are_isomorphic(const Graph &g1, const Graph &g2)
     {
         firstTime = false;
         cout << "YYYYYYYYYY\n";
-        for (int i = 0; i < nbMaxVertices; i++)
-            v1ToV2PossibleMatches[i].reserve(nbMaxVertices);
+        for (int i = 0; i < NBMAXVERT; i++)
+            v1ToV2PossibleMatches[i].reserve(NBMAXVERT);
     }
     /*
        cout << " Comparing a pair of graphs\n";
