@@ -191,7 +191,8 @@ inline void gen_twin_list(const Graph &g, vector<long long> &twinLists2, int nbV
 
             }
         }
-        twinLists2.push_back(curCompat+(newCompat*256));
+        if (newCompat)
+            twinLists2.push_back(curCompat+(newCompat*256));
     }
 
 }
