@@ -280,7 +280,7 @@ inline bool can_discard_edgelist(const vector<long long> &twinLists2, int *isTwi
 
 vector<Graph> gen_graphs(int nbVert)
 {
-    const int puissNewVert = (1<<nbVert-1);
+    const int puissNewVert = (1<<(nbVert-1));
 
     int nbGraphPerComp[5] = {0,0,0,0,0};
     int nbFreeGraphPerComp[5] = {0,0,0,0,0};
@@ -297,7 +297,7 @@ vector<Graph> gen_graphs(int nbVert)
     vector<long long> twinLists2;
     twinLists2.reserve(NBMAXVERT*NBMAXVERT);
 
-    const int nbEdgeCombi = (1<<nbVert-1);
+    const int nbEdgeCombi = (1<<(nbVert-1));
 
     bool isTwin[NBMAXVERT];
     bool isInList[NBMAXVERT];
@@ -403,7 +403,6 @@ vector<Graph> gen_graphs(int nbVert)
             //for (const vector<int> &newEdgesList : listSubsetsEdges)
             for (int code = 0; code < nbEdgeCombi; code++)
             {
-                const vector<int> &newEdgesList = adjListGlobal[code];
                 //for (int i = 0; i < nbVert; i++)
                     //isInList[i] = false;
                     //
@@ -422,6 +421,7 @@ vector<Graph> gen_graphs(int nbVert)
                 }
                 gWithEdges.nbEdge += newEdgesList.size();
                 gWithEdges.adjMat[nbVert-1] = code;*/
+                const vector<int> &newEdgesList = adjListGlobal[code];
                 gWithEdges.copy_and_add_new_vertex_bis(g, newEdgesList, puissNewVert, code);
                     //gWithEdges.add_edge(nbVert-1, newNeighb);
 
