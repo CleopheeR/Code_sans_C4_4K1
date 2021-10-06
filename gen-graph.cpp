@@ -292,6 +292,7 @@ vector<Graph> gen_graphs(int nbVert)
     degreeList.resize(nbVert+1);
     sparse_hash_map<vector<int>, vector<Graph>> deglist2Graphs;
 
+    long long sizeTotalTwinVector = 0;
     vector<vector<int>> twinLists;
     vector<long long> twinLists2;
     twinLists2.reserve(NBMAXVERT*NBMAXVERT);
@@ -392,6 +393,7 @@ vector<Graph> gen_graphs(int nbVert)
 
             twinLists2.clear();
             gen_twin_list(g, twinLists2, nbVert);
+            sizeTotalTwinVector += twinLists2.size();
             //gen_twin_list2(g, twinLists2, nbVert);
             //for (int i = 0; i < nbVert; i++)
             //    isTwin[i] = false;
@@ -450,6 +452,7 @@ vector<Graph> gen_graphs(int nbVert)
 
             }
         }
+    cout << sizeTotalTwinVector << " elements in twin vector, so average " << (double)sizeTotalTwinVector/(double)listMinus.size() << endl;
     }
 
     int nbGraph = 0;
