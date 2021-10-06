@@ -132,8 +132,9 @@ void save_to_file(const string &filename, const sparse_hash_map<vector<int>, vec
 }
 
 
-void gen_twin_list(const Graph &g, vector<vector<int>> &twinLists, bool* isTwin, int nbVert)
+inline void gen_twin_list(const Graph &g, vector<long long> &twinLists2, int nbVert)
 {
+    /*
     twinLists.clear();
     memset(isTwin, 0, nbVert-1);
 
@@ -160,17 +161,50 @@ void gen_twin_list(const Graph &g, vector<vector<int>> &twinLists, bool* isTwin,
             }
         }
     }
+    */
+
+    for (int v1 = 0; v1 < nbVert-2; v1++)
+    {
+        //for (int v2 : g.get_neighb(v1))
+        int puiss1 = 1<<v1;
+        long long curCompat = v1;
+        long long newCompat = 0;
+        int puiss2 = (1<<v1);
+        for (int v2 = v1+1; v2 < nbVert-1; v2++)
+        {
+            //newCompat*=2;
+            //int puiss2 = 1<<v2;
+            puiss2 *= 2;
+            int xorage = g.adjMat[v1] ^ g.adjMat[v2];
+            if (xorage == 0 || xorage == (puiss1 ^ puiss2))
+            ///if (v2 > v1 && (g.adjMat[v1] ^ g.adjMat[v2]) == ((1<<v1)^(1<<v2)))
+            {
+                //long long newCompat = (1<<(32+v2));
+                newCompat ^= puiss2;
+                //newCompat <<= 32;
+                //newCompat ^= v1;
+                //curCompat ^= newCompat;
+                //bitset<64> y(newCompat);
+                //cout << "\t" << y << endl;
+                //twinLists2.push_back(newCompat);
+                //break;
+
+            }
+        }
+        twinLists2.push_back(curCompat+(newCompat*256));
+    }
 
 }
 
 
-void gen_twin_list2(const Graph &g, vector<vector<int>> &twinLists, bool* isTwin, int nbVert)
+void gen_twin_list2(const Graph &g, vector<long long> &twinLists2, int nbVert)
 {
+    /*
     for (int i = 0; i < nbVert; i++)
         isTwin[i] = false;
 
     int lastTwin = -1;
-    for (int v1 = 0; v1 < nbVert-1; v1++)
+    for (int v1 = 0; v1 < nbVert-2; v1++)
     {
         if (isTwin[v1])
             continue;
@@ -192,11 +226,31 @@ void gen_twin_list2(const Graph &g, vector<vector<int>> &twinLists, bool* isTwin
             }
         }
     }
+    */
+
+    //TODO modifier si jamais utilisé à nouveau
+    for (int v1 = 0; v1 < nbVert-2; v1++)
+    {
+        for (int v2 = v1+1; v2 < nbVert-1; v2++)
+        {
+            if (v2 > v1 && (g.adjMat[v1] == g.adjMat[v2]))
+            {
+                long long newCompat = (1<<v2);
+                newCompat <<= 32;
+                newCompat ^= v1;
+                twinLists2.push_back(newCompat);
+                break;
+            }
+        }
+    }
+
+
 
 }
 
-bool can_discard_edgelist(const vector<int> &newEdgesList, const vector<vector<int>> &twinLists, bool* isInList, int nbVert)
+inline bool can_discard_edgelist(const vector<long long> &twinLists2, int *isTwinCompat, int nbVert)
 {
+    /*
     memset(isInList, 0, nbVert-1);
     for (int newNeighb : newEdgesList)
         isInList[newNeighb] = true;
@@ -209,6 +263,15 @@ bool can_discard_edgelist(const vector<int> &newEdgesList, const vector<vector<i
                 return true;
         }
     }
+    */
+    for (const long long &curTwins : twinLists2)
+    {
+        const int twin1 = curTwins%256;
+        const int twin2 = curTwins/256;
+        if (isTwinCompat[twin1] & twin2)
+            return true;
+    }
+
 
     return false;
 }
@@ -216,6 +279,8 @@ bool can_discard_edgelist(const vector<int> &newEdgesList, const vector<vector<i
 
 vector<Graph> gen_graphs(int nbVert)
 {
+    const int puissNewVert = (1<<nbVert-1);
+
     int nbGraphPerComp[5] = {0,0,0,0,0};
     int nbFreeGraphPerComp[5] = {0,0,0,0,0};
     int nbGraphFree = 0;
@@ -227,9 +292,38 @@ vector<Graph> gen_graphs(int nbVert)
     sparse_hash_map<vector<int>, vector<Graph>> deglist2Graphs;
 
     vector<vector<int>> twinLists;
+    vector<long long> twinLists2;
+    twinLists2.reserve(NBMAXVERT*NBMAXVERT);
+
+    const int nbEdgeCombi = (1<<nbVert-1);
 
     bool isTwin[NBMAXVERT];
     bool isInList[NBMAXVERT];
+    int **isTwinCompat = NULL;
+    isTwinCompat = (int**) malloc(sizeof(*isTwinCompat)*nbEdgeCombi);
+    for (int i = 0; i < nbEdgeCombi; i++)
+        isTwinCompat[i] = (int*) malloc(sizeof(*isTwinCompat)*NBMAXVERT);
+
+    //TODO attention pas symmétrique là.
+    for (int code = 0; code < nbEdgeCombi; code++)
+    {
+        for (int v1 = 0; v1 < nbVert-2; v1++)
+        {
+            int curCompat = 0;
+            if (code & (1<<v1))
+            {
+                isTwinCompat[code][v1] = 0;
+                continue;
+            }
+
+            for (int v2 = v1+1; v2 < nbVert-1; v2++)
+            {
+                if (code & (1<<v2))
+                    curCompat ^= (1<<v2);
+            }
+            isTwinCompat[code][v1] = curCompat;
+        }
+    }
 
 
 
@@ -295,31 +389,39 @@ vector<Graph> gen_graphs(int nbVert)
             */
 
 
-            gen_twin_list(g, twinLists, isTwin, nbVert);
-            gen_twin_list2(g, twinLists, isTwin, nbVert);
+            twinLists2.clear();
+            gen_twin_list(g, twinLists2, nbVert);
+            //gen_twin_list2(g, twinLists2, nbVert);
             //for (int i = 0; i < nbVert; i++)
             //    isTwin[i] = false;
 
 
 
             //for (const vector<int> &newEdgesList : listSubsetsEdges)
-            for (int code = 0; code < (1<< (nbVert-1)); code++)
+            for (int code = 0; code < nbEdgeCombi; code++)
             {
                 const vector<int> &newEdgesList = adjListGlobal[code];
                 //for (int i = 0; i < nbVert; i++)
                     //isInList[i] = false;
                     //
                     //
-                gWithEdges.copy_and_add_new_vertex(g);
-                for (int newNeighb : newEdgesList)
-                    gWithEdges.add_edge(nbVert-1, newNeighb);
-
-                bool refuseBecauseTwins = can_discard_edgelist(newEdgesList, twinLists, isInList, nbVert);
+                bool refuseBecauseTwins = can_discard_edgelist(twinLists2, isTwinCompat[code], nbVert);
                 if (refuseBecauseTwins)
                 {
                    //cerr << "lol YEAH\n";
                     continue;
                 }
+                /*
+                gWithEdges.copy_and_add_new_vertex(g);
+                for (int newNeighb : newEdgesList)
+                {
+                    gWithEdges.adjMat[newNeighb]^= puissNewVert;
+                }
+                gWithEdges.nbEdge += newEdgesList.size();
+                gWithEdges.adjMat[nbVert-1] = code;*/
+                gWithEdges.copy_and_add_new_vertex_bis(g, newEdgesList, puissNewVert, code);
+                    //gWithEdges.add_edge(nbVert-1, newNeighb);
+
 
 
 

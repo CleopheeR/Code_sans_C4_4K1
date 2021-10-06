@@ -110,7 +110,8 @@ class Graph
             return adjListGlobal[adjMat[u]];
         }
 
-        void copy_and_add_new_vertex(const Graph&);//, vector<int> &degreeList); //TODO ou bien renvoie un Graphe autre
+        void copy_and_add_new_vertex(const Graph&g);//, vector<int> &degreeList); //TODO ou bien renvoie un Graphe autre
+        void copy_and_add_new_vertex_bis(const Graph& g, const vector<int> &newEdges, int puissNew, int code);//, vector<int> &degreeList); //TODO ou bien renvoie un Graphe autre
         void add_edge(int u, int v);//, vector<int> &degreeeList);
         void remove_last_edge(int u, int v, vector<int> &degreeeList);
 

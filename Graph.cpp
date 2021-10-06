@@ -17,6 +17,26 @@ void Graph::init(int n, int m)
 }
 
 
+void Graph::copy_and_add_new_vertex_bis(const Graph& g, const vector<int> &newEdges, int puissNew, int code)
+{
+    if (adjMat == NULL)
+        init(g.nbVert+1, g.nbEdge);
+    else
+    {
+        nbVert = g.nbVert+1;
+        nbEdge = g.nbEdge+newEdges.size();
+    }
+
+    for (int u = 0; u < g.nbVert; u++)
+        adjMat[u] = g.adjMat[u];
+
+    for (int x : newEdges)
+        adjMat[x] ^= puissNew;
+    adjMat[g.nbVert] = code;
+
+
+
+}
 
 void Graph::copy_and_add_new_vertex(const Graph& g)//, vector<int> &degreeList)
 {
