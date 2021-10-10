@@ -225,7 +225,7 @@ vector<Graph> gen_graphs(int nbVert)
     int nbGraphTried = 0;
     vector<Graph> res;
     vector<char> degreeList;
-    degreeList.resize(nbVert+1);
+    degreeList.resize(nbVert+4);
     sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs;
 
     long long sizeTotalTwinVector = 0;
