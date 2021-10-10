@@ -184,7 +184,7 @@ void Graph::compute_hashes(vector<char> &degreeList)
     {
         swap(cols, prevCols);
         for (int u = 0; u < nbVert; u++)
-            cols[u] = my_hash3(prevCols, get_neighb(u));
+            cols[u] = my_hash2(prevCols, get_neighb(u));
 
     }
     if (vertsCol == NULL)
@@ -195,7 +195,12 @@ void Graph::compute_hashes(vector<char> &degreeList)
         vertsCol[u] = cols[u];
         xorAll ^= cols[u];
     }
-    degreeList.back() = xorAll;
+
+    //degreeList.back() = xorAll;
+    degreeList[nbVert] = xorAll;
+    degreeList[nbVert+1] = xorAll >> 8;
+    degreeList[nbVert+2] = xorAll >> 16;
+    degreeList[nbVert+3] = xorAll >> 24;
 }
 
 void init_adjListGlobal(int n)
