@@ -115,7 +115,7 @@ void save_to_file(const string &filename, const sparse_hash_map<vector<int>, vec
 }
 
 
-inline void gen_twin_list(const Graph &g, vector<long long> &twinLists, int nbVert)
+void gen_twin_list(const Graph &g, vector<long long> &twinLists, int nbVert)
 {
    for (int v1 = 0; v1 < nbVert-2; v1++)
     {
@@ -156,7 +156,7 @@ void gen_twin_list2(const Graph &g, vector<long long> &twinLists, int nbVert)
     }
 }
 
-inline bool can_discard_edgelist(const vector<long long> &twinLists, int *isTwinCompat, int nbVert)
+bool can_discard_edgelist(const vector<long long> &twinLists, int *isTwinCompat, int nbVert)
 {
     for (const long long &curTwins : twinLists)
     {
@@ -170,7 +170,7 @@ inline bool can_discard_edgelist(const vector<long long> &twinLists, int *isTwin
 }
 
 
-inline void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert)
+void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert)
 {
     pathList.clear();
 
@@ -199,7 +199,7 @@ inline void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert)
     }
 }
 
-inline bool detect_C4(const vector<long long> &pathList, int code)
+bool detect_C4(const vector<long long> &pathList, int code)
 {
     for (long long p2 : pathList)
     {

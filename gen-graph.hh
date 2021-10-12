@@ -41,4 +41,11 @@ void save_to_file(const string &filename, const sparse_hash_map<vector<int>, vec
 
 void gen_subsets(int k, int n, vector<vector<int>> &listRes);
 
+
+void gen_twin_list(const Graph &g, vector<long long> &twinLists, int nbVert);
+bool can_discard_edgelist(const vector<long long> &twinLists, int *isTwinCompat, int nbVert);
+
+void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert);
+bool detect_C4(const vector<long long> &pathList, int code);
+
 #endif
