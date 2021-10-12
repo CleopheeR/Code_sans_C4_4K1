@@ -12,7 +12,7 @@
 
 vector<int> bigDegreeList;
 
-bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int>> &listSubsetsEdges, bool prefixeurTest, sparse_hash_map<vector<int>, vector<Graph>> &fixeurDict, sparse_hash_map<vector<int>, vector<Graph>> &prefixeurPlusDict)
+bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int>> &listSubsetsEdges, bool prefixeurTest, sparse_hash_map<vector<int>, vector<Graph>> &prefixeurPlusDict)
 {
     if (bigDegreeList.empty())
         bigDegreeList.resize(g.nbVert+2);
@@ -135,7 +135,7 @@ sparse_hash_map<vector<int>, vector<Graph>> gen_fixeurs(int nbVert)
         if (cptGraph%1000 == 0)
             cerr << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << listGraphs.size() << endl;
 
-        if (is_pre_or_fixeur(g, degreeList, listSubsetsEdges, true, deglist2PrefixeursPlus, deglist2PrefixeursPlus))
+        if (is_pre_or_fixeur(g, degreeList, listSubsetsEdges, true, deglist2PrefixeursPlus))
         {
             for (int i = 0; i < g.nbVert; i++)
                 degreeList[i] = g.get_neighb(i).size();

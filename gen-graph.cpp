@@ -47,33 +47,17 @@ void gen_subsets(int k, int n, vector<vector<int>> &listRes)
                 l[z] = l[z-1]+1;
         }
     }
-/*
-    for (const auto &combi : listRes)
-    {
-        for (int x : combi)
-            cout << x << " ";
-        cout << endl;
-    }
-*/
 }
 
 
 //bool check_if_seen_and_add(const Graph& g, unordered_map<vector<int>, vector<Graph>, vector_hash> &dico)
 bool check_if_seen_and_add(Graph& g, vector<int> &degreeList, sparse_hash_map<vector<int>, vector<Graph>> &dico)
 {
-    /*
-    cout << "checking...\n";
-    for (int x : g.degreeList)
-        cout << x << " ";
-    cout << endl;
-    */
     for (const Graph& gSeen : dico[degreeList])
     {
         if (are_isomorphic(g, gSeen))
             return false;
     }
-
-    //cout << "   accepting :)\n";
 
     dico[degreeList].push_back(g);
     return true;
@@ -122,7 +106,6 @@ void save_to_file(const string &filename, const sparse_hash_map<vector<int>, vec
 {
     vector<Graph> res;
     ofstream file(filename);
-    //int nbGraph = graphList.size();
 
     file << nbGraph << endl;
 
@@ -132,103 +115,30 @@ void save_to_file(const string &filename, const sparse_hash_map<vector<int>, vec
 }
 
 
-inline void gen_twin_list(const Graph &g, vector<long long> &twinLists2, int nbVert)
+inline void gen_twin_list(const Graph &g, vector<long long> &twinLists, int nbVert)
 {
-    /*
-    twinLists.clear();
-    memset(isTwin, 0, nbVert-1);
-
-    int lastTwin = -1;
-    for (int v1 = 0; v1 < nbVert-1; v1++)
+   for (int v1 = 0; v1 < nbVert-2; v1++)
     {
-        if (isTwin[v1])
-            continue;
-        for (int v2 : g.get_neighb(v1))
-        {
-            if (v2 > v1 && (g.adjMat[v1] ^ g.adjMat[v2]) == ((1<<v1)^(1<<v2)))
-            {
-                if (lastTwin != v1)
-                {
-                    lastTwin = v1;
-                    twinLists.push_back({v1, v2});
-                }
-                else
-                {
-                    twinLists.back().push_back(v2);
-                }
-                isTwin[v2] = true;
-                lastTwin = v1;
-            }
-        }
-    }
-    */
-
-    for (int v1 = 0; v1 < nbVert-2; v1++)
-    {
-        //for (int v2 : g.get_neighb(v1))
         int puiss1 = 1<<v1;
         long long curCompat = v1;
         long long newCompat = 0;
         int puiss2 = (1<<v1);
         for (int v2 = v1+1; v2 < nbVert-1; v2++)
         {
-            //newCompat*=2;
-            //int puiss2 = 1<<v2;
             puiss2 *= 2;
             int xorage = g.adjMat[v1] ^ g.adjMat[v2];
             if (xorage == 0 || xorage == (puiss1 ^ puiss2))
-            ///if (v2 > v1 && (g.adjMat[v1] ^ g.adjMat[v2]) == ((1<<v1)^(1<<v2)))
-            {
-                //long long newCompat = (1<<(32+v2));
                 newCompat ^= puiss2;
-                //newCompat <<= 32;
-                //newCompat ^= v1;
-                //curCompat ^= newCompat;
-                //bitset<64> y(newCompat);
-                //cout << "\t" << y << endl;
-                //twinLists2.push_back(newCompat);
-                //break;
-
-            }
         }
         if (newCompat)
-            twinLists2.push_back(curCompat+(newCompat*256));
+            twinLists.push_back(curCompat+(newCompat*256));
     }
 
 }
 
 
-void gen_twin_list2(const Graph &g, vector<long long> &twinLists2, int nbVert)
+void gen_twin_list2(const Graph &g, vector<long long> &twinLists, int nbVert)
 {
-    /*
-    for (int i = 0; i < nbVert; i++)
-        isTwin[i] = false;
-
-    int lastTwin = -1;
-    for (int v1 = 0; v1 < nbVert-2; v1++)
-    {
-        if (isTwin[v1])
-            continue;
-        for (int v2 =v1+1; v2 < nbVert-1; v2++)
-        {
-            if (g.adjMat[v1] == g.adjMat[v2])// == ((1<<v1)^(1<<v2)))
-            {
-                if (lastTwin != v1)
-                {
-                    lastTwin = v1;
-                    twinLists.push_back({v1, v2});
-                }
-                else
-                {
-                    twinLists.back().push_back(v2);
-                }
-                isTwin[v2] = true;
-                lastTwin = v1;
-            }
-        }
-    }
-    */
-
     //TODO modifier si jamais utilisé à nouveau
     for (int v1 = 0; v1 < nbVert-2; v1++)
     {
@@ -239,40 +149,22 @@ void gen_twin_list2(const Graph &g, vector<long long> &twinLists2, int nbVert)
                 long long newCompat = (1<<v2);
                 newCompat <<= 32;
                 newCompat ^= v1;
-                twinLists2.push_back(newCompat);
+                twinLists.push_back(newCompat);
                 break;
             }
         }
     }
-
-
-
 }
 
-inline bool can_discard_edgelist(const vector<long long> &twinLists2, int *isTwinCompat, int nbVert)
+inline bool can_discard_edgelist(const vector<long long> &twinLists, int *isTwinCompat, int nbVert)
 {
-    /*
-    memset(isInList, 0, nbVert-1);
-    for (int newNeighb : newEdgesList)
-        isInList[newNeighb] = true;
-
-    for (const vector<int> &curTwins : twinLists)
-    {
-        for (int i = 1; i < curTwins.size(); i++)
-        {
-            if (!isInList[curTwins[i-1]] && isInList[curTwins[i]])
-                return true;
-        }
-    }
-    */
-    for (const long long &curTwins : twinLists2)
+    for (const long long &curTwins : twinLists)
     {
         const int twin1 = curTwins%256;
         const int twin2 = curTwins/256;
         if (isTwinCompat[twin1] & twin2)
             return true;
     }
-
 
     return false;
 }
@@ -335,9 +227,8 @@ vector<Graph> gen_graphs(int nbVert)
     sparse_hash_map<vector<int>, vector<Graph>> deglist2Graphs;
 
     long long sizeTotalTwinVector = 0;
-    vector<vector<int>> twinLists;
-    vector<long long> twinLists2;
-    twinLists2.reserve(NBMAXVERT*NBMAXVERT);
+    vector<long long> twinLists;
+    twinLists.reserve(NBMAXVERT*NBMAXVERT);
     vector<long long> pathLength2;
     pathLength2.reserve(NBMAXVERT);
 
@@ -410,53 +301,16 @@ vector<Graph> gen_graphs(int nbVert)
             cptGraph++;
             if (cptGraph%100 == 0)
                 cout << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << listMinus.size() << endl;
-            /*gNew.copy_and_add_new_vertex(g);//TODO garder le retour, un sommet ?
 
-            int nbComp = 1;//+0*nb_connected_comp(gNew);
-            //nbGraphPerComp[nbComp]++;
-
-            nbGraphTried++;
-            if (nbComp && free_C4_O4(gNew, nbVert))
-            {
-                for (int i = 0; i < gNew.nbVert; i++)
-                    degreeList[i] = gNew.get_neighb(i).size();
-                sort(degreeList.begin(), degreeList.begin()+(gNew.nbVert));
-
-
-                //nbGraphFree++;
-                //nbFreeGraphPerComp[nbComp]++;
-                gNew.compute_hashes(degreeList);
-                nbGraphFree++;
-                nbFreeGraphPerComp[nbComp]++;
-                if (check_if_seen_and_add(gNew, degreeList, deglist2Graphs))
-                    nbPassedIso++;
-            }
-
-            */
-
-
-            twinLists2.clear();
-            gen_twin_list(g, twinLists2, nbVert);
-            sizeTotalTwinVector += twinLists2.size();
-
+            twinLists.clear();
+            gen_twin_list(g, twinLists, nbVert);
+            sizeTotalTwinVector += twinLists.size();
 
             gen_P2_list(g, pathLength2, nbVert);
 
-
-            //gen_twin_list2(g, twinLists2, nbVert);
-            //for (int i = 0; i < nbVert; i++)
-            //    isTwin[i] = false;
-
-
-
-            //for (const vector<int> &newEdgesList : listSubsetsEdges)
             for (int code = 0; code < nbEdgeCombi; code++)
             {
-                //for (int i = 0; i < nbVert; i++)
-                    //isInList[i] = false;
-                    //
-                    //
-                bool refuseBecauseTwins = can_discard_edgelist(twinLists2, isTwinCompat[code], nbVert);
+                bool refuseBecauseTwins = can_discard_edgelist(twinLists, isTwinCompat[code], nbVert);
                 if (refuseBecauseTwins)
                 {
                    //cerr << "lol YEAH\n";
@@ -467,28 +321,11 @@ vector<Graph> gen_graphs(int nbVert)
                 bool refuseBecauseC4 = detect_C4(pathLength2, code);
                 if (refuseBecauseC4)
                     continue;
-                /*
-                gWithEdges.copy_and_add_new_vertex(g);
-                for (int newNeighb : newEdgesList)
-                {
-                    gWithEdges.adjMat[newNeighb]^= puissNewVert;
-                }
-                gWithEdges.nbEdge += newEdgesList.size();
-                gWithEdges.adjMat[nbVert-1] = code;*/
                 const vector<int> &newEdgesList = adjListGlobal[code];
                 gWithEdges.copy_and_add_new_vertex_bis(g, newEdgesList, puissNewVert, code);
-                    //gWithEdges.add_edge(nbVert-1, newNeighb);
 
-
-
-
-
-
-                /*
-                 * nbComp = nb_connected_comp(gWithEdges);
-                nbGraphPerComp[nbComp]++;*/
                 nbGraphTried++;
-                if (nbComp && free_O4(gWithEdges, nbVert))
+                if (free_O4(gWithEdges, nbVert))
                 {
                     for (int i = 0; i < gWithEdges.nbVert; i++)
                         degreeList[i] = gWithEdges.get_neighb(i).size();
