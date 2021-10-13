@@ -13,6 +13,9 @@ using namespace std;
 
 extern vector<int> *adjListGlobal;
 
+extern int nbProc;
+#define NBMAXPROC 200
+
 #define NBMAXVERT 32
 
 #define are_neighb(g, u, v) (g.adjMat[u]&(1<<v))

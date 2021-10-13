@@ -9,16 +9,16 @@
 
 
 
-bool isMatched[NBMAXVERT];
-bool checkeVoisins[NBMAXVERT];
-vector<vector<int>> v1ToV2PossibleMatches(NBMAXVERT);
-vector<int> v1ToV2Matches(NBMAXVERT);
-bool firstTime = true;
+bool isMatched[NBMAXPROC][NBMAXVERT];
+bool checkeVoisins[NBMAXPROC][NBMAXVERT];
+vector<int> v1ToV2PossibleMatches[NBMAXPROC][NBMAXVERT];//(NBMAXVERT);
+int v1ToV2Matches[NBMAXPROC][NBMAXVERT];//(NBMAXVERT);
+bool notFirstTime[NBMAXPROC] = {false};
 
-int vertIsoOrderToExplore[NBMAXVERT];
-int indexInIsoOrder[NBMAXVERT];
+int vertIsoOrderToExplore[NBMAXPROC][NBMAXVERT];
+int indexInIsoOrder[NBMAXPROC][NBMAXVERT];
 
-vector<int> listColours1(NBMAXVERT), listColours2(NBMAXVERT);
+//vector<int> listColours1(NBMAXVERT), listColours2(NBMAXVERT);
 
 
 int nb_connected_comp(const Graph& g)
@@ -125,40 +125,46 @@ bool free_C4_O4(const Graph& g, int n)
 
 
 
-bool gen_iso_matching(const Graph &g1, const Graph &g2, int i)
+bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread)
 {
+    vector<int> *curV1ToV2PossibleMatches = v1ToV2PossibleMatches[idThread];
+    int *curVertIsoOrderToExplore = vertIsoOrderToExplore[idThread];
     /*cerr << "---------------\n";
       g1.print();
       g2.print();
       */
-    while (i < g1.nbVert && v1ToV2PossibleMatches[vertIsoOrderToExplore[i]%1000].size() == 1)
+    while (i < g1.nbVert && curV1ToV2PossibleMatches[curVertIsoOrderToExplore[i]%1000].size() == 1)
         i++;
 
     if (i == g1.nbVert)
         return true;
 
-    int v1 = vertIsoOrderToExplore[i]%1000;
+    int v1 = curVertIsoOrderToExplore[i]%1000;
     int u1 = v1;
     int iU1 = i;//indexInIsoOrder[u1];
-    for (int match : v1ToV2PossibleMatches[v1])
+    bool *curIsMatched = isMatched[idThread];
+    int *curV1ToV2Matches = v1ToV2Matches[idThread];
+    bool *curCheckeVoisins = checkeVoisins[idThread];
+    int *curIndexInIsoOrder = indexInIsoOrder[idThread];
+    for (int match : curV1ToV2PossibleMatches[v1])
     {
-        if (isMatched[match])
+        if (curIsMatched[match])
             continue;
-        v1ToV2Matches[v1] = match;
-        isMatched[match] = true;
+        curV1ToV2Matches[v1] = match;
+        curIsMatched[match] = true;
 
         int u2 = match;
         int nbNeighb = g1.get_neighb(u1).size();
-        memset(checkeVoisins, 0, g1.nbVert);
+        memset(curCheckeVoisins, 0, g1.nbVert);
 
 
         int nbGreater = 0;
         for (int x : g1.get_neighb(u1))
         {
-            if (indexInIsoOrder[x] <= iU1 || v1ToV2PossibleMatches[x].size() == 1)
+            if (curIndexInIsoOrder[x] <= iU1 || curV1ToV2PossibleMatches[x].size() == 1)
             {
-                assert(!checkeVoisins[v1ToV2Matches[x]]);
-                checkeVoisins[v1ToV2Matches[x]] = true;
+                assert(!curCheckeVoisins[curV1ToV2Matches[x]]);
+                curCheckeVoisins[curV1ToV2Matches[x]] = true;
             }
             else
                 nbGreater++;
@@ -168,11 +174,11 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i)
 
         for (int v2 : g2.get_neighb(u2))
         {
-            if (!checkeVoisins[v2])
+            //if (!checkeVoisins[v2])
 
-           if (!checkeVoisins[v2])
+           if (!curCheckeVoisins[v2])
             {
-                if (isMatched[v2])
+                if (curIsMatched[v2])
                     nbGreater = -17;
                 nbGreater--;
             }
@@ -181,25 +187,25 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i)
 
 
 
-        if (nbGreater == 0 && gen_iso_matching(g1, g2, i+1))
+        if (nbGreater == 0 && gen_iso_matching(g1, g2, i+1, idThread))
             return true;
-        isMatched[match] = false;
+        curIsMatched[match] = false;
     }
 
     return false;
 }
 
-bool are_isomorphic(const Graph &g1, const Graph &g2)
+bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
 {
     static long long nbTimesAborted = 0;
     static long long nbTotalBucketSize = 0;
     static long long nbTimesCalled = 0;
-    if (firstTime)
+    if (!notFirstTime[idThread])
     {
-        firstTime = false;
+        notFirstTime[idThread] = true;
         cout << "YYYYYYYYYY\n";
         for (int i = 0; i < NBMAXVERT; i++)
-            v1ToV2PossibleMatches[i].reserve(NBMAXVERT);
+            v1ToV2PossibleMatches[idThread][i].reserve(NBMAXVERT);
     }
     /*
        cout << " Comparing a pair of graphs\n";
@@ -221,13 +227,13 @@ bool are_isomorphic(const Graph &g1, const Graph &g2)
        }
        */
 
-    memset(isMatched, 0, g1.nbVert);// TODO ou bien dans la fonction gen_iso et dessus blah
+    memset(isMatched[idThread], 0, g1.nbVert);// TODO ou bien dans la fonction gen_iso et dessus blah
 
-    if (v1ToV2Matches.size() != g1.nbVert)
+    /*if (v1ToV2Matches.size() != g1.nbVert)
     {
         v1ToV2Matches.resize(g1.nbVert);
         v1ToV2PossibleMatches.resize(g1.nbVert);
-    }
+    }*/
 
     vector<int> degreeNeighb1(g1.nbVert), degreeNeighb2(g1.nbVert);
     vector<int> uniqueMatchVertices;
@@ -253,33 +259,37 @@ bool are_isomorphic(const Graph &g1, const Graph &g2)
     */
 
     int curNbBucketSize = 0;
+    int *curVertIsoOrderToExplore = vertIsoOrderToExplore[idThread];
+    int *curV1ToV2Matches = v1ToV2Matches[idThread];
+    vector<int> *curV1ToV2PossibleMatches = v1ToV2PossibleMatches[idThread];
+    bool* curIsMatched = isMatched[idThread];
     for (int v1 = 0; v1 < g1.nbVert; v1++)
     {
-        vertIsoOrderToExplore[v1] = 1000*g1.get_neighb(v1).size()+v1;
-        v1ToV2PossibleMatches[v1].resize(0);
+        curVertIsoOrderToExplore[v1] = 1000*g1.get_neighb(v1).size()+v1;
+        curV1ToV2PossibleMatches[v1].resize(0);
         for (int v2 = 0; v2 < g2.nbVert; v2++)
         {
             if (g1.vertsCol[v1] == g2.vertsCol[v2] && g1.get_neighb(v1).size() == g2.get_neighb(v2).size())
             {
 
-                v1ToV2PossibleMatches[v1].push_back(v2);
+                curV1ToV2PossibleMatches[v1].push_back(v2);
             }
         }
 
-        curNbBucketSize += v1ToV2PossibleMatches[v1].size();
-        if (v1ToV2PossibleMatches[v1].empty())
+        curNbBucketSize += curV1ToV2PossibleMatches[v1].size();
+        if (curV1ToV2PossibleMatches[v1].empty())
         {
             nbTimesAborted++;
             //assert(false);
             return false;
         }
 
-        if (v1ToV2PossibleMatches[v1].size() == 1)
+        if (curV1ToV2PossibleMatches[v1].size() == 1)
         {
-            v1ToV2Matches[v1] = v1ToV2PossibleMatches[v1][0];
-            if (isMatched[v1ToV2Matches[v1]])
+            curV1ToV2Matches[v1] = curV1ToV2PossibleMatches[v1][0];
+            if (curIsMatched[curV1ToV2Matches[v1]])
                 return false; // Two vertices must be matched to the same one in g2.
-            isMatched[v1ToV2Matches[v1]] = true;
+            curIsMatched[curV1ToV2Matches[v1]] = true;
             uniqueMatchVertices.push_back(v1);
         }
     }
@@ -289,11 +299,11 @@ bool are_isomorphic(const Graph &g1, const Graph &g2)
     for (int i1 = 0; i1 < nbUnique; i1++)
     {
         int u1 = uniqueMatchVertices[i1];
-        int v1 = v1ToV2Matches[u1];
+        int v1 = curV1ToV2Matches[u1];
         for (int i2 = i1+1; i2 < nbUnique; i2++)
         {
             int u2 = uniqueMatchVertices[i2];
-            int v2 = v1ToV2Matches[u2];
+            int v2 = curV1ToV2Matches[u2];
             if (!are_neighb(g1, u1, u2) ^ !are_neighb(g2, v1, v2))
             {
                 nbTimesAborted++;
@@ -304,13 +314,14 @@ bool are_isomorphic(const Graph &g1, const Graph &g2)
     nbTotalBucketSize += curNbBucketSize;
     nbTimesCalled++;
 
-    sort(vertIsoOrderToExplore, vertIsoOrderToExplore+g1.nbVert);
+    int *curIndexInIsoOrder = indexInIsoOrder[idThread];
+    sort(curVertIsoOrderToExplore, curVertIsoOrderToExplore+g1.nbVert);
     for (int i = 0; i < g1.nbVert; i++)
-        indexInIsoOrder[vertIsoOrderToExplore[i]%1000] = i;
+        curIndexInIsoOrder[curVertIsoOrderToExplore[i]%1000] = i;
 
 
 
-    bool toto = gen_iso_matching(g1, g2, 0);
+    bool toto = gen_iso_matching(g1, g2, 0, idThread);
 
     if (nbTimesCalled % 50000 == 0)
     {

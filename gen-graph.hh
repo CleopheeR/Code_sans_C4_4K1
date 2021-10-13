@@ -4,6 +4,9 @@
 #include <vector>
 #include <unordered_map>
 #include <map>
+#include <thread>
+#include <mutex>
+
 #include "sparsepp/spp.h"
 #include "Graph.hh"
 
@@ -30,7 +33,7 @@ using spp::sparse_hash_map;
 vector<Graph> gen_graphs(int nbVert);
 
 //bool check_if_seen_and_add(const Graph& g, unordered_map<vector<int>, vector<Graph>, vector_hash> &dico);
-bool check_if_seen_and_add(Graph& g, vector<int> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico);
+bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico, int idThread = 0);
 
 
 vector<Graph> load_from_file(const string &filename);
@@ -48,4 +51,6 @@ bool can_discard_edgelist(const vector<long long> &twinLists, int *isTwinCompat,
 void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert);
 bool detect_C4(const vector<long long> &pathList, int code);
 
+
+vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, vector<int> &sizesToDo, ofstream &outFile, int idThread, mutex &lock);
 #endif

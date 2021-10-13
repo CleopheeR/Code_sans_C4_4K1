@@ -9,6 +9,8 @@
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include <thread>
+#include <mutex>
 
 #include <bitset>
 
@@ -20,6 +22,8 @@
 
 using namespace std;
 using spp::sparse_hash_map;
+
+vector<int> subsetsBySize[NBMAXVERT];
 
 //TODO idée : stocker aussi somme des degrés des voisins ? (bof, peu portable sauf si double indirection...)
 
@@ -53,11 +57,11 @@ void gen_subsets(int k, int n, vector<vector<int>> &listRes)
 
 
 //bool check_if_seen_and_add(const Graph& g, unordered_map<vector<int>, vector<Graph>, vector_hash> &dico)
-bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico)
+bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico, int idThread)
 {
     for (const Graph& gSeen : dico[degreeList])
     {
-        if (are_isomorphic(g, gSeen))
+        if (are_isomorphic(g, gSeen, idThread))
             return false;
     }
 
@@ -119,6 +123,7 @@ void save_to_file(const string &filename, const sparse_hash_map<vector<char>, ve
 
 void gen_twin_list(const Graph &g, vector<long long> &twinLists, int nbVert)
 {
+
    for (int v1 = 0; v1 < nbVert-2; v1++)
     {
         int puiss1 = 1<<v1;
@@ -243,9 +248,14 @@ vector<Graph> gen_graphs(int nbVert)
     for (int i = 0; i < nbEdgeCombi; i++)
         isTwinCompat[i] = (int*) malloc(sizeof(*isTwinCompat)*NBMAXVERT);
 
+
+    for (int i = 0; i < nbVert-1; i++)
+        subsetsBySize[i].reserve(1<<i);
+
     //TODO attention pas symmétrique là.
     for (int code = 0; code < nbEdgeCombi; code++)
     {
+        subsetsBySize[adjListGlobal[code].size()].push_back(code);
         for (int v1 = 0; v1 < nbVert-2; v1++)
         {
             int curCompat = 0;
@@ -289,6 +299,37 @@ vector<Graph> gen_graphs(int nbVert)
 
         cout << "j'ai généré/trouvé les graphes à " << nbVert-1 << " somets : il y en a " << listMinus.size() << endl;
 
+        int degMin = 1000000, degMax = 0;
+        for (const Graph &g : listMinus)
+        {
+            degMin = min(degMin, g.nbEdge);
+            degMax = max(degMax, g.nbEdge);
+        } //TODO in load_from_file...
+
+        vector<int> degreesToDo;
+        degreesToDo.reserve(degMax-degMin+1+nbVert);
+        for (int i = degMin; i <= degMax+nbVert-1; i++)
+            degreesToDo.push_back(i);
+
+
+        stringstream fileName;
+        fileName << "Alexgraphedelataille";
+        fileName << nbVert << ".txt";
+
+        ofstream outFile(fileName.str());
+
+        mutex threadMutex;
+        vector<thread> threads(nbProc-1);
+        for (int iProc = 0; iProc < nbProc-1; iProc++)
+            threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), iProc, std::ref(threadMutex));
+
+        thread lastThread(&gen_graphs_thread, std::ref(listMinus), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), nbProc-1, std::ref(threadMutex));
+        lastThread.join();
+        for (int i = 0; i < nbProc-1; i++)
+            threads[i].join();
+
+        return {};
+
         int cptGraph = 0;
         Graph gNew, gWithEdges;
         gNew.init(nbVert, -1);
@@ -297,7 +338,7 @@ vector<Graph> gen_graphs(int nbVert)
         for (const Graph& g : listMinus)
         {
             cptGraph++;
-            if (cptGraph%100 == 0)
+            if (cptGraph%10000 == 0)
                 cout << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << listMinus.size() << endl;
 
             twinLists.clear();
@@ -372,5 +413,116 @@ vector<Graph> gen_graphs(int nbVert)
 
     return res;
 
+}
+
+vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, vector<int> &sizesToDo, ofstream &outFile, int idThread, mutex &lock)
+{
+    const int nbVert = listMinus[0].nbVert+1;
+    const int puissNewVert = (1<<(nbVert-1));
+
+    vector<char> degreeList;
+    degreeList.resize(nbVert+4);
+    sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs;
+
+    long long sizeTotalTwinVector = 0;
+    vector<long long> twinLists;
+    twinLists.reserve(NBMAXVERT*NBMAXVERT);
+    vector<long long> pathLength2;
+    pathLength2.reserve(NBMAXVERT);
+
+    const int nbEdgeCombi = (1<<(nbVert-1));
+
+    int cptGraph = 0;
+    Graph gWithEdges;
+    gWithEdges.init(nbVert, -1);
+
+    while (true)
+    {
+        lock.lock();
+        if (sizesToDo.empty())
+        {
+            lock.unlock();
+            return {};
+        }
+
+        int m = sizesToDo.back();
+        //cerr << "doing size " << m << endl;
+        sizesToDo.pop_back();
+        lock.unlock();
+
+        int nbGraph = 0;
+        for (const Graph& g : listMinus)
+        {
+            if (g.nbEdge > m || g.nbEdge + g.nbVert < m)
+                continue;
+            //cerr << "\t" << g.nbEdge << endl;
+            nbGraph++;
+            cptGraph++;
+            if (cptGraph%10000 == 0)
+                cout << "Nous sommes sur leeeee " << cptGraph << "-ème graphe sur " << listMinus.size() << endl;
+
+            twinLists.clear();
+            gen_twin_list(g, twinLists, nbVert);
+            sizeTotalTwinVector += twinLists.size();
+
+            gen_P2_list(g, pathLength2, nbVert);
+
+            //for (int code = 1<< (m-g.nbEdge)-1; code < nbEdgeCombi;
+            //        foo = code & -code, bar = code + foo, s = (((code & ~bar) / foo) >> 1) | bar)
+            const vector<int> &ourSubsets = subsetsBySize[m-g.nbEdge];
+            for (int code : ourSubsets)
+            {
+                bool refuseBecauseTwins = can_discard_edgelist(twinLists, isTwinCompat[code], nbVert);
+                if (refuseBecauseTwins)
+                {
+                    //cerr << "lol YEAH\n";
+                    continue;
+                }
+
+
+                bool refuseBecauseC4 = detect_C4(pathLength2, code);
+                if (refuseBecauseC4)
+                    continue;
+                const vector<int> &newEdgesList = adjListGlobal[code];
+                gWithEdges.copy_and_add_new_vertex_bis(g, newEdgesList, puissNewVert, code);
+
+                if (free_O4(gWithEdges, nbVert))
+                {
+                    for (int i = 0; i < gWithEdges.nbVert; i++)
+                        degreeList[i] = gWithEdges.get_neighb(i).size();
+                    sort(degreeList.begin(), degreeList.begin()+gWithEdges.nbVert);
+                    gWithEdges.compute_hashes(degreeList);
+                    check_if_seen_and_add(gWithEdges, degreeList, deglist2Graphs, idThread);
+                }
+
+            }
+
+            //cout  << "Il y a " << nbGraph << " graphes à " << nbVert << " sommets et " << m << " arêtes .\n";
+        }
+        lock.lock();
+        cerr << "seen " << nbGraph << " graphs for size " << m << endl;
+        for (const auto& inDict : deglist2Graphs)
+            for (const Graph &g : inDict.second)
+                g.print_in_file(outFile);
+        deglist2Graphs.clear();
+        lock.unlock();
+
+    }
+
+    /*
+       for (int i = 1; i < 5; i++)
+       cerr << "nb graphes avec " << i << " composantes connexes : " << nbGraphPerComp[i] << endl;
+       for (int i = 1; i < 4; i++)
+       cerr << "nb free graphes avec " << i << " composantes connexes : " << nbFreeGraphPerComp[i] << endl;
+       cerr << nbPassedIso << " out of " << nbGraphFree << " were not isomorphic\n";
+
+       cerr << nbVert << " " << nbGraphTried << " " << nbGraphFree << " " << nbPassedIso << " ";
+       for (int i = 1; i < 5; i++)
+       cerr << nbGraphPerComp[i] << " ";
+       for (int i = 1; i < 4; i++)
+       cerr << nbFreeGraphPerComp[i] << " ";
+       cerr << endl;
+       */
+    return {}; //TODO enlever ça en transformer en void
 }
 

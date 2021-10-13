@@ -14,11 +14,15 @@
 
 using namespace std;
 
+int nbProc = 2;
+
 int main(int argc, char* argv[])
 {
     int nbVert = atoi(argv[1]);
     char testOrGen = argv[2][0];
     int nbBlowup = 0;
+    if (argc > 3)
+        nbProc = atoi(argv[3]);
 
     if (testOrGen == 'G')
     {
