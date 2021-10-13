@@ -10,16 +10,16 @@
 #include "gen-graph.hh"
 
 
-vector<int> bigDegreeList;
+vector<char> bigDegreeList;
 
-bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int>> &listSubsetsEdges, bool prefixeurTest, sparse_hash_map<vector<int>, vector<Graph>> &prefixeurPlusDict, int **isTwinCompat)
+bool is_pre_or_fixeur(Graph &g, vector<char> &degreeList, const vector<vector<char>> &listSubsetsEdges, bool prefixeurTest, sparse_hash_map<vector<char>, vector<Graph>> &prefixeurPlusDict, int **isTwinCompat)
 {
     int nbVert = g.nbVert+1;
     const int puissNewVert = (1<<(nbVert-1));
     const int nbEdgeCombi = (1<<(nbVert-1));
 
     if (bigDegreeList.empty())
-        bigDegreeList.resize(g.nbVert+2);
+        bigDegreeList.resize(g.nbVert+5);
     static Graph gWithEdges;
     if (gWithEdges.adjMat == NULL)
         gWithEdges.init(g.nbVert+1, -1);
@@ -110,14 +110,14 @@ bool is_pre_or_fixeur(Graph &g, vector<int> &degreeList, const vector<vector<int
 }
 
 
-sparse_hash_map<vector<int>, vector<Graph>> gen_fixeurs(int nbVert)
+sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
 {
-    sparse_hash_map<vector<int>, vector<Graph>> deglist2Fixeurs;
+    sparse_hash_map<vector<char>, vector<Graph>> deglist2Fixeurs;
 
-    sparse_hash_map<vector<int>, vector<Graph>> deglist2PrefixeursPlus;
+    sparse_hash_map<vector<char>, vector<Graph>> deglist2PrefixeursPlus;
 
-    vector<int> degreeList(nbVert+1);
-    vector<int> degreeListPlus(nbVert+2);
+    vector<char> degreeList(nbVert+4);
+    vector<char> degreeListPlus(nbVert+5);
     int nbEdgeCombi = 1<<nbVert;
 
     stringstream fileName;
