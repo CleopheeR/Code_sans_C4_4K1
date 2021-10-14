@@ -8,6 +8,7 @@
 #include <mutex>
 
 #include "sparsepp/spp.h"
+#include "gzstream/gzstream.h"
 #include "Graph.hh"
 
 namespace std
@@ -36,7 +37,7 @@ vector<Graph> gen_graphs(int nbVert);
 bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico, int idThread = 0);
 
 
-vector<Graph> load_from_file(const string &filename);
+vector<Graph> load_from_file(const string &filename, int nbGraphMinus=-1);
 
 //void save_to_file(const string &filename, const unordered_map<vector<int>, vector<Graph>, vector_hash> &graphList, int nbGraph);
 void save_to_file(const string &filename, const sparse_hash_map<vector<char>, vector<Graph>> &graphList, int nbGraph);
@@ -52,5 +53,5 @@ void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert);
 bool detect_C4(const vector<long long> &pathList, int code);
 
 
-vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, vector<int> &sizesToDo, ofstream &outFile, int idThread, mutex &lock);
+vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, vector<int> &sizesToDo, ogzstream &outFile, int idThread, mutex &lock);
 #endif

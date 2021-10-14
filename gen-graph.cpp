@@ -14,7 +14,7 @@
 
 #include <bitset>
 
-
+#include "gzstream/gzstream.h"
 #include "sparsepp/spp.h"
 #include "Graph.hh"
 #include "gen-graph.hh"
@@ -69,15 +69,18 @@ bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<v
     return true;
 }
 
-vector<Graph> load_from_file(const string &filename)
+vector<Graph> load_from_file(const string &filename, int nbGraphMinus)
 {
     vector<Graph> res;
-    ifstream file(filename);
+    igzstream file(filename.c_str());
     int nbGraph;
     if (file.peek() == EOF)
         return res;
-    file >> nbGraph;
+    if (nbGraphMinus == -1)
+        file >> nbGraph;
 
+    else
+        nbGraph = nbGraphMinus;
     res.resize(nbGraph);
     for (int i = 0; i < nbGraph; i++)
     {
@@ -111,7 +114,7 @@ vector<Graph> load_from_file(const string &filename)
 void save_to_file(const string &filename, const sparse_hash_map<vector<char>, vector<Graph>> &graphList, int nbGraph)
 {
     vector<Graph> res;
-    ofstream file(filename);
+    ogzstream file(filename.c_str());
 
     file << nbGraph << endl;
 
@@ -286,10 +289,19 @@ vector<Graph> gen_graphs(int nbVert)
 
     else
     {
-        stringstream fileMinusName;
+        stringstream fileMinusName, fileSizeMinusName;
         fileMinusName << "Alexgraphedelataille";
-        fileMinusName << nbVert-1 << ".txt";
-        vector<Graph> listMinus = load_from_file(fileMinusName.str());
+        fileMinusName << nbVert-1 << ".txt.gz";
+        fileSizeMinusName << "Alexsizegraphedelataille" << nbVert-1 << ".txt";
+        ifstream fSize(fileSizeMinusName.str());
+        if (fSize.peek() == EOF)
+        {
+            cerr << "Lancer avant la taille -1 \n";
+            exit(3);
+        }
+        int nbGMinus = -1;
+        fSize >> nbGMinus;
+        vector<Graph> listMinus = load_from_file(fileMinusName.str(), nbGMinus);
         if (listMinus.empty())
         {
             cerr << "Lancer avant la taille -1 \n";
@@ -326,9 +338,9 @@ vector<Graph> gen_graphs(int nbVert)
 
         stringstream fileName;
         fileName << "Alexgraphedelataille";
-        fileName << nbVert << ".txt";
+        fileName << nbVert << ".txt.gz";
 
-        ofstream outFile(fileName.str());
+        ogzstream outFile(fileName.str().c_str());
 
         mutex threadMutex;
         vector<thread> threads(nbProc-1);
@@ -339,6 +351,7 @@ vector<Graph> gen_graphs(int nbVert)
         lastThread.join();
         for (int i = 0; i < nbProc-1; i++)
             threads[i].join();
+        outFile.close();
 
         return {};
 
@@ -427,7 +440,7 @@ vector<Graph> gen_graphs(int nbVert)
 
 }
 
-vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, vector<int> &sizesToDo, ofstream &outFile, int idThread, mutex &lock)
+vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, vector<int> &sizesToDo, ogzstream &outFile, int idThread, mutex &lock)
 {
     const int nbVert = listMinus[0].nbVert+1;
     const int puissNewVert = (1<<(nbVert-1));

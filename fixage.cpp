@@ -4,10 +4,12 @@
 #include <cassert>
 #include <algorithm>
 
+#include "gzstream/gzstream.h"
 #include "fixage.hh"
 #include "Graph.hh"
 #include "test-properties.hh"
 #include "gen-graph.hh"
+
 
 
 vector<char> bigDegreeList;
@@ -134,7 +136,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
     fileNamePlus << "Alexfixeursdelataille";
     fileNamePlus << nbVert+1 << ".txt";
 
-    ifstream filePlus(fileNamePlus.str());
+    igzstream filePlus(fileNamePlus.str());
     int nbPlus;
     if (filePlus.peek() != EOF)
     {

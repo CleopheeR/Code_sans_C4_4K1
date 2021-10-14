@@ -3,6 +3,7 @@
 #include <fstream>
 #include <algorithm>
 
+#include "gzstream/gzstream.h"
 #include "Graph.hh"
 
 vector<int> *adjListGlobal;
@@ -113,7 +114,7 @@ void Graph::remove_last_edge(int u, int v, vector<int> &degreeList)
 }
 
 
-void Graph::print_in_file(ofstream &f) const
+void Graph::print_in_file(ogzstream &f) const
 {
     f << nbVert << " " << nbEdge;
     for (int i = 0; i < nbVert; i++)

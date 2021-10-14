@@ -6,6 +6,8 @@
 #include <cassert>
 #include <vector>
 
+#include "gzstream/gzstream.h"
+
 using namespace std;
 
 #ifndef DEF_GRAPH_HH
@@ -68,7 +70,7 @@ class Graph
         }
 
 
-        Graph (ifstream &f)
+        Graph (igzstream &f)
         {
             int n, m;
             f >> n >> m;
@@ -95,7 +97,7 @@ class Graph
                 free(vertsCol);
         }
 
-        void print_in_file(ofstream &f) const;
+        void print_in_file(ogzstream &f) const;
 
         void init(int n, int m);
 
