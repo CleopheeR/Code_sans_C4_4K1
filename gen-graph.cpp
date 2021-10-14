@@ -308,9 +308,21 @@ vector<Graph> gen_graphs(int nbVert)
 
         vector<int> degreesToDo;
         degreesToDo.reserve(degMax-degMin+1+nbVert);
-        for (int i = degMin; i <= degMax+nbVert-1; i++)
-            degreesToDo.push_back(i);
+        int moy = (degMax+degMin+nbVert)/2;
+        degreesToDo.push_back(moy);
+        for (int i = 1; ; i++)
+        {
+            int d1 = moy-i;
+            int d2 = moy+i;
 
+            if (d1 >= degMin)
+                degreesToDo.push_back(d1);
+            if (d2 <= degMax+nbVert-1)
+                degreesToDo.push_back(d2);
+            //degreesToDo.push_back(i);
+            if (d1 < degMin && d2 > degMax+nbVert-1)
+                break;
+        }
 
         stringstream fileName;
         fileName << "Alexgraphedelataille";
