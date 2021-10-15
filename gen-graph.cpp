@@ -26,6 +26,7 @@ using spp::sparse_hash_map;
 vector<int> subsetsBySize[NBMAXVERT];
 
 //TODO idée : stocker aussi somme des degrés des voisins ? (bof, peu portable sauf si double indirection...)
+long long nbTotalGraphsWritten = 0;
 
 void gen_subsets(int k, int n, vector<vector<int>> &listRes)
 {
@@ -296,7 +297,8 @@ vector<Graph> gen_graphs(int nbVert)
         ifstream fSize(fileSizeMinusName.str());
         if (fSize.peek() == EOF)
         {
-            cerr << "Lancer avant la taille -1 \n";
+            cerr << "Lancer avant la taille -1 size \n";
+            cerr << fileSizeMinusName.str() << endl;
             exit(3);
         }
         int nbGMinus = -1;
@@ -353,6 +355,11 @@ vector<Graph> gen_graphs(int nbVert)
             threads[i].join();
         outFile.close();
 
+        stringstream fileSizeName;
+        fileSizeName << "Alexsizegraphedelataille" << nbVert << ".txt";
+        ofstream fileSize(fileSizeName.str());
+        fileSize << nbTotalGraphsWritten << "\n";
+        fileSize.close();
         return {};
 
         int cptGraph = 0;
@@ -526,11 +533,18 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, ve
         }
         lock.lock();
         cerr << "seen " << nbGraph << " graphs for size " << m << endl;
+        long long curNbWritten = 0;
         for (const auto& inDict : deglist2Graphs)
+        {
+            curNbWritten += inDict.second.size();
             for (const Graph &g : inDict.second)
+            {
                 g.print_in_file(outFile);
+            }
+        }
         deglist2Graphs.clear();
         lock.unlock();
+        nbTotalGraphsWritten += curNbWritten;
 
     }
 
