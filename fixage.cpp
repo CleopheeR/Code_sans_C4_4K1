@@ -279,6 +279,7 @@ void gen_fixeurs_thread(int nbVert, const vector<Graph> &graphList, int** isTwin
 {
     vector<char> degreeListPlus(nbVert+5);
     int nbEdgeCombi = 1<<nbVert;
+    vector<Graph> ourFixeurs;
 
 
     int cptGraph = 0;
