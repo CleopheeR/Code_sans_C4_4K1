@@ -151,7 +151,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
 
     stringstream fileNamePlus;
     fileNamePlus << "Alexfixeursdelataille";
-    fileNamePlus << nbVert+1 << ".txt";
+    fileNamePlus << nbVert+1 << ".txt.gz";
 
     igzstream filePlus(fileNamePlus.str().c_str());
     int nbPlus;
@@ -226,7 +226,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
     cout  << "Il y a " << fixeursList.size() << " fixeurs à " << nbVert << " sommets.\n";
     stringstream fixeursFileNamee;
     fixeursFileNamee << "Alexfixeursdelataille";
-    fixeursFileNamee << nbVert << ".txt";
+    fixeursFileNamee << nbVert << ".txt.gz";
 
     //save_to_file(fixeursFileName.str(), deglist2Fixeurs, nbGraph);
     //TODO maybe refaire fonction ?

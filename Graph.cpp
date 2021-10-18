@@ -123,7 +123,7 @@ void Graph::print_in_file(ogzstream &f) const
             if (i > y)
                 f << "\t" << i << ";" << y;
     }
-    f << endl;
+    f << "\n";
 }
 
 void Graph::print(void) const

@@ -81,9 +81,11 @@ int main(int argc, char* argv[])
 
     else if (testOrGen == 'S') //statistics
     {
+
         stringstream fileName;
         fileName << "Alexgraphedelataille";
-        fileName << nbVert << ".txt";
+        fileName << nbVert << ".txt.gz";
+        cerr << fileName << endl;
         vector<Graph> list = load_from_file(fileName.str());
 
         vector<int> cpt((nbVert*nbVert)/2+1, 0);
