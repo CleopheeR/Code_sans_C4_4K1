@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
         stringstream fileName;
         fileName << "Alexgraphedelataille";
         fileName << nbVert << ".txt.gz";
-        cerr << fileName << endl;
+        cerr << fileName.str() << endl;
         vector<Graph> list = load_from_file(fileName.str());
 
         vector<int> cpt((nbVert*nbVert)/2+1, 0);
