@@ -23,6 +23,18 @@ extern int nbProc;
 #define are_neighb(g, u, v) (g.adjMat[u]&(1<<v))
 using namespace std;
 
+inline int read_int(const char *str, int &index)
+{
+    int res = 0;
+    while (str[index] >= '0' && str[index] <= '9')
+    {
+        res *= 10;
+        res += str[index]-'0';
+        index++;
+    }
+    return res;
+}
+
 class Graph
 {
     public:
@@ -72,18 +84,59 @@ class Graph
 
         Graph (igzstream &f)
         {
+            string toto;
+            getline(f, toto);
             int n, m;
-            f >> n >> m;
+            int pos = 0;
+            const char* totoStr = toto.c_str();
+            n = read_int(totoStr, pos);
+            pos++;
+            m = read_int(totoStr, pos);
+            pos++;
+
+
             init(n, m);
             nbEdge = m; // car ajouté par add_edge
             for (int i = 0; i < m; i++)
             {
                 char virgule;
                 int u, v;
-                f >> u >> virgule >> v;
+                u = read_int(totoStr, pos);
+                pos++;
+                v = read_int(totoStr, pos);
 
-                adjMat[u] |= (1<<v);
-                adjMat[v] |= (1<<u);
+                adjMat[u] ^= (1<<v);
+                adjMat[v] ^= (1<<u);
+            }
+            vertsCol = NULL;
+        }
+
+        void fill_from_file(igzstream &f)
+        {
+            static string toto;
+            getline(f, toto);
+            int n, m;
+
+            int pos = 0;
+            const char* totoStr = toto.c_str();
+            n = read_int(totoStr, pos);
+            pos++;
+            m = read_int(totoStr, pos);
+            pos++;
+
+            init(n, m);
+
+            nbEdge = m;
+            for (int i = 0; i < m; i++)
+            {
+                char virgule;
+                int u, v;
+                u = read_int(totoStr, pos);
+                pos++;
+                v = read_int(totoStr, pos);
+
+                adjMat[u] ^= (1<<v);
+                adjMat[v] ^= (1<<u);
             }
             vertsCol = NULL;
         }

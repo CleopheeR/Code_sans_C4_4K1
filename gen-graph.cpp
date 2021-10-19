@@ -85,7 +85,7 @@ vector<Graph> load_from_file(const string &filename, int nbGraphMinus)
     res.resize(nbGraph);
     for (int i = 0; i < nbGraph; i++)
     {
-        res[i] = Graph(file);
+        res[i].fill_from_file(file);
     }
 
     /*
