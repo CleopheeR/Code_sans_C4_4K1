@@ -121,7 +121,7 @@ void Graph::print_in_file(ogzstream &f) const
     {
         for (int y : get_neighb(i))
             if (i > y)
-                f << "\t" << i << ";" << y;
+                f << " " << i << ";" << y;
     }
     f << "\n";
 }

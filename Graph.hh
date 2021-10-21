@@ -26,6 +26,8 @@ using namespace std;
 inline int read_int(const char *str, int &index)
 {
     int res = 0;
+    //while (str[index] < '0' || str[index] > '9')
+    //    index++;
     while (str[index] >= '0' && str[index] <= '9')
     {
         res *= 10;
@@ -104,6 +106,7 @@ class Graph
                 u = read_int(totoStr, pos);
                 pos++;
                 v = read_int(totoStr, pos);
+                pos++;
 
                 adjMat[u] ^= (1<<v);
                 adjMat[v] ^= (1<<u);
@@ -134,6 +137,8 @@ class Graph
                 u = read_int(totoStr, pos);
                 pos++;
                 v = read_int(totoStr, pos);
+                pos++;
+
 
                 adjMat[u] ^= (1<<v);
                 adjMat[v] ^= (1<<u);
