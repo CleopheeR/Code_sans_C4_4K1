@@ -37,10 +37,10 @@ vector<Graph> gen_graphs(int nbVert);
 bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico, int idThread = 0);
 
 
-vector<Graph> load_from_file(const string &filename, int nbGraphMinus=-1);
+vector<Graph> load_from_file(const string &filename, long long nbGraphMinus=-1);
 
 //void save_to_file(const string &filename, const unordered_map<vector<int>, vector<Graph>, vector_hash> &graphList, int nbGraph);
-void save_to_file(const string &filename, const sparse_hash_map<vector<char>, vector<Graph>> &graphList, int nbGraph);
+void save_to_file(const string &filename, const sparse_hash_map<vector<char>, vector<Graph>> &graphList, long long nbGraph);
 
 
 void gen_subsets(int k, int n, vector<vector<int>> &listRes);

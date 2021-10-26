@@ -119,7 +119,7 @@ bool is_pre_or_fixeur(const Graph &g, bool prefixeurTest, const sparse_hash_map<
 
 sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
 {
-     sparse_hash_map<vector<char>, vector<Graph>> deglist2Fixeurs;
+    sparse_hash_map<vector<char>, vector<Graph>> deglist2Fixeurs;
     sparse_hash_map<vector<char>, vector<Graph>> deglist2PrefixeursPlus;
     vector<char> degreeList(nbVert+4);
     vector<char> degreeListPlus(nbVert+5);
@@ -137,7 +137,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
         cerr << fileSizeName.str() << endl;
         exit(3);
     }
-    int nbGToRead;
+    long long nbGToRead;
     fSize >> nbGToRead;
     vector<Graph> listGraphs = load_from_file(fileName.str(), nbGToRead);
     if (listGraphs.empty())
@@ -151,14 +151,14 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
     fileNamePlus << nbVert+1 << ".txt.gz";
 
     igzstream filePlus(fileNamePlus.str().c_str());
-    int nbPlus;
+    long long nbPlus;
     if (filePlus.peek() != EOF)
     {
         Graph gLu;
         filePlus >> nbPlus;
 
         cerr << "ohlalal : " << nbPlus << endl;
-        for (int i = 0; i < nbPlus; i++)
+        for (long long i = 0; i < nbPlus; i++)
         {
             gLu = Graph(filePlus);
             for (int u = 0; u < gLu.nbVert; u++)
@@ -208,13 +208,13 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
     vector<Graph> fixeursList;
     fixeursList.reserve(1000000);
 
-    int nbPerProc = listGraphs.size()/nbProc;
+    long long nbPerProc = listGraphs.size()/nbProc;
     mutex threadMutex;
     vector<thread> threads(nbProc-1);
     for (int iProc = 0; iProc < nbProc-1; iProc++)
-        threads[iProc] = thread(&gen_fixeurs_thread, nbVert, std::cref(listGraphs), isTwinCompat, std::ref(fixeursList), std::cref(deglist2PrefixeursPlus), iProc*nbPerProc, (iProc+1)*nbPerProc, std::ref(threadMutex), iProc);
+        threads[iProc] = thread(&gen_fixeurs_thread, nbVert, std::cref(listGraphs), isTwinCompat, std::ref(fixeursList), std::cref(deglist2PrefixeursPlus), std::ref(threadMutex), iProc);
 
-    thread lastProc = thread(&gen_fixeurs_thread, nbVert, std::cref(listGraphs), isTwinCompat, std::ref(fixeursList), std::cref(deglist2PrefixeursPlus), (nbProc-1)*nbPerProc, listGraphs.size(), std::ref(threadMutex), nbProc-1);
+    thread lastProc = thread(&gen_fixeurs_thread, nbVert, std::cref(listGraphs), isTwinCompat, std::ref(fixeursList), std::cref(deglist2PrefixeursPlus), std::ref(threadMutex), nbProc-1);
 
     lastProc.join();
     for (int iProc = 0; iProc < nbProc-1; iProc++)
@@ -272,22 +272,23 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
 }
 
 
-void gen_fixeurs_thread(int nbVert, const vector<Graph> &graphList, int** isTwinCompat, vector<Graph> &fixeursList, const sparse_hash_map<vector<char>, vector<Graph>> &deglist2PrefixeursPlus, int iBeg, int iEnd, mutex &mutInsert, int idThread)
+void gen_fixeurs_thread(int nbVert, const vector<Graph> &graphList, int** isTwinCompat, vector<Graph> &fixeursList, const sparse_hash_map<vector<char>, vector<Graph>> &deglist2PrefixeursPlus, mutex &mutInsert, int idThread)
 {
     vector<char> degreeListPlus(nbVert+5);
     int nbEdgeCombi = 1<<nbVert;
     vector<Graph> ourFixeurs;
 
 
-    int cptGraph = 0;
+    long long cptGraph = 0;
+    long long nbGToDo = graphList.size();
 
-    for (int iG = iBeg; iG < iEnd; iG++)
+    for (long long iG = idThread; iG < nbGToDo; iG += nbProc)
     {
         //cerr << " coucou " << iG << " (" << idThread << endl;
         const Graph &g = graphList[iG];
         cptGraph++;
         if (cptGraph%10000 == 0)
-            cerr << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << iEnd-iBeg << "(" << iBeg << "," << iEnd << ")" << endl;
+            cerr << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << nbGToDo/nbProc << "(" << idThread << ")" << endl; //iEnd-iBeg << "(" << iBeg << "," << iEnd << ")" << endl;
 
         if (is_pre_or_fixeur(g, true, deglist2PrefixeursPlus, isTwinCompat, idThread))
         {

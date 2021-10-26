@@ -70,11 +70,11 @@ bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<v
     return true;
 }
 
-vector<Graph> load_from_file(const string &filename, int nbGraphMinus)
+vector<Graph> load_from_file(const string &filename, long long nbGraphMinus)
 {
     vector<Graph> res;
     igzstream file(filename.c_str());
-    int nbGraph;
+    long long nbGraph;
     if (file.peek() == EOF)
         return res;
     if (nbGraphMinus == -1)
@@ -83,7 +83,7 @@ vector<Graph> load_from_file(const string &filename, int nbGraphMinus)
     else
         nbGraph = nbGraphMinus;
     res.resize(nbGraph);
-    for (int i = 0; i < nbGraph; i++)
+    for (long long i = 0; i < nbGraph; i++)
     {
         res[i].fill_from_file(file);
     }
@@ -112,7 +112,7 @@ vector<Graph> load_from_file(const string &filename, int nbGraphMinus)
 }
 
 //void save_to_file(const string &filename, const unordered_map<vector<int>, vector<Graph>, vector_hash> &graphList, int nbGraph)
-void save_to_file(const string &filename, const sparse_hash_map<vector<char>, vector<Graph>> &graphList, int nbGraph)
+void save_to_file(const string &filename, const sparse_hash_map<vector<char>, vector<Graph>> &graphList, long long nbGraph)
 {
     vector<Graph> res;
     ogzstream file(filename.c_str());
@@ -417,7 +417,7 @@ vector<Graph> gen_graphs(int nbVert)
     cout << sizeTotalTwinVector << " elements in twin vector, so average " << (double)sizeTotalTwinVector/(double)listMinus.size() << endl;
     }
 
-    int nbGraph = 0;
+    long long nbGraph = 0;
     for (const auto& inDict : deglist2Graphs)
         nbGraph += inDict.second.size();
 
@@ -464,7 +464,7 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, ve
 
     const int nbEdgeCombi = (1<<(nbVert-1));
 
-    int cptGraph = 0;
+    long long cptGraph = 0;
     Graph gWithEdges;
     gWithEdges.init(nbVert, -1);
 
@@ -482,7 +482,7 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, ve
         sizesToDo.pop_back();
         lock.unlock();
 
-        int nbGraph = 0;
+        long long nbGraph = 0;
         for (const Graph& g : listMinus)
         {
             if (g.nbEdge > m || g.nbEdge + g.nbVert < m)
