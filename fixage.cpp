@@ -46,7 +46,6 @@ bool is_pre_or_fixeur(const Graph &g, bool prefixeurTest, const sparse_hash_map<
 
 
 
-
     for (int code = 0; code < nbEdgeCombi; code++)
     {
         const vector<int> &newEdgesList = adjListGlobal[code];
@@ -85,17 +84,15 @@ bool is_pre_or_fixeur(const Graph &g, bool prefixeurTest, const sparse_hash_map<
             continue;
         }
 
-
         if (!prefixeurTest)
             return false;
 
         bool isGBigPreFixeur = false;
         vector<char> &curBigDegreeList = bigDegreeList[idThread];
-
         for (int i = 0; i < gWithEdges.nbVert; i++)
             curBigDegreeList[i] = gWithEdges.get_neighb(i).size();
         sort(curBigDegreeList.begin(), curBigDegreeList.begin()+gWithEdges.nbVert);
-        //gWithEdges.compute_hashes(bigDegreeList);
+        gWithEdges.compute_hashes(curBigDegreeList);
         const auto &itPrefixeursPlus1ToTest = prefixeurPlusDict.find(curBigDegreeList);
         //for (const Graph& gSeen : prefixeurPlusDict[bigDegreeList])
         if (itPrefixeursPlus1ToTest == prefixeurPlusDict.cend())
