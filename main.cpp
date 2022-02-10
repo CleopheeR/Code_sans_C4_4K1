@@ -5,6 +5,7 @@
 #include <fstream>
 //#include <map>
 
+#include "sparsepp/spp.h"
 #include "Graph.hh"
 #include "gen-graph.hh"
 #include "fixage.hh"
@@ -24,14 +25,15 @@ int main(int argc, char* argv[])
     if (argc > 3)
         nbProc = atoi(argv[3]);
 
+    init_adjListGlobal(nbVert+1);
     if (testOrGen == 'G')
     {
-        init_adjListGlobal(nbVert);
+        //init_adjListGlobal(nbVert);
         vector<Graph> graphList;
         graphList = gen_graphs(nbVert);
 
 
-        /*
+/*
         stringstream fileName;
         fileName << "graphedelataille";
         fileName << nbVert << ".txt";
@@ -64,20 +66,50 @@ int main(int argc, char* argv[])
                 gg.print();
             }
         }
-        */
 
+    */
     }
 
 
     else if (testOrGen == 'F')
     {
-        init_adjListGlobal(nbVert+1);
         gen_fixeurs(nbVert);
 
 
 
 
     }
+
+    else if (testOrGen == 'M') // Find minimal prefixers
+    {
+        stringstream fileNameMinus;
+        fileNameMinus << "Alexfixeursdelataille";
+        fileNameMinus << nbVert-1 << ".txt.gz";
+        cerr << fileNameMinus.str() << endl;
+
+        vector<Graph> listGraphsMinus = load_from_file(fileNameMinus.str());
+
+
+        stringstream fileName;
+        fileName << "Alexfixeursdelataille";
+        fileName << nbVert << ".txt.gz";
+
+        sparse_hash_map<vector<char>, vector<Graph>> prefixeurs;
+        read_prefixeurs_compute_hash(fileName.str(), nbVert, prefixeurs);
+
+        cerr << listGraphsMinus.size() << " fixeurs minus seen\n";
+
+
+        get_minimal_fixeurs(listGraphsMinus, prefixeurs);
+
+        for (const auto &pairDegG : prefixeurs)
+        {
+            for (const Graph &g : pairDegG.second)
+                g.print();
+        }
+
+    }
+
 
     else if (testOrGen == 'S') //statistics
     {
@@ -98,6 +130,38 @@ int main(int argc, char* argv[])
 
 
     }
+
+    else if (testOrGen == 'C') //Compare
+    {
+        cerr << nbVert << " zut \n";
+        //init_adjListGlobal(nbVert);
+        igzstream fileF13("graphe-f13.txt");
+        Graph f13(fileF13);
+
+        //igzstream fileFixeurs(argv[3]);
+        cerr << "file = " << argv[3] << endl;
+        vector<Graph> listGraphs = load_from_file(argv[3]);
+
+        sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs;
+        cerr << listGraphs.size() << " mdr " << endl;
+
+
+        vector<char> degreeList(13+5);
+
+        for (Graph& g : listGraphs)
+        {
+            g.compute_hashes(degreeList);
+            if (!check_if_seen_and_add(g, degreeList, deglist2Graphs))
+                cerr << "ERROR" << endl;
+        }
+
+        f13.print();
+        f13.compute_hashes(degreeList);
+        if (!check_if_seen_and_add(f13, degreeList, deglist2Graphs))
+            cout << "YOUHOU !!!\n";
+    }
+
+
 
     free_adjListGlobal();
 
