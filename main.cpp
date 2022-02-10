@@ -89,8 +89,33 @@ int main(int argc, char* argv[])
         vector<Graph> list = load_from_file(fileName.str());
 
         vector<int> cpt((nbVert*nbVert)/2+1, 0);
-        for (const Graph &g : list)
-            cpt[g.nbEdge]++;
+
+	igzstream file(fileName.str().c_str());
+	stringstream fileSizeMinusName;
+	fileSizeMinusName << "Alexsizegraphedelataille" << nbVert << ".txt";
+        ifstream fSize(fileSizeMinusName.str());
+        if (fSize.peek() == EOF)
+        {
+            cerr << "Lancer avant la taille -1 size \n";
+            cerr << fileSizeMinusName.str() << endl;
+            exit(3);
+        }
+        int nbGMinus = -1;
+        fSize >> nbGMinus;
+        
+	string toto;
+
+	for (int i = 0; i < nbGMinus; i++)
+	{
+		if (i%500000 == 0)
+			cerr << "on est à " << i << " sur " << nbGMinus << endl;
+		getline(file, toto);
+		stringstream totoSs(toto);
+		int n,m;
+		totoSs >> n >> m;
+		cpt[m]++;
+		
+	}
 
         for (int i = 0; i < cpt.size(); i++)
             if (cpt[i] != 0)
