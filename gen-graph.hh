@@ -11,24 +11,6 @@
 #include "gzstream/gzstream.h"
 #include "Graph.hh"
 
-namespace std
-{
-    template<>
-struct hash<vector<char>> {
-    inline size_t operator()(const vector<char> &v) const {
-        int ret = 0;
-        //int nbElem = v.size();
-    //for (int i = 0; i < nbElem; i++)
-    for (const int x : v)
-        //ret ^= (ret << 5) + (ret >> 2) + x;//v[i];
-        ret ^= x + 0x9e3779b9 + (ret << 6) + (ret >> 2);
-    //long long d = v.back();
-    //ret ^= (d << 32);
-    return ret;
-    }
-};
-}
-
 
 using spp::sparse_hash_map;
 vector<Graph> gen_graphs(int nbVert);

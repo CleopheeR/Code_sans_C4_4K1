@@ -77,8 +77,12 @@ vector<Graph> load_from_file(const string &filename, long long nbGraphMinus)
     long long nbGraph;
     if (file.peek() == EOF)
         return res;
-    if (nbGraphMinus == -1)
+    if (nbGraphMinus == -1) // Utile pourquoi ???
+    {
+        string tata;
         file >> nbGraph;
+        getline(file, tata);
+    }
 
     else
         nbGraph = nbGraphMinus;
