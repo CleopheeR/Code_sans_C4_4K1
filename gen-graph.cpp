@@ -87,6 +87,7 @@ vector<Graph> load_from_file(const string &filename, long long nbGraphMinus)
     {
         res[i].fill_from_file(file);
     }
+    file.close();
 
     /*
     long long nbTwinTotal = 0;
@@ -303,7 +304,9 @@ vector<Graph> gen_graphs(int nbVert)
         }
         int nbGMinus = -1;
         fSize >> nbGMinus;
+	fSize.close();
         vector<Graph> listMinus = load_from_file(fileMinusName.str(), nbGMinus);
+
         if (listMinus.empty())
         {
             cerr << "Lancer avant la taille -1 \n";
@@ -359,6 +362,7 @@ vector<Graph> gen_graphs(int nbVert)
         fileSizeName << "Alexsizegraphedelataille" << nbVert << ".txt";
         ofstream fileSize(fileSizeName.str());
         fileSize << nbTotalGraphsWritten << "\n";
+	cerr << "Generated " << nbTotalGraphsWritten << " graphs for size " << nbVert << endl;
         fileSize.close();
         return {};
 
@@ -370,7 +374,7 @@ vector<Graph> gen_graphs(int nbVert)
         for (const Graph& g : listMinus)
         {
             cptGraph++;
-            if (cptGraph%10000 == 0)
+            if (cptGraph%50000 == 0)
                 cout << "Nous sommes sur le " << cptGraph << "-ème graphe sur " << listMinus.size() << endl;
 
             twinLists.clear();
@@ -490,8 +494,8 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, ve
             //cerr << "\t" << g.nbEdge << endl;
             nbGraph++;
             cptGraph++;
-            if (cptGraph%10000 == 0)
-                cout << "Nous sommes sur leeeee " << cptGraph << "-ème graphe sur " << listMinus.size() << endl;
+            if (cptGraph%50000 == 0)
+                cout << "Nous sommes sur leeeee " << cptGraph << "-ème graphe sur " << listMinus.size() << " (nbEdges: " << m << ')' << endl;
 
             twinLists.clear();
             gen_twin_list(g, twinLists, nbVert);
@@ -533,6 +537,7 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, ve
         }
         lock.lock();
         cerr << "seen " << nbGraph << " graphs for size " << m << endl;
+
         long long curNbWritten = 0;
         for (const auto& inDict : deglist2Graphs)
         {
@@ -543,9 +548,9 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, ve
             }
         }
         deglist2Graphs.clear();
-        lock.unlock();
         nbTotalGraphsWritten += curNbWritten;
-
+	cerr << "finished writing for nbEdges = " << m << endl;
+        lock.unlock();
     }
 
     /*
