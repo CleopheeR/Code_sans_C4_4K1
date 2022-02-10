@@ -323,7 +323,7 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
 
     bool toto = gen_iso_matching(g1, g2, 0, idThread);
 
-    if (nbTimesCalled % 50000 == 0)
+    if (nbTimesCalled % 100000 == 0)
     {
         double avg = nbTotalBucketSize/(double)nbTimesCalled;
         cerr << nbTimesCalled << "  " << nbTimesAborted << " " << avg << "\n";
