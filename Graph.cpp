@@ -3,6 +3,7 @@
 #include <fstream>
 #include <algorithm>
 
+#include "sparsepp/spp.h"
 #include "gzstream/gzstream.h"
 #include "Graph.hh"
 
@@ -225,4 +226,28 @@ void free_adjListGlobal(void)
     free(adjListGlobal);
 }
 
+void read_prefixeurs_compute_hash(const string &fName, int nbVert,sparse_hash_map<vector<char>, vector<Graph>> &deglist2Graphs)
+{
+    vector<char> degreeList(nbVert+4);
+    long long nbGraph;
+    igzstream file(fName.c_str());
+    if (file.peek() != EOF)
+    {
+        Graph gLu;
+        file >> nbGraph;
+
+        cerr << "ohlalal : " << nbGraph << endl;
+        for (long long i = 0; i < nbGraph; i++)
+        {
+            gLu = Graph(file);
+            for (int u = 0; u < gLu.nbVert; u++)
+                degreeList[u] = gLu.get_neighb(u).size();
+            sort(degreeList.begin(), degreeList.begin()+gLu.nbVert);
+            gLu.compute_hashes(degreeList);
+            deglist2Graphs[degreeList].push_back(gLu);
+        }
+    }
+
+    file.close();
+}
 
