@@ -1,3 +1,6 @@
+#ifndef DEF_GRAPH_HH
+#define DEF_GRAPH_HH
+
 #include <cstdlib>
 #include <vector>
 #include <utility>
@@ -6,12 +9,31 @@
 #include <cassert>
 #include <vector>
 
+#include "sparsepp/spp.h"
 #include "gzstream/gzstream.h"
 
+using spp::sparse_hash_map;
 using namespace std;
 
-#ifndef DEF_GRAPH_HH
-#define DEF_GRAPH_HH
+namespace std
+{
+    template<>
+struct hash<vector<char>> {
+    inline size_t operator()(const vector<char> &v) const {
+        int ret = 0;
+        //int nbElem = v.size();
+    //for (int i = 0; i < nbElem; i++)
+    for (const int x : v)
+        //ret ^= (ret << 5) + (ret >> 2) + x;//v[i];
+        ret ^= x + 0x9e3779b9 + (ret << 6) + (ret >> 2);
+    //long long d = v.back();
+    //ret ^= (d << 32);
+    return ret;
+    }
+};
+}
+
+
 
 extern vector<int> *adjListGlobal;
 
@@ -190,6 +212,7 @@ class Graph
 void init_adjListGlobal(int n);
 void free_adjListGlobal(void);
 
+void read_prefixeurs_compute_hash(const string &fName, int nbVert,sparse_hash_map<vector<char>, vector<Graph>> &deglist2Graphs);
 #endif
 
 

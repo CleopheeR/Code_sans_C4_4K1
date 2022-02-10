@@ -150,6 +150,8 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
     fileNamePlus << "Alexfixeursdelataille";
     fileNamePlus << nbVert+1 << ".txt.gz";
 
+    read_prefixeurs_compute_hash(fileNamePlus.str(), nbVert+1 ,deglist2PrefixeursPlus);
+    /*
     igzstream filePlus(fileNamePlus.str().c_str());
     long long nbPlus;
     if (filePlus.peek() != EOF)
@@ -167,7 +169,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
             gLu.compute_hashes(degreeListPlus);
             deglist2PrefixeursPlus[degreeListPlus].push_back(gLu);
         }
-    }
+    }*/
 
 
 
@@ -300,3 +302,96 @@ void gen_fixeurs_thread(int nbVert, const vector<Graph> &graphList, int** isTwin
     }
 }
 
+
+void remove_nonminimal_fixeurs(const Graph &g, sparse_hash_map<vector<char>, vector<Graph>> &prefixeurPlusDict, int **isTwinCompat, int idThread)
+{
+    int nbVert = g.nbVert+1;
+    const int puissNewVert = (1<<(nbVert-1));
+    const int nbEdgeCombi = (1<<(nbVert-1));
+
+    if (bigDegreeList[idThread].empty())
+        bigDegreeList[idThread].resize(g.nbVert+5);
+    Graph &gWithEdges = isPreOrFixeurGWithEdges[idThread];
+    if (gWithEdges.adjMat == NULL)
+        gWithEdges.init(g.nbVert+1, -1);
+    bool printDebug = false;
+
+    //vector<long long> twinLists2;
+    //twinLists2.reserve(NBMAXVERT*NBMAXVERT);
+    bool isTwin[NBMAXVERT];
+    vector<long long> pathLength2;
+    pathLength2.reserve(NBMAXVERT);
+
+    if (g.nbVert == 0)
+        exit(78);
+    gen_P2_list(g, pathLength2, nbVert);
+
+
+
+    for (int code = 0; code < nbEdgeCombi; code++)
+    {
+        const vector<int> &newEdgesList = adjListGlobal[code];
+
+        /*bool refuseBecauseTwins = can_discard_edgelist(twinLists2, isTwinCompat[code], nbVert);
+        if (refuseBecauseTwins)
+        {
+            //cerr << "lol YEAH\n";
+            continue;
+        }*/
+
+
+        bool hasC4 = detect_C4(pathLength2, code);
+        if (hasC4)
+            continue;
+        gWithEdges.copy_and_add_new_vertex_bis(g, newEdgesList, puissNewVert, code);
+
+        if (printDebug)
+        {
+            gWithEdges.print();
+            cout << "-----------------";
+        }
+
+        if (!free_C4(gWithEdges, gWithEdges.nbVert) || !free_O4(gWithEdges, gWithEdges.nbVert))
+        //if (!free_O4(gWithEdges, gWithEdges.nbVert))
+        {
+            if (printDebug)
+                cerr << "cond1\n";
+            continue;
+        }
+
+        vector<char> &curBigDegreeList = bigDegreeList[idThread];
+        for (int i = 0; i < gWithEdges.nbVert; i++)
+            curBigDegreeList[i] = gWithEdges.get_neighb(i).size();
+        sort(curBigDegreeList.begin(), curBigDegreeList.begin()+gWithEdges.nbVert);
+        gWithEdges.compute_hashes(curBigDegreeList);
+        const auto &itPrefixeursPlus1ToTest = prefixeurPlusDict.find(curBigDegreeList);
+        if (itPrefixeursPlus1ToTest == prefixeurPlusDict.cend())
+            continue;
+        vector<Graph> &prefixeursPlus1ToTest = itPrefixeursPlus1ToTest->second;
+        int iG = 0;
+        for (;iG < prefixeursPlus1ToTest.size(); iG++)
+        {
+            const Graph& gSeen = prefixeursPlus1ToTest[iG];
+            if (are_isomorphic(gWithEdges, gSeen, idThread))
+                break;
+        }
+
+        if (iG < prefixeursPlus1ToTest.size())
+            prefixeursPlus1ToTest.erase(prefixeursPlus1ToTest.begin()+iG);
+
+    }
+}
+
+
+void get_minimal_fixeurs(const vector<Graph> &prefixeurMinusList, sparse_hash_map<vector<char>, vector<Graph>> &prefixeurPlusDict)
+{
+    for (const Graph &g : prefixeurMinusList)
+        remove_nonminimal_fixeurs(g, prefixeurPlusDict, NULL, 0);
+
+
+    int nbMinimal = 0;
+    for (const auto& inDict : prefixeurPlusDict)
+        nbMinimal += inDict.second.size();
+
+    cout << "Il y a " << nbMinimal << " prefixeurs minimaux.\n";
+}
