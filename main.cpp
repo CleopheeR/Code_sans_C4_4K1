@@ -3,7 +3,6 @@
 #include <sstream>
 #include <string>
 #include <fstream>
-//#include <map>
 
 #include "sparsepp/spp.h"
 #include "Graph.hh"
@@ -11,7 +10,6 @@
 #include "fixage.hh"
 #include "test-properties.hh"
 #include "compare_with_cleophee.hh"
-//#include <cstdlib>
 
 using namespace std;
 
@@ -21,17 +19,14 @@ int main(int argc, char* argv[])
 {
     int nbVert = atoi(argv[1]);
     char testOrGen = argv[2][0];
-    int nbBlowup = 0;
     if (argc > 3)
         nbProc = atoi(argv[3]);
 
     init_adjListGlobal(nbVert+1);
     if (testOrGen == 'G')
     {
-        //init_adjListGlobal(nbVert);
         vector<Graph> graphList;
         graphList = gen_graphs(nbVert);
-
 
 /*
         stringstream fileName;
@@ -74,10 +69,6 @@ int main(int argc, char* argv[])
     else if (testOrGen == 'F')
     {
         gen_fixeurs(nbVert);
-
-
-
-
     }
 
     else if (testOrGen == 'M') // Find minimal prefixers
@@ -122,9 +113,9 @@ int main(int argc, char* argv[])
 
         vector<int> cpt((nbVert*nbVert)/2+1, 0);
 
-	igzstream file(fileName.str().c_str());
-	stringstream fileSizeMinusName;
-	fileSizeMinusName << "Alexsizegraphedelataille" << nbVert << ".txt";
+        igzstream file(fileName.str().c_str());
+        stringstream fileSizeMinusName;
+        fileSizeMinusName << "Alexsizegraphedelataille" << nbVert << ".txt";
         ifstream fSize(fileSizeMinusName.str());
         if (fSize.peek() == EOF)
         {
@@ -134,32 +125,29 @@ int main(int argc, char* argv[])
         }
         int nbGMinus = -1;
         fSize >> nbGMinus;
-        
-	string toto;
 
-	for (int i = 0; i < nbGMinus; i++)
-	{
-		if (i%500000 == 0)
-			cerr << "on est à " << i << " sur " << nbGMinus << endl;
-		getline(file, toto);
-		stringstream totoSs(toto);
-		int n,m;
-		totoSs >> n >> m;
-		cpt[m]++;
-		
-	}
+        string toto;
+
+        for (int i = 0; i < nbGMinus; i++)
+        {
+            if (i%500000 == 0)
+                cerr << "on est à " << i << " sur " << nbGMinus << endl;
+            getline(file, toto);
+            stringstream totoSs(toto);
+            int n,m;
+            totoSs >> n >> m;
+            cpt[m]++;
+        }
 
         for (int i = 0; i < cpt.size(); i++)
             if (cpt[i] != 0)
                 cout << i << ": " << cpt[i] << endl;
-
-
     }
 
+    //TTAADDAA WHAT?! real compare please!
     else if (testOrGen == 'C') //Compare
     {
         cerr << nbVert << " zut \n";
-        //init_adjListGlobal(nbVert);
         igzstream fileF13("graphe-f13.txt");
         Graph f13(fileF13);
 
@@ -169,7 +157,6 @@ int main(int argc, char* argv[])
 
         sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs;
         cerr << listGraphs.size() << " mdr " << endl;
-
 
         vector<char> degreeList(13+5);
 
@@ -186,10 +173,7 @@ int main(int argc, char* argv[])
             cout << "YOUHOU !!!\n";
     }
 
-
-
     free_adjListGlobal();
-
 
     return 0;
 }

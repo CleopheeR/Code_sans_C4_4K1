@@ -8,7 +8,7 @@
 #include "Graph.hh"
 
 
-
+//TTAADDAA documenter variables
 bool isMatched[NBMAXPROC][NBMAXVERT];
 bool checkeVoisins[NBMAXPROC][NBMAXVERT];
 vector<int> v1ToV2PossibleMatches[NBMAXPROC][NBMAXVERT];//(NBMAXVERT);
@@ -20,44 +20,11 @@ int indexInIsoOrder[NBMAXPROC][NBMAXVERT];
 
 //vector<int> listColours1(NBMAXVERT), listColours2(NBMAXVERT);
 
-
-int nb_connected_comp(const Graph& g)
+bool free_C4_O4(const Graph& g, int n)
 {
-    int nbComp = 0;
-    vector<bool> isSeen(g.nbVert, false);
-    queue<int> toDo;
-    for (int u = 0; u < g.nbVert; u++)
-    {
-        if (isSeen[u])
-            continue;
-        nbComp++;
-        toDo.push(u);
-        isSeen[u] = true;
-        while (!toDo.empty())
-        {
-            int v = toDo.front();
-            toDo.pop();
-            for (int w : g.get_neighb(v))
-            {
-                if (!isSeen[w])
-                {
-                    toDo.push(w);
-                    isSeen[w] = true;
-                }
-            }
-        }
-    }
-    return nbComp;
+    return free_C4(g, n) && free_O4(g, n);
 }
 
-bool has_twin(const Graph &g, int v)
-{
-    assert(v == g.nbVert-1);
-    for (int u = 0; u < g.nbVert-1; u++)
-        if ((g.adjMat[u]^g.adjMat[v]) == ((1<<u) ^ (1<<v)))
-            return true;
-    return false;
-}
 
 bool free_O4(const Graph& g, int n)
 {
@@ -96,7 +63,6 @@ bool free_C4(const Graph& g, int n)
         //if (v1 == v2) //TODO facultatif si graphe simple
             //continue;
 
-
         for (int i3 = i2+1; i3 < nbNeighb1; i3++)
         {
             const int v3 = neighb1[i3];
@@ -118,88 +84,14 @@ bool free_C4(const Graph& g, int n)
 }
 
 
-bool free_C4_O4(const Graph& g, int n)
-{
-    return free_C4(g, n) && free_O4(g, n);
-}
-
-
-
-bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread)
-{
-    vector<int> *curV1ToV2PossibleMatches = v1ToV2PossibleMatches[idThread];
-    int *curVertIsoOrderToExplore = vertIsoOrderToExplore[idThread];
-    /*cerr << "---------------\n";
-      g1.print();
-      g2.print();
-      */
-    while (i < g1.nbVert && curV1ToV2PossibleMatches[curVertIsoOrderToExplore[i]%1000].size() == 1)
-        i++;
-
-    if (i == g1.nbVert)
-        return true;
-
-    int v1 = curVertIsoOrderToExplore[i]%1000;
-    int u1 = v1;
-    int iU1 = i;//indexInIsoOrder[u1];
-    bool *curIsMatched = isMatched[idThread];
-    int *curV1ToV2Matches = v1ToV2Matches[idThread];
-    bool *curCheckeVoisins = checkeVoisins[idThread];
-    int *curIndexInIsoOrder = indexInIsoOrder[idThread];
-    for (int match : curV1ToV2PossibleMatches[v1])
-    {
-        if (curIsMatched[match])
-            continue;
-        curV1ToV2Matches[v1] = match;
-        curIsMatched[match] = true;
-
-        int u2 = match;
-        int nbNeighb = g1.get_neighb(u1).size();
-        memset(curCheckeVoisins, 0, g1.nbVert);
-
-
-        int nbGreater = 0;
-        for (int x : g1.get_neighb(u1))
-        {
-            if (curIndexInIsoOrder[x] <= iU1 || curV1ToV2PossibleMatches[x].size() == 1)
-            {
-                assert(!curCheckeVoisins[curV1ToV2Matches[x]]);
-                curCheckeVoisins[curV1ToV2Matches[x]] = true;
-            }
-            else
-                nbGreater++;
-
-        }
-
-
-        for (int v2 : g2.get_neighb(u2))
-        {
-            //if (!checkeVoisins[v2])
-
-           if (!curCheckeVoisins[v2])
-            {
-                if (curIsMatched[v2])
-                    nbGreater = -17;
-                nbGreater--;
-            }
-        }
-        //cerr << "Tring to match " << u1 << " with " << match << " and greater = " << nbGreater << endl;
-
-
-
-        if (nbGreater == 0 && gen_iso_matching(g1, g2, i+1, idThread))
-            return true;
-        curIsMatched[match] = false;
-    }
-
-    return false;
-}
-
 bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
 {
     static long long nbTimesAborted = 0;
     static long long nbTotalBucketSize = 0;
     static long long nbTimesCalled = 0;
+
+    //On first run (per thread) we reserve some space to gain time
+    //TTAADDAA => this space is never recovered?
     if (!notFirstTime[idThread])
     {
         notFirstTime[idThread] = true;
@@ -239,25 +131,6 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
     vector<int> uniqueMatchVertices;
     uniqueMatchVertices.reserve(g1.nbVert);
 
-    /*
-    listColours1.resize(g1.nbVert);
-    listColours2.resize(g1.nbVert);
-
-    for (int u = 0; u < g1.nbVert; u++)
-    {
-        listColours1[u] = g1.vertsCol[u];
-        listColours2[u] = g2.vertsCol[u];
-    }
-    sort(listColours1.begin(), listColours1.end());
-    sort(listColours2.begin(), listColours2.end());
-
-    if (listColours1 != listColours2)
-    {
-        nbTimesAborted++;
-        return false;
-    }
-    */
-
     int curNbBucketSize = 0;
     int *curVertIsoOrderToExplore = vertIsoOrderToExplore[idThread];
     int *curV1ToV2Matches = v1ToV2Matches[idThread];
@@ -271,7 +144,6 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
         {
             if (g1.vertsCol[v1] == g2.vertsCol[v2] && g1.get_neighb(v1).size() == g2.get_neighb(v2).size())
             {
-
                 curV1ToV2PossibleMatches[v1].push_back(v2);
             }
         }
@@ -319,8 +191,6 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
     for (int i = 0; i < g1.nbVert; i++)
         curIndexInIsoOrder[curVertIsoOrderToExplore[i]%1000] = i;
 
-
-
     bool toto = gen_iso_matching(g1, g2, 0, idThread);
 
     if (nbTimesCalled % 100000 == 0)
@@ -328,6 +198,115 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
         double avg = nbTotalBucketSize/(double)nbTimesCalled;
         cerr << nbTimesCalled << "  " << nbTimesAborted << " " << avg << "\n";
     }
-    return toto;
 
+    return toto;
+}
+
+
+bool has_twin(const Graph &g, int v)
+{
+    assert(v == g.nbVert-1);
+    for (int u = 0; u < g.nbVert-1; u++)
+        if ((g.adjMat[u]^g.adjMat[v]) == ((1<<u) ^ (1<<v)))
+            return true;
+    return false;
+}
+
+
+int nb_connected_comp(const Graph& g)
+{
+    int nbComp = 0;
+    vector<bool> isSeen(g.nbVert, false);
+    queue<int> toDo;
+    for (int u = 0; u < g.nbVert; u++)
+    {
+        if (isSeen[u])
+            continue;
+        nbComp++;
+        toDo.push(u);
+        isSeen[u] = true;
+        while (!toDo.empty())
+        {
+            int v = toDo.front();
+            toDo.pop();
+            for (int w : g.get_neighb(v))
+            {
+                if (!isSeen[w])
+                {
+                    toDo.push(w);
+                    isSeen[w] = true;
+                }
+            }
+        }
+    }
+    return nbComp;
+}
+
+
+
+/** Internal functions **/y
+
+
+bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread)
+{
+    vector<int> *curV1ToV2PossibleMatches = v1ToV2PossibleMatches[idThread];
+    int *curVertIsoOrderToExplore = vertIsoOrderToExplore[idThread];
+    /*cerr << "---------------\n";
+      g1.print();
+      g2.print();
+      */
+    while (i < g1.nbVert && curV1ToV2PossibleMatches[curVertIsoOrderToExplore[i]%1000].size() == 1)
+        i++;
+
+    if (i == g1.nbVert)
+        return true;
+
+    int v1 = curVertIsoOrderToExplore[i]%1000;
+    int u1 = v1;
+    int iU1 = i;//indexInIsoOrder[u1];
+    bool *curIsMatched = isMatched[idThread];
+    int *curV1ToV2Matches = v1ToV2Matches[idThread];
+    bool *curCheckeVoisins = checkeVoisins[idThread];
+    int *curIndexInIsoOrder = indexInIsoOrder[idThread];
+    for (int match : curV1ToV2PossibleMatches[v1])
+    {
+        if (curIsMatched[match])
+            continue;
+        curV1ToV2Matches[v1] = match;
+        curIsMatched[match] = true;
+
+        int u2 = match;
+        int nbNeighb = g1.get_neighb(u1).size();
+        memset(curCheckeVoisins, 0, g1.nbVert);
+
+        int nbGreater = 0;
+        for (int x : g1.get_neighb(u1))
+        {
+            if (curIndexInIsoOrder[x] <= iU1 || curV1ToV2PossibleMatches[x].size() == 1)
+            {
+                assert(!curCheckeVoisins[curV1ToV2Matches[x]]);
+                curCheckeVoisins[curV1ToV2Matches[x]] = true;
+            }
+            else
+                nbGreater++;
+        }
+
+
+        for (int v2 : g2.get_neighb(u2))
+        {
+            if (!curCheckeVoisins[v2])
+            {
+                if (curIsMatched[v2])
+                    nbGreater = -17;
+                nbGreater--;
+            }
+        }
+        //cerr << "Tring to match " << u1 << " with " << match << " and greater = " << nbGreater << endl;
+
+        if (nbGreater == 0 && gen_iso_matching(g1, g2, i+1, idThread))
+            return true;
+        curIsMatched[match] = false;
+    }
+
+    return false;
 }
