@@ -395,3 +395,16 @@ void get_minimal_fixeurs(const vector<Graph> &prefixeurMinusList, sparse_hash_ma
 
     cout << "Il y a " << nbMinimal << " prefixeurs minimaux.\n";
 }
+
+
+void save_to_file(const string &filename, const sparse_hash_map<vector<char>, vector<Graph>> &graphList, long long nbGraph)
+{
+    vector<Graph> res;
+    ogzstream file(filename.c_str());
+
+    file << nbGraph << endl;
+
+    for (const auto& inDict : graphList)
+        for (const Graph &g : inDict.second)
+            g.print_in_file(file);
+}

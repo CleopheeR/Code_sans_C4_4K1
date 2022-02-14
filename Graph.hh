@@ -21,35 +21,27 @@ namespace std
 struct hash<vector<char>> {
     inline size_t operator()(const vector<char> &v) const {
         int ret = 0;
-        //int nbElem = v.size();
-    //for (int i = 0; i < nbElem; i++)
     for (const int x : v)
-        //ret ^= (ret << 5) + (ret >> 2) + x;//v[i];
         ret ^= x + 0x9e3779b9 + (ret << 6) + (ret >> 2);
-    //long long d = v.back();
-    //ret ^= (d << 32);
     return ret;
     }
 };
 }
 
 
-
 extern vector<int> *adjListGlobal;
-
 extern int nbProc;
-#define NBMAXPROC 200
 
+#define NBMAXPROC 200
 #define NBMAXVERT 32
 
 #define are_neighb(g, u, v) (g.adjMat[u]&(1<<v))
-using namespace std;
 
 inline int read_int(const char *str, int &index)
 {
+    //TTAADDAA pas boucle car nb sur deux chiffres maxi...
+    //Ou en fait faire deux fonctions
     int res = 0;
-    //while (str[index] < '0' || str[index] > '9')
-    //    index++;
     while (str[index] >= '0' && str[index] <= '9')
     {
         res *= 10;
@@ -67,14 +59,11 @@ class Graph
             vertsCol = NULL;
         }
 
-
         Graph(const Graph& g)
         {
             init(g.nbVert, g.nbEdge);
             for (int u = 0; u < g.nbVert; u++)
-            {
                 adjMat[u] = g.adjMat[u];
-            }
 
             if (g.vertsCol)
             {
@@ -86,13 +75,12 @@ class Graph
                 vertsCol = NULL;
         }
 
+        //TTAADDAA factoriser avec constructeur ?!
         Graph& operator=(const Graph& g)
         {
             init(g.nbVert, g.nbEdge);
             for (int u = 0; u < g.nbVert; u++)
-            {
                 adjMat[u] = g.adjMat[u];
-            }
 
             if (g.vertsCol)
             {
@@ -136,6 +124,7 @@ class Graph
             vertsCol = NULL;
         }
 
+        //TTAADDAA factoriser avec au-dessus ?
         void fill_from_file(igzstream &f)
         {
             static string toto;
@@ -177,9 +166,23 @@ class Graph
                 free(vertsCol);
         }
 
-        void print_in_file(ogzstream &f) const;
-
         void init(int n, int m);
+
+        void copy_and_add_new_vertex_bis(const Graph& g, const vector<int> &newEdges, int puissNew, int code);//TODO ou bien renvoie un Graphe autre
+
+        inline const vector<int>& get_neighb(int u) const
+        {
+            return adjListGlobal[adjMat[u]];
+        }
+
+        void add_edge(int u, int v); // Does not change any degreeList
+
+        void compute_hashes(vector<char> &degreeeList);
+
+        void print_in_file(ogzstream &f) const;
+        void print(void) const;
+
+
 
 
 
@@ -189,22 +192,6 @@ class Graph
         int *adjMat;
         char *vertsCol;
 
-        //const vector<int>& get_neighb(int u) const;
-       inline const vector<int>& get_neighb(int u) const
-        {
-            return adjListGlobal[adjMat[u]];
-        }
-
-        void copy_and_add_new_vertex(const Graph&g);//, vector<int> &degreeList); //TODO ou bien renvoie un Graphe autre
-        void copy_and_add_new_vertex_bis(const Graph& g, const vector<int> &newEdges, int puissNew, int code);//, vector<int> &degreeList); //TODO ou bien renvoie un Graphe autre
-        void add_edge(int u, int v);//, vector<int> &degreeeList);
-        void remove_last_edge(int u, int v, vector<int> &degreeeList);
-
-
-        void compute_hashes(vector<char> &degreeeList);
-
-        void print(void) const;
-        //TODO copie...
 };
 
 
@@ -213,6 +200,7 @@ void init_adjListGlobal(int n);
 void free_adjListGlobal(void);
 
 void read_prefixeurs_compute_hash(const string &fName, int nbVert,sparse_hash_map<vector<char>, vector<Graph>> &deglist2Graphs);
+
 #endif
 
 

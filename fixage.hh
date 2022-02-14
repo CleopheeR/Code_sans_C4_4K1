@@ -22,4 +22,6 @@ void gen_fixeurs_thread(int nbVert, const vector<Graph> &graphList, int** isTwin
 
 void get_minimal_fixeurs(const vector<Graph> &prefixeurMinusList, sparse_hash_map<vector<char>, vector<Graph>> &prefixeurPlusDict);
 
+void save_to_file(const string &filename, const sparse_hash_map<vector<char>, vector<Graph>> &graphList, long long nbGraph);
+
 #endif
