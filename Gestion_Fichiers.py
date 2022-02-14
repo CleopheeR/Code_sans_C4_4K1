@@ -156,15 +156,15 @@ def Graph_to_liste(g,n):
 
 def Liste_to_Fichier(l,nom_fichier):
     #Ouvrir le fichier en lecture 
-    f=open(nom_fichier,"r")
+    #f=open(nom_fichier,"r")
     #Copier tout le texte 
-    texte=f.read()
+    #texte=f.read()
     #Fermer le fichier 
-    f.close()
+    #f.close()
     #Ouvrir le fichier en ecriture 
     f=open(nom_fichier,"w")
     #Reccopier tout le texte 
-    f.write(texte) 
+    #f.write(texte) 
     #Transforme la liste en str 
     ligne_du_graph=""
     for i in range (len(l)):

@@ -3,6 +3,7 @@ import time
 from graph_tool.all import *
 from Gestion_Fichiers import *
 from Special_graphs import *
+import sys
 
 def FreeO4(g, v1, adjMat):
     n = g.vertex_index[v1]+1
@@ -410,12 +411,12 @@ def Est_Blow_up_sans_generer(n):
 
 
 def main():
-    n=int(input("Entrez le nombre de sommets :"))
-    ToutLesGraphsAnSommetstest=input("Voulez-vous generer les graphs (G) ou les tester (T) :")
+    n=int(sys.argv[1])
+    ToutLesGraphsAnSommetstest = sys.argv[2]
     if ToutLesGraphsAnSommetstest == "G":
         L=ToutLesGraphsAnSommets_Par_Fichier(n)
         print("Il y a ",len (L)," graphes de taille ",n)
-        Jevoislesgraphs=input("Voulez-vous les voirs ? (Y or N)")
+        Jevoislesgraphs="N"#input("Voulez-vous les voirs ? (Y or N)")
         if Jevoislesgraphs=="Y" : 
             for i in range(len(L)) :
                 print(L[i])
