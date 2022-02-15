@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "Graph.hh"
+#include "test-properties.hh"
 
 
 //TTAADDAA documenter variables
@@ -244,7 +245,7 @@ int nb_connected_comp(const Graph& g)
 
 
 
-/** Internal functions **/y
+/** Internal functions **/
 
 
 bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread)

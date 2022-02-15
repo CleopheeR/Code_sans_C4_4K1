@@ -19,7 +19,7 @@ bool has_twin(const Graph& g, int v);
 int nb_connected_comp(const Graph& g);
 
 
-/** Internal functions **/y
+/** Internal functions **/
 
 
 bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread);
