@@ -63,6 +63,21 @@ void Graph::print_in_file(ogzstream &f) const
     f << "\n";
 }
 
+/*
+ * void Graph::print_in_binfile(ofstream &f) const
+{
+    //TODO coder pour de vrai !
+    f << nbVert << " " << nbEdge;
+    for (int i = 0; i < nbVert; i++)
+    {
+        for (int y : get_neighb(i))
+            if (i > y)
+                f << " " << i << "," << y;
+    }
+    f << "\n";
+}
+*/
+
 void Graph::print(void) const
 {
     cout << nbVert << " vertices and " << nbEdge << " edges.\n";
