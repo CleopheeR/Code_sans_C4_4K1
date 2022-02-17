@@ -26,7 +26,8 @@ int main(int argc, char* argv[])
     if (testOrGen == 'G')
     {
         vector<Graph> graphList;
-        graphList = gen_graphs(nbVert);
+        vector<Graph> dummy;
+        graphList = gen_graphs(nbVert, dummy);
 
 /*
         stringstream fileName;
@@ -101,6 +102,69 @@ int main(int argc, char* argv[])
 
     }
 
+    else if (testOrGen == 'X') //Gen graphs including some specific graphs.
+    {
+        cerr << "coucou " << endl;
+        string graphsFname("startingGraphs.txt");
+        igzstream graphsFile(graphsFname.c_str());
+
+        int nbStartingGraphs;
+        graphsFile >> nbStartingGraphs;
+        map<int, vector<Graph>> startingGraphsBySize;
+        int minDegStarting = 128;
+        string toto;
+        getline(graphsFile, toto);
+        cerr << " vu " << nbStartingGraphs << " graphes de départ " << endl;
+
+        for (int i = 0; i < nbStartingGraphs; i++)
+        {
+            Graph gLu = Graph(graphsFile);
+            gLu.print();
+            startingGraphsBySize[gLu.nbVert].push_back(gLu);
+            minDegStarting = min(gLu.nbVert, minDegStarting);
+        }
+        graphsFile.close();
+
+        string fNameFirst = "Alexgraphedelataille"+to_string(minDegStarting)+".txt.gz";
+        string fNameSizeFirst = "Alexsizegraphedelataille"+to_string(minDegStarting)+".txt";
+
+        ifstream fTest(fNameSizeFirst);
+        if (!fTest.fail())
+        {
+            cerr << "Attention, il y a des fichiers de graphes déjà générés :(\n";
+            exit(7);
+        }
+        fTest.close();
+
+        ofstream fSize(fNameSizeFirst);
+        fSize << startingGraphsBySize[minDegStarting].size() << "\n";
+        fSize.close();
+
+        ogzstream fGraphs(fNameFirst.c_str());
+        for (const Graph &g : startingGraphsBySize[minDegStarting])
+            g.print_in_file(fGraphs);
+        fGraphs.close();
+
+        for (int i = minDegStarting+1; i <= nbVert; i++)
+        {
+            string fNameSize = "Alexsizegraphedelataille"+to_string(i)+".txt";
+
+            ifstream fTest2(fNameSize);
+            if (!fTest2.fail())
+            {
+                cerr << "Attention, il y a des fichiers de graphes déjà générés pour la taille " << i << ":(\n";
+                exit(7);
+            }
+            fTest2.close();
+
+
+            vector<Graph> graphList;
+            graphList = gen_graphs(i, startingGraphsBySize[i]); //TODO récupérer les graphes vraiment
+        }
+
+
+
+    }
 
     else if (testOrGen == 'S') //statistics
     {

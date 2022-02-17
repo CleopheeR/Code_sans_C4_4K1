@@ -45,7 +45,7 @@ bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<v
 //TTAADDAA mieux gérer les variables et print débug/info
 //TTAADDAA changer le type, là on écrit dans un fichier
 //TTAADDAA faire sous-fonction ?
-vector<Graph> gen_graphs(int nbVert)
+vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
 {
     if (nbVert == 1) //TODO: déplacer dans le main ? Mettre dans une fonction ? (oui)
     {
@@ -59,6 +59,7 @@ vector<Graph> gen_graphs(int nbVert)
         return {};
     }
 
+    nbTotalGraphsWritten = 0;
 
     const int puissNewVert = (1<<(nbVert-1));
 
@@ -89,7 +90,10 @@ vector<Graph> gen_graphs(int nbVert)
 
 
     for (int i = 0; i < nbVert-1; i++)
+    {
+        subsetsBySize[i].clear();
         subsetsBySize[i].reserve(1<<i);
+    }
 
     //TODO attention pas symmétrique là.
     for (int code = 0; code < nbEdgeCombi; code++)
@@ -135,10 +139,12 @@ vector<Graph> gen_graphs(int nbVert)
     {
         cerr << "Lancer avant la taille -1 \n";
         exit(3);
-        listMinus = gen_graphs(nbVert-1);
+        vector<Graph> dummy;
+        listMinus = gen_graphs(nbVert-1, dummy);
     }
 
     cout << "j'ai généré/trouvé les graphes à " << nbVert-1 << " somets : il y en a " << listMinus.size() << endl;
+
 
     int degMin = 1000000, degMax = 0;
     for (const Graph &g : listMinus)
@@ -174,9 +180,9 @@ vector<Graph> gen_graphs(int nbVert)
     mutex threadMutex;
     vector<thread> threads(nbProc-1);
     for (int iProc = 0; iProc < nbProc-1; iProc++)
-        threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), iProc, std::ref(threadMutex));
+        threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), iProc, std::ref(threadMutex));
 
-    thread lastThread(&gen_graphs_thread, std::ref(listMinus), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), nbProc-1, std::ref(threadMutex));
+    thread lastThread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), nbProc-1, std::ref(threadMutex));
     lastThread.join();
     for (int i = 0; i < nbProc-1; i++)
         threads[i].join();
@@ -247,7 +253,7 @@ vector<Graph> load_from_file(const string &filename, long long nbGraphToRead)
 
 /** Internal functions **/
 //TTAADDAA peut-être un peu long, splitter en sous-fonctions ?
-vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, vector<int> &sizesToDo, ogzstream &outFile, int idThread, mutex &lock)
+vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startingGraphs, int **isTwinCompat, vector<int> &sizesToDo, ogzstream &outFile, int idThread, mutex &lock)
 {
     const int nbVert = listMinus[0].nbVert+1;
     const int puissNewVert = (1<<(nbVert-1));
@@ -281,6 +287,18 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, int **isTwinCompat, ve
         //cerr << "doing size " << m << endl;
         sizesToDo.pop_back();
         lock.unlock();
+
+        for (Graph &gStart : startingGraphs)
+        {
+            if (gStart.nbEdge == m)
+            {
+                for (int i = 0; i < gStart.nbVert; i++)
+                    degreeList[i] = gStart.get_neighb(i).size();
+                sort(degreeList.begin(), degreeList.begin()+gStart.nbVert);
+                gStart.compute_hashes(degreeList);
+                check_if_seen_and_add(gStart, degreeList, deglist2Graphs, idThread);
+            }
+        }
 
         long long nbGraph = 0;
         for (const Graph& g : listMinus)
