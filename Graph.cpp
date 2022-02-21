@@ -183,7 +183,7 @@ void read_prefixeurs_compute_hash(const string &fName, int nbVert,sparse_hash_ma
             sort(degreeList.begin(), degreeList.begin()+gLu.nbVert);
             gLu.compute_hashes(degreeList);
             deglist2Graphs[degreeList].push_back(gLu);
-            gLu.print();
+            //gLu.print();
         }
     }
 
