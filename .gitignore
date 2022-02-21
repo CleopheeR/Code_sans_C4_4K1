@@ -1,0 +1,8 @@
+*.o
+*.s
+tags
+a.out
+*.out
+release
+debug
+profile
