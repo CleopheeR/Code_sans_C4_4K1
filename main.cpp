@@ -219,10 +219,8 @@ int main(int argc, char* argv[])
 
         sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs1;
         sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs2;
-        cerr << listGraphs1.size() << " mdr1 " << endl;
-        cerr << listGraphs2.size() << " mdr2 " << endl;
 
-        vector<char> degreeList(13+5);
+        vector<char> degreeList(nbVert+5);
 
         for (Graph& g : listGraphs1)
         {
@@ -230,6 +228,7 @@ int main(int argc, char* argv[])
             if (!check_if_seen_and_add(g, degreeList, deglist2Graphs1))
                 cerr << "ERROR" << endl;
         }
+        cerr << listGraphs1.size() << " mdr1 " << endl;
 
         for (Graph& g : listGraphs2)
         {
@@ -237,6 +236,7 @@ int main(int argc, char* argv[])
             if (!check_if_seen_and_add(g, degreeList, deglist2Graphs2))
                 cerr << "ERROR" << endl;
         }
+        cerr << listGraphs2.size() << " mdr2 " << endl;
 
         cout << "This list = " << argv[3] << " and other list = " << argv[4] << endl;
         compare_two_fixeurs_sets(deglist2Graphs1, deglist2Graphs2);
