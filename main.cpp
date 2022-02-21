@@ -10,6 +10,7 @@
 #include "fixage.hh"
 #include "test-properties.hh"
 #include "compare_with_cleophee.hh"
+#include "misc.hh"
 
 using namespace std;
 
@@ -209,32 +210,40 @@ int main(int argc, char* argv[])
     }
 
     //TTAADDAA WHAT?! real compare please!
-    else if (testOrGen == 'C') //Compare
+    else if (testOrGen == 'C') //Compare fixeurs files
     {
         cerr << nbVert << " zut \n";
-        igzstream fileF13("graphe-f13.txt");
-        Graph f13(fileF13);
-
-        //igzstream fileFixeurs(argv[3]);
         cerr << "file = " << argv[3] << endl;
-        vector<Graph> listGraphs = load_from_file(argv[3]);
+        vector<Graph> listGraphs1 = load_from_file(argv[3]);
+        vector<Graph> listGraphs2 = load_from_file(argv[4]);
 
-        sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs;
-        cerr << listGraphs.size() << " mdr " << endl;
+        sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs1;
+        sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs2;
+        cerr << listGraphs1.size() << " mdr1 " << endl;
+        cerr << listGraphs2.size() << " mdr2 " << endl;
 
         vector<char> degreeList(13+5);
 
-        for (Graph& g : listGraphs)
+        for (Graph& g : listGraphs1)
         {
             g.compute_hashes(degreeList);
-            if (!check_if_seen_and_add(g, degreeList, deglist2Graphs))
+            if (!check_if_seen_and_add(g, degreeList, deglist2Graphs1))
                 cerr << "ERROR" << endl;
         }
 
-        f13.print();
-        f13.compute_hashes(degreeList);
-        if (!check_if_seen_and_add(f13, degreeList, deglist2Graphs))
-            cout << "YOUHOU !!!\n";
+        for (Graph& g : listGraphs2)
+        {
+            g.compute_hashes(degreeList);
+            if (!check_if_seen_and_add(g, degreeList, deglist2Graphs2))
+                cerr << "ERROR" << endl;
+        }
+
+        cout << "This list = " << argv[3] << " and other list = " << argv[4] << endl;
+        compare_two_fixeurs_sets(deglist2Graphs1, deglist2Graphs2);
+        cout << "\n------------------------\n\n";
+        cout << "This list = " << argv[4] << " and other list = " << argv[3] << endl;
+        compare_two_fixeurs_sets(deglist2Graphs2, deglist2Graphs1);
+
     }
 
     free_adjListGlobal();
