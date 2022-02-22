@@ -255,10 +255,10 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread)
 {
     vector<int> *curV1ToV2PossibleMatches = v1ToV2PossibleMatches[idThread];
     int *curVertIsoOrderToExplore = vertIsoOrderToExplore[idThread];
-    cerr << "---------------\n";
+    /*cerr << "---------------\n";
       g1.print();
       g2.print();
-      
+    */  
     //TODO vertIsoOrder, on avait un autre truc sans besoin du %1000 défini dans la fin de are_isomorphic
     // We pass the vertices which were matched because unique possible candidate.
     while (i < g1.nbVert && curV1ToV2PossibleMatches[curVertIsoOrderToExplore[i]%1000].size() == 1)
