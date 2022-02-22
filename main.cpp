@@ -214,8 +214,27 @@ int main(int argc, char* argv[])
     {
         cerr << nbVert << " zut \n";
         cerr << "file = " << argv[3] << endl;
-        vector<Graph> listGraphs1 = load_from_file(argv[3]);
-        vector<Graph> listGraphs2 = load_from_file(argv[4]);
+        string fname1(argv[3]), fname2(argv[4]);
+        int nbG1 = -1, nbG2 = -2;
+        string strNbVert = to_string(nbVert);
+        if (fname1.back() == '/') // In case it is not fixers, we need to read the nb of graphs.
+        {
+            ifstream fSize1(fname1+"Alexsizegraphedelataille"+strNbVert+".txt");
+            fSize1 >> nbG1;
+            fSize1.close();
+            fname1 += "Alexgraphedelataille"+strNbVert+".txt.gz";
+        }
+        if (fname2.back() == '/')
+        {
+            ifstream fSize2(fname2+"Alexsizegraphedelataille"+strNbVert+".txt");
+            fSize2 >> nbG2;
+            fSize2.close();
+            fname2 += "Alexgraphedelataille"+strNbVert+".txt.gz";
+        }
+
+
+        vector<Graph> listGraphs1 = load_from_file(fname1, nbG1);
+        vector<Graph> listGraphs2 = load_from_file(fname2, nbG2);
 
         sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs1;
         sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs2;
@@ -238,10 +257,10 @@ int main(int argc, char* argv[])
         }
         cerr << listGraphs2.size() << " mdr2 " << endl;
 
-        cout << "This list = " << argv[3] << " and other list = " << argv[4] << endl;
+        cout << "This list = " << fname1 << " and other list = " << fname2 << endl;
         compare_two_fixeurs_sets(deglist2Graphs1, deglist2Graphs2);
         cout << "\n------------------------\n\n";
-        cout << "This list = " << argv[4] << " and other list = " << argv[3] << endl;
+        cout << "This list = " << fname2 << " and other list = " << fname1 << endl;
         compare_two_fixeurs_sets(deglist2Graphs2, deglist2Graphs1);
 
     }
