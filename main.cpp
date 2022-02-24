@@ -213,9 +213,9 @@ int main(int argc, char* argv[])
     else if (testOrGen == 'C') //Compare fixeurs files
     {
         cerr << nbVert << " zut \n";
-        cerr << "file = " << argv[3] << endl;
         string fname1(argv[3]), fname2(argv[4]);
-        int nbG1 = -1, nbG2 = -2;
+        cerr << "files = " << fname1 << " and " << fname2 << endl;
+        int nbG1 = -1, nbG2 = -1;
         string strNbVert = to_string(nbVert);
         if (fname1.back() == '/') // In case it is not fixers, we need to read the nb of graphs.
         {
@@ -231,6 +231,7 @@ int main(int argc, char* argv[])
             fSize2.close();
             fname2 += "Alexgraphedelataille"+strNbVert+".txt.gz";
         }
+        cerr << "files = " << fname1 << " and " << fname2 << endl;
 
 
         vector<Graph> listGraphs1 = load_from_file(fname1, nbG1);
@@ -239,7 +240,7 @@ int main(int argc, char* argv[])
         sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs1;
         sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs2;
 
-        vector<char> degreeList(nbVert+5);
+        vector<char> degreeList(nbVert+4);
 
         for (Graph& g : listGraphs1)
         {
