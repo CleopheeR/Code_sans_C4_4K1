@@ -320,6 +320,18 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
             const vector<int> &ourSubsets = subsetsBySize[m-g.nbEdge];
             for (int code : ourSubsets)
             {
+                bool hasTwin = false;
+                for (int x : adjListGlobal[code])
+                {
+                    if ((g.adjMat[x] ^ code) == (1<<x))
+                    {
+                        hasTwin = true;
+                        break;
+                    }
+                }
+                if (hasTwin)
+                    continue;
+
                 bool refuseBecauseTwins = can_discard_edgelist(twinLists, isTwinCompat[code], nbVert);
                 if (refuseBecauseTwins)
                 {
