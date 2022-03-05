@@ -266,6 +266,45 @@ int main(int argc, char* argv[])
 
     }
 
+    else if (testOrGen == 'T') //Test if there are twins
+    {
+        cerr << nbVert << " zut \n";
+        string fname(argv[3]);
+        cerr << "file = " << fname << endl;
+        int nbG = -1;
+        string strNbVert = to_string(nbVert);
+        if (fname.back() == '/') // In case it is not fixers, we need to read the nb of graphs.
+        {
+            ifstream fSize(fname+"Alexsizegraphedelataille"+strNbVert+".txt");
+            fSize >> nbG;
+            fSize.close();
+            fname += "Alexgraphedelataille"+strNbVert+".txt.gz";
+        }
+
+        vector<Graph> listGraphs = load_from_file(fname, nbG);
+
+        for (Graph& g : listGraphs)
+        {
+	    bool stop = false;
+	    for (int u = 0; u < nbVert && !stop; u++)
+	    {
+		for (int v = u+1; v < nbVert; v++)
+		{
+		    if ((g.adjMat[u]^g.adjMat[v]) == ((1<<u) ^ (1<< v)))
+		    {
+			stop = true;
+			g.print();
+	                cerr << "ERROR " << u << "," << v << endl;
+			break;
+		    }
+		}
+	    }
+        }
+        cerr << listGraphs.size() << " mdr " << endl;
+
+    }
+
+
     free_adjListGlobal();
 
     return 0;
