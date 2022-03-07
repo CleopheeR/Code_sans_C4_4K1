@@ -285,20 +285,20 @@ int main(int argc, char* argv[])
 
         for (Graph& g : listGraphs)
         {
-	    bool stop = false;
-	    for (int u = 0; u < nbVert && !stop; u++)
-	    {
-		for (int v = u+1; v < nbVert; v++)
-		{
-		    if ((g.adjMat[u]^g.adjMat[v]) == ((1<<u) ^ (1<< v)))
-		    {
-			stop = true;
-			g.print();
-	                cerr << "ERROR " << u << "," << v << endl;
-			break;
-		    }
-		}
-	    }
+            bool stop = false;
+            for (int u = 0; u < nbVert && !stop; u++)
+            {
+                for (int v = u+1; v < nbVert; v++)
+                {
+                    if ((g.adjMat[u]^g.adjMat[v]) == ((1<<u) ^ (1<< v)))
+                    {
+                        stop = true;
+                        g.print();
+                        cerr << "ERROR " << u << "," << v << endl;
+                        break;
+                    }
+                }
+            }
         }
         cerr << listGraphs.size() << " mdr " << endl;
 
