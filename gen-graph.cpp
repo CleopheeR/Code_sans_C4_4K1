@@ -311,6 +311,14 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
             if (cptGraph%50000 == 0)
                 cout << "Nous sommes sur leeeee " << cptGraph << "-ème graphe sur " << listMinus.size() << " (nbEdges: " << m << ')' << endl;
 
+            bool isPref13Taken[8192];
+            memset(isPref13Taken, false, 8192);
+            for (int iNode = 0; iNode < nbVert; iNode++)
+            {
+                int prefAdj = g.adjMat[iNode]%8192;
+                isPref13Taken[prefAdj] = true;
+            }
+
             twinLists.clear();
             gen_twin_list(g, twinLists, nbVert);
             sizeTotalTwinVector += twinLists.size();
@@ -320,7 +328,13 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
             const vector<int> &ourSubsets = subsetsBySize[m-g.nbEdge];
             for (int code : ourSubsets)
             {
-                bool hasTwin = false;
+                if (isPref13Taken[code%8192])
+                {
+                    static int cptBlah = 0;
+                    //cerr << ++cptBlah << ": discarded subset because same adjacency in F13\n";
+                    continue;
+                }
+                /*bool hasTwin = false;
                 for (int x : adjListGlobal[code])
                 {
                     if ((g.adjMat[x] ^ code) == (1<<x))
@@ -331,6 +345,7 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
                 }
                 if (hasTwin)
                     continue;
+                */
 
                 bool refuseBecauseTwins = can_discard_edgelist(twinLists, isTwinCompat[code], nbVert);
                 if (refuseBecauseTwins)
