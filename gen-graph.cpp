@@ -313,7 +313,7 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
 
             bool isPref13Taken[8192];
             memset(isPref13Taken, false, 8192);
-            for (int iNode = 0; iNode < nbVert; iNode++)
+            for (int iNode = 0; iNode < nbVert-1; iNode++)
             {
                 int prefAdj = g.adjMat[iNode]%8192;
                 isPref13Taken[prefAdj] = true;
