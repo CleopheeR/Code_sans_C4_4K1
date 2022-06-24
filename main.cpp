@@ -11,6 +11,7 @@
 #include "test-properties.hh"
 #include "compare_with_cleophee.hh"
 #include "misc.hh"
+#include "compute_arrays_compat.hh"
 
 using namespace std;
 
@@ -23,7 +24,7 @@ int main(int argc, char* argv[])
     if (argc > 3)
         nbProc = atoi(argv[3]);
 
-    init_adjListGlobal(nbVert+1);
+    init_adjListGlobal(nbVert+2);
     if (testOrGen == 'G')
     {
         vector<Graph> graphList;
@@ -304,7 +305,54 @@ int main(int argc, char* argv[])
 
     }
 
+    else if (testOrGen == 'A') //Generate arrays
+    {
+        vector<vector<int>> adjSets;
+        vector<string> setsNames;
+        //TODO
+        cerr << nbVert << " zut \n";
+        string fname(argv[3]);
+        cerr << "file = " << fname << endl;
+        int nbEdge;
+        string strNbVert = to_string(nbVert);
+        igzstream fTableau(fname.c_str());
 
+        Graph g = Graph(fTableau);
+        nbVert = g.nbVert;
+        nbEdge = g.nbEdge;
+
+        string line;
+
+
+        while (getline(fTableau, line))
+        {
+            stringstream lineSs(line);
+            string nameRead;
+            lineSs >> nameRead;
+            setsNames.push_back(nameRead);
+
+            int x;
+            vector<int> curAdj;
+            while (lineSs >> x)
+                curAdj.push_back(x);
+
+            adjSets.push_back(curAdj);
+        }
+
+        g.print();
+        cerr << adjSets.size() << " sets and " << setsNames.size() << " names\n";
+        for (int i = 0; i < adjSets.size(); i++)
+        {
+            cout << setsNames[i] << " ";
+            for (int u : adjSets[i])
+                cout << u << " ";
+            cout << endl;
+        }
+
+        compute_cleophee_arrays(g, adjSets, setsNames);
+
+        fTableau.close();
+    }
     free_adjListGlobal();
 
     return 0;
