@@ -170,12 +170,16 @@ class Graph
 
         void copy_and_add_new_vertex_bis(const Graph& g, const vector<int> &newEdges, int puissNew, int code);//TODO ou bien renvoie un Graphe autre
 
+        // Removes the vertex passed in argument. Swaps it with last vertex.
+        Graph subgraph_removing_vertex(int idToRemove) const;
+
         inline const vector<int>& get_neighb(int u) const
         {
             return adjListGlobal[adjMat[u]];
         }
 
         void add_edge(int u, int v); // Does not change any degreeList
+        void delete_edge(int u, int v); // Does not change any degreeList
 
         void compute_hashes(vector<char> &degreeeList);
 

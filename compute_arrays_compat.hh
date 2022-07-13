@@ -9,6 +9,6 @@
 
 using namespace std;
 
-void compute_cleophee_arrays(const Graph &G, const vector<vector<int>> &adjSets, const vector<string> &setsToName);
+void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets, const vector<vector<int>> &antiCompleteSets, const vector<string> &setsNames, const vector<int> &freeVerts);
 
 #endif

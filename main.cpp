@@ -307,7 +307,7 @@ int main(int argc, char* argv[])
 
     else if (testOrGen == 'A') //Generate arrays
     {
-        vector<vector<int>> adjSets;
+        vector<vector<int>> adjSets, antiCompleteSets;
         vector<string> setsNames;
         //TODO
         cerr << nbVert << " zut \n";
@@ -323,6 +323,25 @@ int main(int argc, char* argv[])
 
         string line;
 
+        vector<int> freeVerts;
+        vector<bool> wasSeen(g.nbVert);
+
+        if (fTableau.peek() == 'F') // Free vertices list
+        {
+            string foo;
+            getline(fTableau, line);
+            stringstream lineSs(line);
+            lineSs >> foo;
+
+            int u;
+            while (lineSs >> u)
+            {
+                cerr << u << " is Free!\n";
+                freeVerts.push_back(u);
+            }
+
+
+        }
 
         while (getline(fTableau, line))
         {
@@ -332,11 +351,33 @@ int main(int argc, char* argv[])
             setsNames.push_back(nameRead);
 
             int x;
-            vector<int> curAdj;
-            while (lineSs >> x)
+            vector<int> curAdj, curAntiAdj;
+            while (lineSs.peek() != '.' && lineSs >> x)
+            {
                 curAdj.push_back(x);
+                wasSeen[x] = true;
+                lineSs.get();
+            }
+
+            if (lineSs.peek() == '.')
+            {
+                lineSs.get();
+                while (lineSs >> x)
+                {
+                    cerr << x << " is anticomplete for " << nameRead << endl;
+                    curAntiAdj.push_back(x);
+                }
+
+            }
+            /* //Inutiles là : on spécifie les sommets libres
+            if (lineSs.peek() == ':')
+            {
+                wasSeen[x] = false;
+                freeVerts.push_back(x); //TODO s'assurer que y'a pas des en double...
+            }*/
 
             adjSets.push_back(curAdj);
+            antiCompleteSets.push_back(curAntiAdj);
         }
 
         g.print();
@@ -349,7 +390,7 @@ int main(int argc, char* argv[])
             cout << endl;
         }
 
-        compute_cleophee_arrays(g, adjSets, setsNames);
+        compute_cleophee_arrays(g, adjSets, antiCompleteSets, setsNames, freeVerts);
 
         fTableau.close();
     }

@@ -320,3 +320,73 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread)
 
     return false;
 }
+
+bool is_supergraph_of_aux(Graph &g, const Graph &targetGraph, const vector<char> &targetHash, vector<char> &tmpHash, int pos, int idThread)
+{
+    if (g.nbVert == targetGraph.nbVert)
+    {
+        if (g.nbEdge != targetGraph.nbEdge)
+            return false;
+
+        g.compute_hashes(tmpHash);
+
+        if (tmpHash == targetHash && are_isomorphic(g, targetGraph, idThread))
+        {
+            //g.print();
+            //targetGraph.print();
+            //cerr << "YEAH\n\n";
+            return true;
+        }
+
+        return false;
+    }
+
+
+
+
+
+    Graph smallGraph;
+    int n = g.nbVert;
+
+    if (n - (n-pos) > targetGraph.nbVert)
+        return false;
+    if (n < targetGraph.nbVert || g.nbEdge < targetGraph.nbEdge)
+        return false;
+
+
+    vector<char> smallDegreeList(g.nbVert+3);
+    for (int i = pos; i < n; i++)
+    {
+        if (g.nbEdge - g.get_neighb(i).size() < targetGraph.nbEdge)
+            continue;
+
+        smallGraph = g.subgraph_removing_vertex(i);
+
+
+        if (is_supergraph_of_aux(smallGraph, targetGraph, targetHash, tmpHash, i, idThread))
+            return true;
+    }
+
+    if (n - (n-pos)+1 < targetGraph.nbVert)
+        return is_supergraph_of_aux(g, targetGraph, targetHash, tmpHash, pos+1, idThread);
+
+    return false;
+}
+
+
+
+bool is_supergraph_of(const Graph &g, Graph &targetGraph, int idThread)
+{
+    int n = targetGraph.nbVert;
+
+    vector<char> tmpHash(n+4), targetHash(n+4);
+
+    targetGraph.compute_hashes(targetHash);
+
+    Graph gCopy = g;
+
+    if (is_supergraph_of_aux(gCopy, targetGraph, targetHash, tmpHash, 0, idThread))
+        return true;
+
+    return false;
+}

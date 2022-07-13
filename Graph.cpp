@@ -35,10 +35,36 @@ void Graph::copy_and_add_new_vertex_bis(const Graph& g, const vector<int> &newEd
     for (int x : newEdges)
         adjMat[x] ^= puissNew;
     adjMat[g.nbVert] = code;
-
-
-
 }
+
+
+Graph Graph::subgraph_removing_vertex(int idToRemove) const
+{
+    Graph ret;
+    int n = nbVert;
+    ret.init(nbVert-1, 0);
+
+    for (int u = 0; u < n; u++)
+    {
+        if (u == idToRemove)
+            continue;
+        for (int v : get_neighb(u))
+        {
+            if (v > u && v != idToRemove)
+            {
+                int u2 = u, v2 = v;
+                if (u > idToRemove)
+                    u2--;
+                if (v2 > idToRemove)
+                    v2--;
+                ret.add_edge(u2, v2);
+            }
+        }
+    }
+
+    return ret;
+}
+
 
 void Graph::add_edge(int u, int v)
 {
@@ -48,7 +74,13 @@ void Graph::add_edge(int u, int v)
     adjMat[v] ^= (1<<u);
 }
 
+void Graph::delete_edge(int u, int v)
+{
+    nbEdge--;
 
+    adjMat[u] ^= (1<<v);
+    adjMat[v] ^= (1<<u);
+}
 
 
 void Graph::print_in_file(ogzstream &f) const

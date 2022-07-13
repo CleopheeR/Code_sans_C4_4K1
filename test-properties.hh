@@ -18,6 +18,8 @@ bool has_twin(const Graph& g, int v);
 
 int nb_connected_comp(const Graph& g);
 
+// Tests if g contains a copy of targetGraph.
+bool is_supergraph_of(const Graph &g, Graph &targetGraph, int idThread);
 
 /** Internal functions **/
 
