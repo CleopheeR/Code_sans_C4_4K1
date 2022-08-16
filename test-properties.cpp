@@ -9,6 +9,9 @@
 #include "test-properties.hh"
 
 
+//DEBUG
+vector<int> swapsSubgraphList; // Only to print which vertices we used
+
 //TTAADDAA documenter variables
 bool isMatched[NBMAXPROC][NBMAXVERT];
 bool checkeVoisins[NBMAXPROC][NBMAXVERT];
@@ -43,7 +46,10 @@ bool free_O4(const Graph& g, int n)
             for (int v4 = v3+1; v4 < n-1; v4++)
             {
                 if (!are_neighb(g, v4, v3) && !are_neighb(g, v4, v2) && !are_neighb(g, v4, v1))
+                {
+                    //cerr << "O4 found: " << v1 << " " << v2 << " " << v4 << " " << v3 << endl;
                     return false;
+                }
             }
         }
     }
@@ -75,7 +81,10 @@ bool free_C4(const Graph& g, int n)
                 if (v4 == v1)// || v4 == v2)// || v4 == v3)
                     continue;
                 if (are_neighb(g, v4, v2) && !are_neighb(g, v4, v1))
+                {
+                    //cerr << "cycle found: " << v1 << " " << v2 << " " << v4 << " " << v3 << endl;
                     return false;
+                }
             }
 
         }
@@ -203,6 +212,30 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
         cerr << nbTimesCalled << "  " << nbTimesAborted << " " << avg << "\n";
     }
 
+
+    //To print the subgraph we found... ?
+    if (false && toto)
+    {
+        for (int i = 0; i < g1.nbVert; i++)
+            cout << i << " => " << v1ToV2Matches[idThread][i] << endl;
+        Graph gbis;
+        gbis.init(g1.nbVert, 0);
+        for (int u1 = 0; u1 < g1.nbVert; u1++)
+        {
+            int u2 = v1ToV2Matches[idThread][u1];
+            for (int v1 : g1.get_neighb(u1))
+            {
+                if (v1 > u1)
+                    continue;
+                int v2 = v1ToV2Matches[idThread][v1];
+                gbis.add_edge(u2, v2);
+            }
+        }
+        gbis.print();
+        cout << "olololo\n";
+        g2.print();
+        cout << "oeoureoiuezouroizeurioezuoizuoiezruo\n";
+    }
     return toto;
 }
 
@@ -258,7 +291,7 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread)
     /*cerr << "---------------\n";
       g1.print();
       g2.print();
-    */  
+    */
     //TODO vertIsoOrder, on avait un autre truc sans besoin du %1000 défini dans la fin de are_isomorphic
     // We pass the vertices which were matched because unique possible candidate.
     while (i < g1.nbVert && curV1ToV2PossibleMatches[curVertIsoOrderToExplore[i]%1000].size() == 1)
@@ -332,9 +365,16 @@ bool is_supergraph_of_aux(Graph &g, const Graph &targetGraph, const vector<char>
 
         if (tmpHash == targetHash && are_isomorphic(g, targetGraph, idThread))
         {
-            //g.print();
-            //targetGraph.print();
-            //cerr << "YEAH\n\n";
+            if (false) // Print which vertices we identified for the subgraph
+            {
+                cerr << "Here is the list of the removed vertices :";
+                for (int x : swapsSubgraphList)
+                    cerr << x << " ";
+                cerr << endl;
+                g.print();
+                targetGraph.print();
+                cerr << "YEAH\n\n";
+            }
             return true;
         }
 
@@ -362,9 +402,12 @@ bool is_supergraph_of_aux(Graph &g, const Graph &targetGraph, const vector<char>
 
         smallGraph = g.subgraph_removing_vertex(i);
 
-
+        //cerr << "trying to remove vertex " << i << "=> now " << g.nbVert-1 << " <-> " << i << endl;
+        swapsSubgraphList.push_back(i);
         if (is_supergraph_of_aux(smallGraph, targetGraph, targetHash, tmpHash, i, idThread))
             return true;
+        //cerr << "end of i=" << i << " removed" << endl;
+        swapsSubgraphList.pop_back();
     }
 
     if (n - (n-pos)+1 < targetGraph.nbVert)
@@ -385,8 +428,19 @@ bool is_supergraph_of(const Graph &g, Graph &targetGraph, int idThread)
 
     Graph gCopy = g;
 
+    swapsSubgraphList.clear();
+
     if (is_supergraph_of_aux(gCopy, targetGraph, targetHash, tmpHash, 0, idThread))
+    {
+        if (false)
+        {
+            g.print();
+            cerr << " ^^^^ was the graph tested against \n";
+            targetGraph.print();
+            cerr << "\n\n";
+        }
         return true;
+    }
 
     return false;
 }
