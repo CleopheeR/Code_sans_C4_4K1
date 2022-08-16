@@ -99,12 +99,12 @@ void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets,
         {
             cerr << "set " << setsNames[i] << " cannot exist " << endl;
             /*
-            if (!free_C4(gNew, n+1))
-                cerr << "\t pas de C4 possible\n";
-            if (!free_O4(gNew, n+1))
-                cerr << "\t pas de O4 possible\n";
-            isAdjCompat[i] = false;
-            */
+               if (!free_C4(gNew, n+1))
+               cerr << "\t pas de C4 possible\n";
+               if (!free_O4(gNew, n+1))
+               cerr << "\t pas de O4 possible\n";
+               isAdjCompat[i] = false;
+               */
         }
     }
 
@@ -116,11 +116,11 @@ void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets,
     for (int i1 = 0; i1 < nbSets; i1++)
     {
         cout << setsNames[i1] << "\t";
-        for (int ii = 0; ii < i1+1; ii++)
-            cout << "\t";
+        //for (int ii = 0; ii < i1+1; ii++)
+        //    cout << "\t";
         const vector<int> &curAdj1 = adjSets[i1];
 
-        for (int i2 = i1+1; i2 < nbSets; i2++)
+        for (int i2 = 0; i2 < nbSets; i2++)
         {
             const vector<int> &curAdj2 = adjSets[i2];
             bool isOkNoEdge = false;
@@ -163,69 +163,78 @@ void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets,
                     {
                         bool containsObstruction = false;
                         for (int i = 0; i < nbObstruction; i++)
+                        {
                             if (is_supergraph_of(g12, obstructions[i], 0)) //0 = idThread
+                            {
+                                cerr << endl;
+                                cerr << "Edge: Identifying graph " << i << endl;
+                                cerr << "\t => was " << setsNames[i1] << " VS " << setsNames[i2] << endl;
+
                                 containsObstruction = true;
+                            }
+                        }
                         if (!containsObstruction)
                             isOkWithEdge = true;
+
                     }
                 }
             }
 
             if (!isOkNoEdge && !isOkWithEdge)
                 cout << "-1\t";
-                //cerr << setsNames[i1] << " and " << setsNames[i2] << " cannot bot exist" << endl;
+            //cerr << setsNames[i1] << " and " << setsNames[i2] << " cannot bot exist" << endl;
             else if (!isOkNoEdge)
                 cout << "1\t";
-                //cerr << setsNames[i1] << " and " << setsNames[i2] << ": 1" << endl;
+            //cerr << setsNames[i1] << " and " << setsNames[i2] << ": 1" << endl;
 
             else if (!isOkWithEdge)
                 cout << "0\t";
-                //cerr << setsNames[i1] << " and " << setsNames[i2] << ": 0" << endl;
+            //cerr << setsNames[i1] << " and " << setsNames[i2] << ": 0" << endl;
             else
                 cout << "N\t";
-                //cerr << setsNames[i1] << " and " << setsNames[i2] << ": can say nothing :(" << endl;
+            //cerr << setsNames[i1] << " and " << setsNames[i2] << ": can say nothing :(" << endl;
         }
         cout << endl;
     }
 }
 
 /*
-void compute_N_melted_graph(const Graph &g, int **tabCompat)
-{
-    int n = g.nbVert;
-    vector<int> oldVertId2NewId(n, -1);
-    int lastId = 0;
+   void compute_N_melted_graph(const Graph &g, int **tabCompat)
+   {
+   int n = g.nbVert;
+   vector<int> oldVertId2NewId(n, -1);
+   int lastId = 0;
 
-    for (int x : listNVerts)
-    {
-        oldVertId2NewId[x] = lastId;
-        lastId++;
-    }
+   for (int x : listNVerts)
+   {
+   oldVertId2NewId[x] = lastId;
+   lastId++;
+   }
 
-    Graph gOnlyNVerts;
-    gOnlyNVerts.init(listNVerts.size(), 0);
-    for (int x : listNVerts)
-    {
-        int newId = oldVertId2NewId[x];
-        const vector<int> neighbs = g.get_neighb(x);
+   Graph gOnlyNVerts;
+   gOnlyNVerts.init(listNVerts.size(), 0);
+   for (int x : listNVerts)
+   {
+   int newId = oldVertId2NewId[x];
+   const vector<int> neighbs = g.get_neighb(x);
 
-        for (int y : neighbs)
-        {
-            int neighbNewId = oldVertId2NewId[y];
-            if (neighbNewId != -1)
-                gOnlyNVerts.add_edge(newId, neighbNewId);
-        }
-
-
-
-
-    }
+   for (int y : neighbs)
+   {
+   int neighbNewId = oldVertId2NewId[y];
+   if (neighbNewId != -1)
+   gOnlyNVerts.add_edge(newId, neighbNewId);
+   }
 
 
 
 
+   }
 
 
-}
+
+
+
+
+   }
 
 */
