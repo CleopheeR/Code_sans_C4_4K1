@@ -147,9 +147,9 @@ void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets,
                         {
                             if (is_supergraph_of(g12, obstructions[i], 0)) //0 = idThread
                             {
-                                //cerr << endl;
-                                //cerr << "Identifying graph " << i << endl;
-                                //cerr << "\t => was " << setsNames[i1] << " VS " << setsNames[i2] << endl;
+                                cerr << endl;
+                                cerr << "No edge: Identifying graph " << i << endl;
+                                cerr << "\t => was " << setsNames[i1] << " VS " << setsNames[i2] << endl;
                                 containsObstruction = true;
                             }
                         }

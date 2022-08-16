@@ -112,14 +112,14 @@ void Graph::print_in_file(ogzstream &f) const
 
 void Graph::print(void) const
 {
-    cout << nbVert << " vertices and " << nbEdge << " edges.\n";
+    cerr << nbVert << " vertices and " << nbEdge << " edges.\n";
     for (int i = 0; i < nbVert; i++)
     {
         for (int y : get_neighb(i))
             if (i > y)
-                cout << i << ";" << y << "\t";
+                cerr << i << ";" << y << "\t";
     }
-    cout << endl;
+    cerr << endl;
 }
 
 
