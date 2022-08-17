@@ -58,7 +58,6 @@ void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets,
 
     int n = g.nbVert;
     int nbSets = adjSets.size();
-    vector<bool> isAdjCompat(nbSets, true);
     vector<vector<Graph>> graphsSetsPerId(adjSets.size());
 
     for (int i = 0; i < nbSets; i++)
@@ -103,7 +102,6 @@ void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets,
                cerr << "\t pas de C4 possible\n";
                if (!free_O4(gNew, n+1))
                cerr << "\t pas de O4 possible\n";
-               isAdjCompat[i] = false;
                */
         }
     }
