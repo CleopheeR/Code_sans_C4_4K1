@@ -22,7 +22,7 @@ void Graph::init(int n, int m)
 void Graph::copy_and_add_new_vertex_bis(const Graph& g, const vector<int> &newEdges, int puissNew, int code)
 {
     if (adjMat == NULL)
-        init(g.nbVert+1, g.nbEdge);
+        init(g.nbVert+1, g.nbEdge+newEdges.size());
     else
     {
         nbVert = g.nbVert+1;
