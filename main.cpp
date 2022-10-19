@@ -348,6 +348,14 @@ int main(int argc, char* argv[])
             stringstream lineSs(line);
             string nameRead;
             lineSs >> nameRead;
+
+            if (nameRead[0] == ';') // Comment, not to process
+            {
+                string foo;
+                getline(lineSs, foo);
+                continue;
+            }
+
             setsNames.push_back(nameRead);
 
             int x;
@@ -390,7 +398,7 @@ int main(int argc, char* argv[])
             cout << endl;
         }
 
-        compute_cleophee_arrays(g, adjSets, antiCompleteSets, setsNames, freeVerts);
+        compute_cleophee_arrays(g, adjSets, antiCompleteSets, setsNames, freeVerts, true);
 
         fTableau.close();
     }

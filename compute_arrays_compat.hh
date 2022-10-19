@@ -13,6 +13,7 @@ using namespace std;
 // Recursive function.
 void getPossibleFreeNeighourhoods(int nbVert, const vector<int> &freeVerts, vector<Graph> &ret, Graph &curG, int pos);
 
-void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets, const vector<vector<int>> &antiCompleteSets, const vector<string> &setsNames, const vector<int> &freeVerts);
+vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets, const vector<vector<int>> &antiCompleteSets, const vector<string> &setsNames, const vector<int> &freeVerts, bool print=false);
 
+bool is_graph_ok(const Graph& g, bool print); // Tests if there is an obstruction of C4 or 4K1
 #endif

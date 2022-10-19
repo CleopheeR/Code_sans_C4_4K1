@@ -5,27 +5,25 @@
 #include "test-properties.hh"
 #include "compute_arrays_compat.hh"
 
+const int verbose = 0;
 
 using namespace std;
-const int nbObstruction = 7;
-vector<Graph> obstructions(nbObstruction);
+int nbObstruction = 0;
+vector<Graph> obstructions;
+
 
 
 void getPossibleFreeNeighourhoods(int nbVert, const vector<int> &freeVerts, vector<Graph> &ret, Graph &curG, int pos)
 {
     if (pos == freeVerts.size())
     {
-        if (!free_C4_O4(curG, nbVert))
-            return;
-        for (int i = 0; i < nbObstruction; i++)
+        if (is_graph_ok(curG, verbose == 2))
+            ret.push_back(curG);
+        else if (curG && (verbose == 2))
         {
-            if (is_supergraph_of(curG, obstructions[i], 0)) //0 = idThread parameter
-            {
-                //cerr << "Identifying graph " << i << endl;
-                return;
-            }
+            cerr << " was graph testing for sets, printing the graph:\n";
+            curG.print();
         }
-        ret.push_back(curG);
     }
 
     else
@@ -41,13 +39,45 @@ void getPossibleFreeNeighourhoods(int nbVert, const vector<int> &freeVerts, vect
 }
 
 
-void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets, const vector<vector<int>> &antiCompleteSets, const vector<string> &setsNames, const vector<int> &freeVerts)
+bool is_graph_ok(const Graph& g, bool print)
 {
-    for (int x : freeVerts)
-        cerr << x << " ";
-    cerr << " <---- these are the free vertices\n";
+    if (free_C4_O4(g, g.nbVert))
+    {
+        bool containsObstruction = false;
+        for (int i = 0; i < nbObstruction; i++)
+        {
+            if (is_supergraph_of(g, obstructions[i], 0)) //0 = idThread
+            {
+                if (print)
+                {
+                    cerr << "Identifying graph " << i << endl;
+                    cerr << endl;
+                }
+                containsObstruction = true;
+            }
+        }
+        if (!containsObstruction)
+            return true;
+    }
 
-    igzstream fObstructions("obstructions-c3.txt");
+    return false;
+}
+
+
+vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets, const vector<vector<int>> &antiCompleteSets, const vector<string> &setsNames, const vector<int> &freeVerts, bool print)
+{
+    if (print)
+    {
+        for (int x : freeVerts)
+            cerr << x << " ";
+        cerr << " <---- these are the free vertices\n";
+    }
+
+    igzstream fObstructions("obstructions-rien.txt");
+    fObstructions >> nbObstruction;
+    string foo;
+    getline(fObstructions, foo);
+    obstructions.resize(nbObstruction);
     for (int i = 0; i < nbObstruction; i++)
     {
         obstructions[i] = Graph(fObstructions);
@@ -83,7 +113,7 @@ void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets,
 
             realFreeVerts.push_back(x);
         }
-        if (realFreeVerts.size() != freeVerts.size())
+        if (print && realFreeVerts.size() != freeVerts.size())
         {
             cerr << "\t\t" << setsNames[i] << " free verts are: ";
             for (int x : realFreeVerts)
@@ -94,29 +124,53 @@ void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets,
 
         getPossibleFreeNeighourhoods(n+1, realFreeVerts, graphsSetsPerId[i], gNew, 0);
 
-        if (graphsSetsPerId[i].empty())
+        if (print)
         {
-            cerr << "set " << setsNames[i] << " cannot exist " << endl;
-            /*
-               if (!free_C4(gNew, n+1))
-               cerr << "\t pas de C4 possible\n";
-               if (!free_O4(gNew, n+1))
-               cerr << "\t pas de O4 possible\n";
-               */
+            if (graphsSetsPerId[i].empty())
+            {
+                cerr << "set " << setsNames[i] << " cannot exist " << endl;
+
+                if (!free_C4(gNew, n+1))
+                    cerr << "\t pas de C4 possible\n";
+                if (!free_O4(gNew, n+1))
+                    cerr << "\t pas de O4 possible\n";
+
+            }
+            else if (print)
+                cerr << "set " << setsNames[i] << " can exist " << endl;
         }
+        if (realFreeVerts.empty())
+            assert(graphsSetsPerId[i].size() <= 1);
     }
 
-    cout << "\t";
-    for (const string& s : setsNames)
-        cout << s << "\t";
-    cout << endl;
+    if (print)
+    {
+        cout << "\t";
+        for (const string& s : setsNames)
+            cout << s << "\t";
+        cout << endl;
+    }
+
+    vector<vector<char>> tableau(nbSets);
+    vector<vector<vector<Graph>>> possibleG1EdgeG2s(nbSets);
+    vector<vector<vector<Graph>>> possibleG1NoEdgeG2s(nbSets);
+
+    for (int i = 0; i < nbSets; i++)
+    {
+        tableau[i].resize(nbSets);
+        possibleG1EdgeG2s[i].resize(nbSets);
+        possibleG1NoEdgeG2s[i].resize(nbSets);
+    }
+
 
     for (int i1 = 0; i1 < nbSets; i1++)
     {
-        cout << setsNames[i1] << "\t";
+        if (print)
+            cout << setsNames[i1] << "\t";
         //for (int ii = 0; ii < i1+1; ii++)
         //    cout << "\t";
         const vector<int> &curAdj1 = adjSets[i1];
+
 
         for (int i2 = 0; i2 < nbSets; i2++)
         {
@@ -138,63 +192,47 @@ void compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets,
                         g12.add_edge(g1.nbVert, x);
 
                     // No edge
-                    if (free_C4_O4(g12, g12.nbVert))
-                    {
-                        bool containsObstruction = false;
-                        for (int i = 0; i < nbObstruction; i++)
-                        {
-                            if (is_supergraph_of(g12, obstructions[i], 0)) //0 = idThread
-                            {
-                                cerr << endl;
-                                cerr << "No edge: Identifying graph " << i << endl;
-                                cerr << "\t => was " << setsNames[i1] << " VS " << setsNames[i2] << endl;
-                                containsObstruction = true;
-                            }
-                        }
-                        if (!containsObstruction)
-                            isOkNoEdge = true;
-                    }
+                    isOkNoEdge = is_graph_ok(g12, print);
+                    if (isOkNoEdge)
+                        possibleG1NoEdgeG2s[i1][i2].push_back(g12);
+                    else if (print)
+                        cerr << "\n => For NoEdge was " << setsNames[i1] << " VS " << setsNames[i2] << endl;
 
                     // An edge
                     g12.add_edge(g12.nbVert-1, g12.nbVert-2);
-                    if (free_C4_O4(g12, g12.nbVert))
-                    {
-                        bool containsObstruction = false;
-                        for (int i = 0; i < nbObstruction; i++)
-                        {
-                            if (is_supergraph_of(g12, obstructions[i], 0)) //0 = idThread
-                            {
-                                cerr << endl;
-                                cerr << "Edge: Identifying graph " << i << endl;
-                                cerr << "\t => was " << setsNames[i1] << " VS " << setsNames[i2] << endl;
+                    isOkWithEdge = is_graph_ok(g12, print);
 
-                                containsObstruction = true;
-                            }
-                        }
-                        if (!containsObstruction)
-                            isOkWithEdge = true;
+                    if (isOkWithEdge)
+                        possibleG1EdgeG2s[i1][i2].push_back(g12);
+                    else if (print)
+                        cerr << "\n => For with edge was " << setsNames[i1] << " VS " << setsNames[i2] << endl;
 
-                    }
                 }
             }
 
-            if (!isOkNoEdge && !isOkWithEdge)
-                cout << "-1\t";
-            //cerr << setsNames[i1] << " and " << setsNames[i2] << " cannot bot exist" << endl;
-            else if (!isOkNoEdge)
-                cout << "1\t";
-            //cerr << setsNames[i1] << " and " << setsNames[i2] << ": 1" << endl;
+            char charToPrint = 'N';
 
+            if (!isOkNoEdge && !isOkWithEdge)
+                charToPrint = '-';
+            else if (!isOkNoEdge)
+                charToPrint = '1';
             else if (!isOkWithEdge)
-                cout << "0\t";
-            //cerr << setsNames[i1] << " and " << setsNames[i2] << ": 0" << endl;
-            else
-                cout << "N\t";
-            //cerr << setsNames[i1] << " and " << setsNames[i2] << ": can say nothing :(" << endl;
+                charToPrint = '0';
+
+            if (print)
+                cout << charToPrint << "\t";
+            tableau[i1][i2] = charToPrint;
+
         }
-        cout << endl;
+        if (print)
+            cout << endl;
     }
+    if (print)
+        cerr << endl << endl;
+
+    return tableau;
 }
+
 
 /*
    void compute_N_melted_graph(const Graph &g, int **tabCompat)
