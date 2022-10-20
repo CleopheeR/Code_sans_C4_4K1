@@ -5,12 +5,135 @@
 #include "Graph.hh"
 #include "test-properties.hh"
 #include "compute_arrays_compat.hh"
+#include "gen-graph.hh"
 
 const int verbose = 0;
 
 using namespace std;
 
+bool is_quasi_fixer(const Graph &g)
+{
+    vector<vector<int>> partitionSets;
+    gen_klmpartition_default_sets(g, partitionSets);
 
+    vector<int> foo;
+    vector<string> foo2;
+    vector<vector<int>> foo3;
+    vector<vector<char>> tableau = compute_cleophee_arrays(g, partitionSets, foo3, foo2, foo);
+
+    int n = tableau.size();
+    for (int i1 = 0; i1 < n; i1++)
+    {
+        for (int i2 = 0; i2 < n; i2++)
+        {
+            if (tableau[i1][i2] != 'N')
+                continue;
+            for (int i3 = 0; i3 < n; i3++)
+            {
+                if (tableau[i1][i3] != 'N')
+                    continue;
+
+                if (tableau[i2][i3] == '0' || tableau[i2][i3] == 'N')
+                    return false;
+            }
+        }
+    }
+
+
+
+    return true;
+}
+
+
+// Generates the possible neighbourhoods for each vertex and puts it in TODO les bons bails
+void gen_klmpartition_default_sets(const Graph &g, vector<vector<int>> &listPossibleNeighbs)
+{
+    int nbVert = g.nbVert+1;
+    vector<long long> twinLists;
+    twinLists.reserve(NBMAXVERT*NBMAXVERT);
+    vector<long long> pathLength2;
+    pathLength2.reserve(NBMAXVERT);
+
+    const int nbEdgeCombi = (1<<(nbVert-1));
+
+    bool isTwin[NBMAXVERT];
+    bool isInList[NBMAXVERT];
+    int **isTwinCompat = NULL;
+
+    /*
+     * isTwinCompat = (int**) malloc(sizeof(*isTwinCompat)*nbEdgeCombi);
+     for (int i = 0; i < nbEdgeCombi; i++)
+     isTwinCompat[i] = (int*) malloc(sizeof(*isTwinCompat)*NBMAXVERT);
+
+
+
+    //TODO attention pas symmétrique là.
+    for (int code = 0; code < nbEdgeCombi; code++)
+    {
+    for (int v1 = 0; v1 < nbVert-2; v1++)
+    {
+    int curCompat = 0;
+    if (code & (1<<v1))
+    {
+    isTwinCompat[code][v1] = 0;
+    continue;
+    }
+
+    for (int v2 = v1+1; v2 < nbVert-1; v2++)
+    {
+    if (code & (1<<v2))
+    curCompat ^= (1<<v2);
+    }
+    isTwinCompat[code][v1] = curCompat;
+    }
+    }
+    */
+
+    twinLists.clear();
+    gen_twin_list(g, twinLists, nbVert);
+
+    gen_P2_list(g, pathLength2, nbVert);
+
+    const int puissNewVert = 1<<(nbVert-1);
+    for (int code = 0; code < puissNewVert; code++)
+    {
+        bool hasTwin = false;
+        for (int x : adjListGlobal[code])
+        {
+            if ((g.adjMat[x] ^ code) == (1<<x))
+            {
+                hasTwin = true;
+                break;
+            }
+        }
+        //if (hasTwin) //TODO peut-être pas...
+        //    continue;
+
+        bool refuseBecauseTwins = false;//can_discard_edgelist(twinLists, isTwinCompat[code], nbVert+1);
+        if (false && refuseBecauseTwins) //TODO peut-être pas
+        {
+            //cerr << "lol YEAH\n";
+            continue;
+        }
+
+        const vector<int> &newEdgesList = adjListGlobal[code];
+
+        //if (newEdgesList.size() == 6 && newEdgesList[0] == 0 && newEdgesList[1] == 1 && newEdgesList[2] == 2 && newEdgesList[3] == 3 && newEdgesList[4] == 4 && newEdgesList[5] == 7)
+        //if (newEdgesList.size() == 5 && newEdgesList[0] == 1 && newEdgesList[1] == 2 && newEdgesList[2] == 3 && newEdgesList[3] == 4 && newEdgesList[4] == 7)
+        //cerr << "lol " << detect_C4(pathLength2, code) << endl;
+        bool refuseBecauseC4 = detect_C4(pathLength2, code);
+        if (refuseBecauseC4)
+            continue;
+        Graph gWithEdges;
+        gWithEdges.copy_and_add_new_vertex_bis(g, newEdgesList, puissNewVert, code);
+
+        //if (newEdgesList.size() == 6 && newEdgesList[0] == 0 && newEdgesList[1] == 1 && newEdgesList[2] == 2 && newEdgesList[3] == 3 && newEdgesList[4] == 4 && newEdgesList[5] == 7)
+        //    gWithEdges.print();
+        if (free_O4(gWithEdges, nbVert))
+            listPossibleNeighbs.push_back(newEdgesList);
+
+    }
+}
 
 void getPossibleFreeNeighourhoods(int nbVert, const vector<int> &freeVerts, vector<Graph> &ret, Graph &curG, int pos, vector<Graph> &obstructions, sparse_hash_map<vector<char>, vector<Graph>> &deglist2PrefixeursPlus, int idThread)
 {
@@ -91,7 +214,6 @@ vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector
             cerr << x << " ";
         cerr << " <---- these are the free vertices\n";
     }
-
 
 
     int n = g.nbVert;
