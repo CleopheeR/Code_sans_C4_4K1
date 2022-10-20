@@ -398,7 +398,31 @@ int main(int argc, char* argv[])
             cout << endl;
         }
 
-        compute_cleophee_arrays(g, adjSets, antiCompleteSets, setsNames, freeVerts, true);
+        vector<Graph> obstructions;
+        int nbObstruction;
+        igzstream fObstructions("obstructions-c3.txt");
+        fObstructions >> nbObstruction;
+        string foo;
+        getline(fObstructions, foo);
+        obstructions.resize(nbObstruction);
+        for (int i = 0; i < nbObstruction; i++)
+        {
+            obstructions[i] = Graph(fObstructions);
+            obstructions[i].print();
+        }
+        fObstructions.close();
+
+        stringstream fileNamePlus;
+        fileNamePlus << "Alexfixeursdelataille";
+        fileNamePlus << nbVert+1 << ".txt.gz";
+
+        sparse_hash_map<vector<char>, vector<Graph>> prefixeurs;
+        //read_prefixeurs_compute_hash(fileNamePlus.str(), nbVert, prefixeurs);
+
+
+        sparse_hash_map<vector<char>, vector<Graph>> prefixeurs;
+
+        compute_cleophee_arrays(g, adjSets, antiCompleteSets, setsNames, freeVerts, obstructions, prefixeurs, 0, true); //0 = idthread
 
         fTableau.close();
     }

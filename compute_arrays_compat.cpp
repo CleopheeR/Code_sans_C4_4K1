@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+#include "sparsepp/spp.h"
 
 #include "Graph.hh"
 #include "test-properties.hh"
@@ -8,18 +9,16 @@
 const int verbose = 0;
 
 using namespace std;
-int nbObstruction = 0;
-vector<Graph> obstructions;
 
 
 
-void getPossibleFreeNeighourhoods(int nbVert, const vector<int> &freeVerts, vector<Graph> &ret, Graph &curG, int pos)
+void getPossibleFreeNeighourhoods(int nbVert, const vector<int> &freeVerts, vector<Graph> &ret, Graph &curG, int pos, vector<Graph> &obstructions, sparse_hash_map<vector<char>, vector<Graph>> &deglist2PrefixeursPlus, int idThread)
 {
     if (pos == freeVerts.size())
     {
-        if (is_graph_ok(curG, verbose == 2))
+        if (is_graph_ok(curG, obstructions, deglist2PrefixeursPlus, verbose == 2))
             ret.push_back(curG);
-        else if (curG && (verbose == 2))
+        else if (verbose == 2)
         {
             cerr << " was graph testing for sets, printing the graph:\n";
             curG.print();
@@ -31,40 +30,60 @@ void getPossibleFreeNeighourhoods(int nbVert, const vector<int> &freeVerts, vect
         int newNeighb = freeVerts[pos];
 
         curG.add_edge(nbVert-1, newNeighb);
-        getPossibleFreeNeighourhoods(nbVert, freeVerts, ret, curG, pos+1);
+        getPossibleFreeNeighourhoods(nbVert, freeVerts, ret, curG, pos+1, obstructions, deglist2PrefixeursPlus, idThread);
 
         curG.delete_edge(nbVert-1, newNeighb);
-        getPossibleFreeNeighourhoods(nbVert, freeVerts, ret, curG, pos+1);
+        getPossibleFreeNeighourhoods(nbVert, freeVerts, ret, curG, pos+1, obstructions, deglist2PrefixeursPlus, idThread);
     }
 }
 
 
-bool is_graph_ok(const Graph& g, bool print)
+bool is_graph_ok(Graph& g, vector<Graph> &obstructions, sparse_hash_map<vector<char>, vector<Graph>> &deglist2PrefixeursPlus, int idThread, bool print)
 {
-    if (free_C4_O4(g, g.nbVert))
+    int nbObstruction = obstructions.size();
+    if (!free_C4_O4(g, g.nbVert))
+        return false;
+    bool containsObstruction = false;
+    for (int i = 0; i < nbObstruction; i++)
     {
-        bool containsObstruction = false;
-        for (int i = 0; i < nbObstruction; i++)
+        if (is_supergraph_of(g, obstructions[i], idThread))
         {
-            if (is_supergraph_of(g, obstructions[i], 0)) //0 = idThread
+            if (print)
+            {
+                cerr << "Identifying graph " << i << endl;
+                cerr << endl;
+            }
+            return false;
+        }
+    }
+
+    thread_local vector<char> deglist;
+    deglist.resize(g.nbVert+4);
+    for (int i = 0; i < g.nbVert; i++)
+        deglist[i] = g.get_neighb(i).size();
+    sort(deglist.begin(), deglist.begin()+g.nbVert);
+    g.compute_hashes(deglist);
+
+    const auto &itFindDeglist = deglist2PrefixeursPlus.find(deglist);
+    if (itFindDeglist != deglist2PrefixeursPlus.end())
+    {
+        const vector<Graph> &prefixeursPlusToTest = itFindDeglist->second;
+        for (const Graph& gSeen : prefixeursPlusToTest)
+        {
+            if (are_isomorphic(g, gSeen, idThread))
             {
                 if (print)
-                {
-                    cerr << "Identifying graph " << i << endl;
-                    cerr << endl;
-                }
-                containsObstruction = true;
+                    cerr << "Isomorphic to a prefixeur !\n";
+                return false;
             }
         }
-        if (!containsObstruction)
-            return true;
     }
 
-    return false;
+
+    return true;
 }
 
-
-vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets, const vector<vector<int>> &antiCompleteSets, const vector<string> &setsNames, const vector<int> &freeVerts, bool print)
+vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector<int>> &adjSets, const vector<vector<int>> &antiCompleteSets, const vector<string> &setsNames, const vector<int> &freeVerts, vector<Graph> &obstructions, sparse_hash_map<vector<char>, vector<Graph>> &deglist2PrefixeursPlus, int idThread, bool print)
 {
     if (print)
     {
@@ -73,17 +92,6 @@ vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector
         cerr << " <---- these are the free vertices\n";
     }
 
-    igzstream fObstructions("obstructions-rien.txt");
-    fObstructions >> nbObstruction;
-    string foo;
-    getline(fObstructions, foo);
-    obstructions.resize(nbObstruction);
-    for (int i = 0; i < nbObstruction; i++)
-    {
-        obstructions[i] = Graph(fObstructions);
-        obstructions[i].print();
-    }
-    fObstructions.close();
 
 
     int n = g.nbVert;
@@ -122,7 +130,7 @@ vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector
         }
 
 
-        getPossibleFreeNeighourhoods(n+1, realFreeVerts, graphsSetsPerId[i], gNew, 0);
+        getPossibleFreeNeighourhoods(n+1, realFreeVerts, graphsSetsPerId[i], gNew, 0, obstructions, deglist2PrefixeursPlus, idThread);
 
         if (print)
         {
@@ -192,7 +200,7 @@ vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector
                         g12.add_edge(g1.nbVert, x);
 
                     // No edge
-                    isOkNoEdge = is_graph_ok(g12, print);
+                    isOkNoEdge = is_graph_ok(g12, obstructions, deglist2PrefixeursPlus, print);
                     if (isOkNoEdge)
                         possibleG1NoEdgeG2s[i1][i2].push_back(g12);
                     else if (print)
@@ -200,7 +208,7 @@ vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector
 
                     // An edge
                     g12.add_edge(g12.nbVert-1, g12.nbVert-2);
-                    isOkWithEdge = is_graph_ok(g12, print);
+                    isOkWithEdge = is_graph_ok(g12, obstructions, deglist2PrefixeursPlus, print);
 
                     if (isOkWithEdge)
                         possibleG1EdgeG2s[i1][i2].push_back(g12);
