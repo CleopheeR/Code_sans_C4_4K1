@@ -9,11 +9,12 @@
 #include "Graph.hh"
 #include "test-properties.hh"
 #include "gen-graph.hh"
+#include "compute_arrays_compat.hh"
 
 //TTAADDAA documenter ça ici ou ailleurs
 vector<char> bigDegreeList[NBMAXPROC];
 Graph isPreOrFixeurGWithEdges[NBMAXPROC];
-
+sparse_hash_map<vector<char>, vector<Graph>> deglist2PrefixeursPlusPlus;
 
 sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
 {
@@ -53,6 +54,14 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
     read_prefixeurs_compute_hash(fileNamePlus.str(), nbVert+1 ,deglist2PrefixeursPlus);
 
     cout << "j'ai généré/trouvé les graphes à " << nbVert << " somets : il y en a " << listGraphs.size() << endl;
+
+
+    stringstream fileNamePlusPlus;
+    fileNamePlus << "Alexfixeursdelataille";
+    fileNamePlus << nbVert+2 << ".txt.gz";
+
+    read_prefixeurs_compute_hash(fileNamePlusPlus.str(), nbVert+2 ,deglist2PrefixeursPlusPlus);
+
 
     int **isTwinCompat = NULL;
 
@@ -224,6 +233,7 @@ bool is_pre_or_fixeur(const Graph &g, bool prefixeurTest, const sparse_hash_map<
         if (isGBigPreFixeur)
             continue;
 
+
         return false;
     }
 
@@ -235,6 +245,11 @@ bool is_pre_or_fixeur(const Graph &g, bool prefixeurTest, const sparse_hash_map<
 
 void gen_fixeurs_thread(int nbVert, const vector<Graph> &graphList, int** isTwinCompat, vector<Graph> &fixeursList, const sparse_hash_map<vector<char>, vector<Graph>> &deglist2PrefixeursPlus, mutex &mutInsert, int idThread)
 {
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(idThread+1, &cpuset);
+    assert(sched_setaffinity(0, sizeof(cpuset), &cpuset) == 0);
+
     vector<char> degreeListPlus(nbVert+5);
     int nbEdgeCombi = 1<<nbVert;
     vector<Graph> ourFixeurs;
@@ -254,6 +269,14 @@ void gen_fixeurs_thread(int nbVert, const vector<Graph> &graphList, int** isTwin
         if (is_pre_or_fixeur(g, true, deglist2PrefixeursPlus, isTwinCompat, idThread))
         {
             cerr << "YYYYYYYYYYYYYYYYEEEEEEEEESSSSSSSSSS\n";
+            mutInsert.lock();
+            fixeursList.push_back(g);
+            mutInsert.unlock();
+        }
+
+        else if (is_quasi_fixer(g, deglist2PrefixeursPlus, deglist2PrefixeursPlusPlus, idThread))//  (g, true, deglist2PrefixeursPlus, isTwinCompat, idThread))
+        {
+            cerr << "UUUUUUUUUUUUUYYYYYYYYYYEEEEEEEESSSSSSS\n";
             mutInsert.lock();
             fixeursList.push_back(g);
             mutInsert.unlock();

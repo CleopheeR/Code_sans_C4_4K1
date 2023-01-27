@@ -3,6 +3,8 @@
 #include <sstream>
 #include <string>
 #include <fstream>
+#include <cmath>
+#include <set>
 
 #include "sparsepp/spp.h"
 #include "Graph.hh"
@@ -24,7 +26,7 @@ int main(int argc, char* argv[])
     if (argc > 3)
         nbProc = atoi(argv[3]);
 
-    init_adjListGlobal(nbVert+2);
+    init_adjListGlobal(nbVert+3);
     if (testOrGen == 'G')
     {
         vector<Graph> graphList;
@@ -95,14 +97,28 @@ int main(int argc, char* argv[])
 
 
         get_minimal_fixeurs(listGraphsMinus, prefixeurs);
+        int nbMinimal = 0;
+
+        stringstream fileNameMinimal;
+        fileNameMinimal << "Alexminimalprefixeursdelataille";
+        fileNameMinimal << nbVert << ".txt.gz";
+        ogzstream fileMinimal(fileNameMinimal.str().c_str());
 
         for (const auto &pairDegG : prefixeurs)
         {
-            for (const Graph &g : pairDegG.second)
-                g.print();
-        }
 
+
+            for (const Graph &g : pairDegG.second)
+            {
+                nbMinimal++;
+                g.print();
+                g.print_in_file(fileMinimal);
+            }
+        }
+        cerr << nbMinimal << endl;
+        fileMinimal.close();
     }
+
 
     else if (testOrGen == 'X') //Gen graphs including some specific graphs.
     {
@@ -168,6 +184,78 @@ int main(int argc, char* argv[])
 
     }
 
+    else if (testOrGen == 'Z') // Gen the extension sets for each graph, compute its array, check for quasi-fixers^^
+    {
+        stringstream fileName;
+        fileName << "Alexgraphedelataille";
+        fileName << nbVert << ".txt.gz";
+        cerr << fileName.str() << endl;
+        int nbGraph = -1;
+        stringstream sizeFileName;
+        sizeFileName << "Alexsizegraphedelataille";
+        sizeFileName << nbVert << ".txt";
+        cerr << sizeFileName.str() << endl;
+
+        ifstream sizeFile(sizeFileName.str());
+        sizeFile >> nbGraph;
+        assert(nbGraph > 0);
+        cerr << "Je veux voir " << nbGraph << " graphes\n";
+
+
+        vector<Graph> listGraphs = load_from_file(fileName.str(), nbGraph);
+
+         stringstream fileNamePlus;
+        fileNamePlus << "Alexfixeursdelataille";
+        fileNamePlus << nbVert+1 << ".txt.gz";
+
+        sparse_hash_map<vector<char>, vector<Graph>> prefixeurs;
+        read_prefixeurs_compute_hash(fileNamePlus.str(), nbVert+1, prefixeurs);
+
+
+        stringstream fileNamePlusPlus;
+        fileNamePlusPlus << "Alexfixeursdelataille";
+        fileNamePlusPlus << nbVert+2 << ".txt.gz";
+
+        sparse_hash_map<vector<char>, vector<Graph>> prefixeursPlus2;
+        read_prefixeurs_compute_hash(fileNamePlusPlus.str(), nbVert+2, prefixeursPlus2);
+
+
+        cout << " FINI lire préfixeurs" << endl;
+
+
+
+        int cptGood = 0;
+        int cpt = 0;
+        int pct = (max(1,nbGraph/100));
+        for (Graph &g : listGraphs)
+        {
+            if (is_quasi_fixer(g, prefixeurs, prefixeursPlus2, 0))
+            {
+                cout << "\tYEAH "<< ++cptGood << endl;
+                g.print();
+            }
+            cpt++;
+            if (cpt%pct == 0)
+                cout << round(100*cpt/(double)nbGraph)  << endl;
+            continue;
+            assert(false);
+            vector<vector<int>> truc;
+            gen_klmpartition_default_sets(g, truc, prefixeurs, 0);
+
+            for (const vector<int> &t : truc)
+            {
+                cerr << "V_i ";
+                for (const int x : t)
+                    if (x != 0 && x != 7)
+                        cerr << x << " ";
+                cerr << endl;
+            }
+            g.print();
+        }
+
+        cerr << cptGood << "/" << listGraphs.size() << " are good\n";
+    }
+
     else if (testOrGen == 'S') //statistics
     {
 
@@ -191,6 +279,15 @@ int main(int argc, char* argv[])
         }
         int nbGMinus = -1;
         fSize >> nbGMinus;
+
+        cerr << "HAHAHA YEAH\n";
+        for (const Graph &g : list)
+        {
+            for (int u = 0; u < g.nbVert; u++)
+                assert(!has_twin(g, u));
+        }
+        cerr << "HIHIHI YEAH\n";
+
 
         string toto;
 
@@ -321,10 +418,37 @@ int main(int argc, char* argv[])
         nbVert = g.nbVert;
         nbEdge = g.nbEdge;
 
+        /*
+        vector<vector<int>> setsPartition;
+        set<vector<int>> toto;
+        gen_klmpartition_default_sets(g, setsPartition);
+        sort(setsPartition.begin(), setsPartition.end(), [](const vector<int> & a, const vector<int> & b){ return a.size() < b.size(); });
+        int cpt = 0;
+        for (const auto &x : setsPartition)
+        {
+            if (toto.insert(x).second == false)
+                continue;
+            char car = 'A'+cpt;
+            if (car > 'Z')
+                car = 'a'+cpt;
+            cpt++;
+            cerr << car << "\t";
+            for (int u : x)
+                cerr << u << " ";
+            cerr << endl;
+        }
+        return 0;
+        */
+
         string line;
 
         vector<int> freeVerts;
         vector<bool> wasSeen(g.nbVert);
+
+        map<string, int> setsNames2Id;
+        int cptSet = 0;
+
+        vector<vector<string>> forcedNeighoursSetsNames;
 
         if (fTableau.peek() == 'F') // Free vertices list
         {
@@ -347,6 +471,11 @@ int main(int argc, char* argv[])
         {
             stringstream lineSs(line);
             string nameRead;
+            if (lineSs.peek() == ';')
+            {
+                getline(lineSs, nameRead);
+                continue;
+            }
             lineSs >> nameRead;
 
             if (nameRead[0] == ';') // Comment, not to process
@@ -357,10 +486,14 @@ int main(int argc, char* argv[])
             }
 
             setsNames.push_back(nameRead);
+            setsNames2Id[nameRead] = cptSet;
+            cptSet++;
+
+            vector<string> curForcedNeighbNames;
 
             int x;
             vector<int> curAdj, curAntiAdj;
-            while (lineSs.peek() != '.' && lineSs >> x)
+            while (lineSs.peek() != '.' && lineSs.peek() != ';' && lineSs >> x)
             {
                 curAdj.push_back(x);
                 wasSeen[x] = true;
@@ -370,13 +503,27 @@ int main(int argc, char* argv[])
             if (lineSs.peek() == '.')
             {
                 lineSs.get();
-                while (lineSs >> x)
+                while (lineSs.peek() != ';' && lineSs >> x)
                 {
                     cerr << x << " is anticomplete for " << nameRead << endl;
                     curAntiAdj.push_back(x);
                 }
 
             }
+            if (lineSs.peek() == ';')
+            {
+                cerr << " YEAH22";
+                string curName;
+                lineSs.get();
+
+                while (lineSs >> curName)
+                {
+                    cerr << "  " << curName;
+                    curForcedNeighbNames.push_back(curName);
+                }
+                cerr << endl;
+            }
+
             /* //Inutiles là : on spécifie les sommets libres
             if (lineSs.peek() == ':')
             {
@@ -384,8 +531,11 @@ int main(int argc, char* argv[])
                 freeVerts.push_back(x); //TODO s'assurer que y'a pas des en double...
             }*/
 
+
             adjSets.push_back(curAdj);
             antiCompleteSets.push_back(curAntiAdj);
+
+            forcedNeighoursSetsNames.push_back(curForcedNeighbNames);
         }
 
         g.print();
@@ -412,20 +562,49 @@ int main(int argc, char* argv[])
         }
         fObstructions.close();
 
-        stringstream fileNamePlus;
-        fileNamePlus << "Alexfixeursdelataille";
-        fileNamePlus << nbVert+1 << ".txt.gz";
-
-        sparse_hash_map<vector<char>, vector<Graph>> prefixeurs;
-        //read_prefixeurs_compute_hash(fileNamePlus.str(), nbVert, prefixeurs);
-
 
         sparse_hash_map<vector<char>, vector<Graph>> prefixeurs;
 
-        compute_cleophee_arrays(g, adjSets, antiCompleteSets, setsNames, freeVerts, obstructions, prefixeurs, 0, true); //0 = idthread
+        vector<vector<int>> forcedNeighoursSetsIds;
+
+        for (const vector<string> &curForcedNeighbs : forcedNeighoursSetsNames)
+        {
+            vector<int> curIds;
+
+            for (const string &str :curForcedNeighbs)
+                curIds.push_back(setsNames2Id[str]);
+
+            forcedNeighoursSetsIds.push_back(curIds);
+        }
+
+        //return 1;
+
+        compute_cleophee_arrays(g, adjSets, antiCompleteSets, setsNames, freeVerts, obstructions, prefixeurs, prefixeurs, 0, true); //0 = idthread
 
         fTableau.close();
     }
+
+    else if (testOrGen == 'I') //Test bug isomorphisme
+    {
+        cerr << nbVert << " zut \n";
+        string fname(argv[3]);
+        int nbG = -1;
+        string strNbVert = to_string(nbVert);
+
+        vector<Graph> listGraphs = load_from_file(fname, nbG);
+
+        vector<char> degreeList1(nbVert+4), degreeList2(nbVert+4);
+        Graph &g1=listGraphs[0], &g2= listGraphs[1];
+        g1.compute_hashes(degreeList1);
+        g2.compute_hashes(degreeList2);
+        g1.print();
+        g2.print();
+
+        cerr << are_isomorphic(g1, g2, 0);
+
+    }
+
+
     free_adjListGlobal();
 
     return 0;
