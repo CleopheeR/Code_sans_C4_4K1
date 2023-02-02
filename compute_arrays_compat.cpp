@@ -246,7 +246,7 @@ bool can_3sets_be_possible(const Graph &g, const vector<int> *adjA, const vector
     if (is_graph_ok(gA0BC, obstructions, deglist2PrefixeursPlusPlusPlus, false))
         A0B_CLink[0] = true;
     if (is_graph_ok(gA1BC, obstructions, deglist2PrefixeursPlusPlusPlus, false))
-        A1B_CLink[1] = true;
+        A1B_CLink[0] = true;
 
     //add ac
     //test
@@ -266,6 +266,12 @@ bool can_3sets_be_possible(const Graph &g, const vector<int> *adjA, const vector
     if (is_graph_ok(gA1BC, obstructions, deglist2PrefixeursPlusPlusPlus, false))
         A1B_CLink[1] = true;
 
+    //Fixed
+    if (A0B_CLink[0] || A0B_CLink[1] || A1B_CLink[0] || A1B_CLink[1])
+        return true;
+
+    /*
+    //TODO voir
     if (A0B_CLink[0] + A0B_CLink[1] > 1)
         return true;
     if (A1B_CLink[0] + A1B_CLink[1] > 1)
@@ -274,7 +280,7 @@ bool can_3sets_be_possible(const Graph &g, const vector<int> *adjA, const vector
         return true;
     if (A0B_CLink[1] + A1B_CLink[0] > 1)
         return true;
-
+    */
     cerr << "\tYEAH FOUND\n";
     return false;
 }
