@@ -14,6 +14,7 @@
 #include "compare_with_cleophee.hh"
 #include "misc.hh"
 #include "compute_arrays_compat.hh"
+#include "problemArray.hh"
 
 using namespace std;
 
@@ -229,7 +230,12 @@ int main(int argc, char* argv[])
         int pct = (max(1,nbGraph/100));
         for (Graph &g : listGraphs)
         {
-            if (is_quasi_fixer(g, prefixeurs, prefixeursPlus2, 0))
+            if (argv[2][1] == 'o' && is_quasi_fixer(g, prefixeurs, prefixeursPlus2, 0))
+            {
+                cout << "\tYEAH "<< ++cptGood << endl;
+                g.print();
+            }
+            if (argv[2][1] == 'n' && is_magic_graph(g))
             {
                 cout << "\tYEAH "<< ++cptGood << endl;
                 g.print();
