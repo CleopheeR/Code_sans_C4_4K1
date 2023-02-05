@@ -58,6 +58,8 @@ class ProblemArray
 
         bool check_that_set_is_clique(const ProblemArraySet &set) const;
 
+        bool solve_array_problems(void) const;
+
         ProblemArray(void)
         {
             int idThread = 0;

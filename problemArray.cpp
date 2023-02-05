@@ -73,9 +73,9 @@ bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const Prob
 bool ProblemArray::is_true_N_between_two(const ProblemArraySet &setA, const ProblemArraySet &setB) const
 {
     int n0 = baseGraph.nbVert;
-    const ProblemArraySet* sets[3] = {&setA, &setB, &setB};
+    const ProblemArraySet* sets[3] = {&setB, &setB, &setA};
     Graph gAB = add_vertices_to_base_graph(sets, 3);
-    int uA = n0, uB1 = n0+1, uB2 = n0+2;
+    int uB1 = n0, uB2 = n0+1, uA = n0+2;
     gAB.add_edge(uB1, uB2);
 
     gAB.add_edge(uA, uB1);
@@ -251,6 +251,58 @@ bool ProblemArray::check_that_set_is_clique(const ProblemArraySet &set) const
     return true;
 }
 
+bool ProblemArray::solve_array_problems(void) const
+{
+    int nbSet = partitionSets.size();
+    for (int i1 = 0; i1 < nbSet; i1++)
+    {
+        const ProblemArraySet &set1 = partitionSets[i1];
+        for (int i2 = 0; i2 < nbSet; i2++)
+        {
+            const ProblemArraySet &set2 = partitionSets[i2];
+            if (partitionArray[i1][i2] != 'N')
+                continue;
+            if (!is_true_N_between_two(set1, set2))
+            {
+                cout << " LOL12\n";
+                continue;
+            }
+            for (int i3 = i2+1; i3 < nbSet; i3++)
+            {
+                const ProblemArraySet &set3 = partitionSets[i3];
+                if (partitionArray[i1][i3] != 'N')
+                    continue;
+
+                if (partitionArray[i2][i3] == '-')
+                {
+                    cout << "xD\n";
+                    continue;
+                }
+
+                if (!is_true_N_between_two(set1, set3))
+                {
+                    cout << " LOL13\n";
+                    continue;
+                }
+
+
+                if (!can_3sets_be_possible(set1, set2, set3))
+                {
+                    cout << " mdr \n";
+                    continue;
+                }
+
+                // We did not save this bad triplet...
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+
+
 //TODO free vertices for base graph
 bool is_magic_graph(const Graph &g)
 {
@@ -273,6 +325,7 @@ bool is_magic_graph(const Graph &g)
     const vector<vector<char>> &tableau = pbArray.partitionArray;
 
     int nbSet = pbArray.partitionSets.size();
+    /*
     for (int i1 = 0; i1 < nbSet; i1++)
     {
         for (int i2 = 0; i2 < nbSet; i2++)
@@ -281,11 +334,14 @@ bool is_magic_graph(const Graph &g)
                 continue;
             for (int i3 = i2+1; i3 < nbSet; i3++)
             {
-                if (tableau[i1][i3] == 'N')
+                if (tableau[i1][i3] == 'N' && tableau[i2][i3] != '-')
                     return false;
             }
         }
-    }
+    }*/
+
+    if (!pbArray.solve_array_problems())
+        return false;
 
     pbArray.print_array();
     cout << endl << endl;
