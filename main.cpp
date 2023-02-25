@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     else if (testOrGen == 'M') // Find minimal prefixers
     {
         stringstream fileNameMinus;
-        fileNameMinus << "Alexfixeursdelataille";
+        fileNameMinus << "Alexmagicdelataille";
         fileNameMinus << nbVert-1 << ".txt.gz";
         cerr << fileNameMinus.str() << endl;
 
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
 
 
         stringstream fileName;
-        fileName << "Alexfixeursdelataille";
+        fileName << "Alexmagicdelataille";
         fileName << nbVert << ".txt.gz";
 
         sparse_hash_map<vector<char>, vector<Graph>> prefixeurs;
@@ -187,6 +187,8 @@ int main(int argc, char* argv[])
 
     else if (testOrGen == 'Z') // Gen the extension sets for each graph, compute its array, check for quasi-fixers^^
     {
+        gen_magic_graphs(nbVert);
+        return 0;
         stringstream fileName;
         fileName << "Alexgraphedelataille";
         fileName << nbVert << ".txt.gz";
@@ -232,10 +234,10 @@ int main(int argc, char* argv[])
         {
             if (argv[2][1] == 'o' && is_quasi_fixer(g, prefixeurs, prefixeursPlus2, 0))
             {
-                cout << "\tYEAH "<< ++cptGood << endl;
+                cout << "\tYEAH "<< ++cptGood << " was number " << cpt << endl;
                 g.print();
             }
-            if (argv[2][1] == 'n' && is_magic_graph(g))
+            if (argv[2][1] == 'n' && is_magic_graph(g, cpt==1))
             {
                 cout << "\tYEAH "<< ++cptGood << endl;
                 g.print();
