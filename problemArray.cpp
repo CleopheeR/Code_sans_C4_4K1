@@ -3,14 +3,25 @@
 #include <fstream>
 #include <algorithm>
 #include <set>
+#include <sstream>
 
 #include "sparsepp/spp.h"
 #include "gzstream/gzstream.h"
 #include "Graph.hh"
 #include "problemArray.hh"
 #include "test-properties.hh"
+#include "gen-graph.hh"
+
+
 
 using namespace std;
+
+inline string intToSetName (int x)
+{
+    string s;
+    s.push_back((char)('A'+x));
+    return s;
+}
 
 Graph ProblemArray::add_vertices_to_base_graph(const ProblemArraySet* adjVertsToAdd[], int nbSet) const
 {
@@ -32,6 +43,8 @@ Graph ProblemArray::add_vertices_to_base_graph(const ProblemArraySet* adjVertsTo
 
 bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const ProblemArraySet &setB, const ProblemArraySet &setC) const
 {
+    assert(!setA.is_advanced() && !setB.is_advanced() && !setC.is_advanced());
+
     int n0 = baseGraph.nbVert;
     /*Graph gABC;
       gABC.init(n0+3, baseGraph.nbEdge);
@@ -72,6 +85,7 @@ bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const Prob
 
 bool ProblemArray::is_true_N_between_two(const ProblemArraySet &setA, const ProblemArraySet &setB) const
 {
+    assert(!setA.is_advanced() && !setB.is_advanced());
     int n0 = baseGraph.nbVert;
     const ProblemArraySet* sets[3] = {&setB, &setB, &setA};
     Graph gAB = add_vertices_to_base_graph(sets, 3);
@@ -82,6 +96,92 @@ bool ProblemArray::is_true_N_between_two(const ProblemArraySet &setA, const Prob
     return is_graph_ok(gAB, false);
 }
 
+bool ProblemArray::can_NN_be_solved_method1(const ProblemArraySet &setA, const ProblemArraySet &setB, const ProblemArraySet &setC) const
+{
+
+
+
+    return false;
+}
+
+
+bool ProblemArray::can_NN_be_solved_method2(void) const
+{
+    string merging1Log = "MergingPhaseOne:\n", merging2Log = "mergingPhaseTwo:\n";
+    int nbError = 0;
+    int nbSet = partitionSets.size();
+    vector<set<int>> badNeighbs(nbSet);
+    for (int i1 = 0; i1 < nbSet; i1++)
+    {
+        for (int i2 = 0; i2 < nbSet; i2++)
+        {
+            if (partitionArray[i1][i2] == 'N')
+                badNeighbs[i1].insert(i2);
+        }
+    }
+
+
+    for (int i = 0; i < nbSet; i++)
+    {
+        string curMsg;
+        for (int i1 : badNeighbs[i])
+        {
+            if (!is_true_N_between_two(partitionSets[i], partitionSets[i1]))
+                continue;
+            for (int i2 : badNeighbs[i])
+            {
+                if (i1 == i2)
+                    continue;
+                curMsg = intToSetName(i1)+ "," +intToSetName(i2) + "  ";
+                if (partitionArray[i1][i2] == '1' || partitionArray[i1][i2] == '-')
+                    continue;
+                if (!is_true_N_between_two(partitionSets[i], partitionSets[i2]))
+                    continue;
+
+                if (!can_3sets_be_possible(partitionSets[i], partitionSets[i1], partitionSets[i2]))
+                    continue;
+
+                curMsg = "";
+                //cerr << " CANNOT MERGEFIRST " << (char)('A'+i1) << " AND " << (char)('A'+i2) << ": " << partitionArray[i1][i2] << endl;
+                //return false;
+                nbError++;
+            }
+            merging1Log += curMsg+"\n";
+        }
+    }
+    cerr << " Second phase of second method.\n";
+
+    set<int> seen, seenAdvanced; // seenAdvanced also contains the centers of the triplets
+    for (int i = 0; i < nbSet; i++)
+    {
+        if (badNeighbs[i].size() <= 1)
+            continue;
+        merging2Log += "\tSet " + intToSetName(i) + ": merging ";
+        seenAdvanced.insert(i);
+        for (int x : badNeighbs[i])
+        {
+            if (seen.find(x) != seen.end())
+            {
+                //cerr << " CANNOT MERGESECOND " << (char)('A'+i) << " AND " << (char)('A'+x) << ": " << partitionArray[i][x] << endl;
+                nbError++;
+                continue;
+                //return false;
+            }
+            if (seenAdvanced.find(x) != seenAdvanced.end())
+                merging2Log += "WARN:";
+            merging2Log += intToSetName(x) + ", ";
+            seenAdvanced.insert(x);
+            seen.insert(x);
+        }
+        merging2Log += "\n";
+    }
+
+    cerr << "uuu\n" <<merging1Log << "\n" << merging2Log << "\n";
+
+    //cerr << "trobi1\n";
+    cerr << "Soucis réels: " << nbError << endl;
+    return nbError == 0;
+}
 
 void ProblemArray::get_possible_free_neighbourhoods(int newVert, const vector<int> &freeVerts, Graph &curG, int pos, vector<Graph> &ret) const
 {
@@ -136,7 +236,7 @@ bool ProblemArray::is_graph_ok(const Graph &g, bool print) const
     vector<sparse_hash_map<vector<char>, vector<Graph>>> &obstructions = *deglist2ObstructionsBySize;
     int sizeMax = min((int)obstructions.size(), n);
 
-    for (int size = 5; sizeMax; size++)
+    for (int size = 5; size < sizeMax; size++)
     {
         sparse_hash_map<vector<char>, vector<Graph>> &curObstructions = obstructions[size];
         if (curObstructions.empty())
@@ -179,6 +279,7 @@ void ProblemArray::compute_partition_array(void)
 
     for (int i1 = 0; i1 < nbSet; i1++)
     {
+        assert(!partitionSets[i1].is_advanced());
         partitionArray[i1][i1] = '1';
         for (int i2 = i1+1; i2 < nbSet; i2++)
         {
@@ -194,6 +295,7 @@ void ProblemArray::compute_partition_array(void)
 char ProblemArray::get_sets_compatibility(int i1, int i2) const
 {
     const ProblemArraySet &set1 = partitionSets[i1], &set2 = partitionSets[i2];
+    assert(!set1.is_advanced() && !set2.is_advanced());
     int n0 = baseGraph.nbVert;
 
     const ProblemArraySet* sets[2] = {&set1, &set2};
@@ -208,7 +310,14 @@ char ProblemArray::get_sets_compatibility(int i1, int i2) const
         edgeOk = false;
 
     if (noEdgeOk && edgeOk)
+    {
+        if (!is_true_N_between_two(set1, set2))
+        {
+            cerr << "yyyyyyyyyyyyyyyyy\n";
+            return 'B';
+        }
         return 'N';
+    }
     else if (noEdgeOk)
         return '0';
     else if (edgeOk)
@@ -238,6 +347,7 @@ void ProblemArray::print_array(void) const
 
 bool ProblemArray::check_that_set_is_clique(const ProblemArraySet &set) const
 {
+    assert(!set.is_advanced());
     int n = baseGraph.nbVert;
     const ProblemArraySet* sets[2] = {&set, &set};
     Graph gPlus2 = add_vertices_to_base_graph(sets, 2);
@@ -251,8 +361,12 @@ bool ProblemArray::check_that_set_is_clique(const ProblemArraySet &set) const
     return true;
 }
 
-bool ProblemArray::solve_array_problems(void) const
+vector<string> ProblemArray::solve_array_problems(void) const
 {
+    vector<string> badTriplets;
+    int nbError = 0;
+    bool error = false;
+    set<int> badTripletElts;
     int nbSet = partitionSets.size();
     for (int i1 = 0; i1 < nbSet; i1++)
     {
@@ -275,13 +389,13 @@ bool ProblemArray::solve_array_problems(void) const
 
                 if (partitionArray[i2][i3] == '-')
                 {
-                    cout << "xD\n";
+                    //cout << "xD\n";
                     continue;
                 }
 
                 if (!is_true_N_between_two(set1, set3))
                 {
-                    cout << " LOL13\n";
+                    cout << " ptdr\n";
                     continue;
                 }
 
@@ -292,19 +406,43 @@ bool ProblemArray::solve_array_problems(void) const
                     continue;
                 }
 
+
+                string tripletName;
+                for (int x : {i1,i2,i3})
+                    tripletName.push_back((char)('A'+x));
+                if (partitionArray[i2][i3] == '1')
+                {
+                    auto itEnd = badTripletElts.end();
+                    if (badTripletElts.find(i1) != itEnd || badTripletElts.find(i2) != itEnd || badTripletElts.find(i3) != itEnd)
+                    {
+                        nbError++;
+                        badTriplets.push_back(tripletName);
+                        continue;
+                    }
+                    //cout << "FUSION" << i1 << "," <<i2 << "," << i3 <<"\n";
+                    //cout << "FUSION" << (char)(i1+'A') << "," <<(char)(i2+'A') << "," << (char)(i3+'A') <<"\n";
+                    badTripletElts.insert(i1);
+                    badTripletElts.insert(i2);
+                    badTripletElts.insert(i3);
+                    continue; // TODO WARNING EXPERIMENTAL!!!
+                }
+
+                nbError++;
+                badTriplets.push_back(tripletName);
                 // We did not save this bad triplet...
-                return false;
+                // TODO REMETTRE
+                //return false;
             }
         }
     }
 
-    return true;
+    return badTriplets;
 }
 
 
 
 //TODO free vertices for base graph
-bool is_magic_graph(const Graph &g)
+bool is_magic_graph(const Graph &g, bool special)
 {
     ProblemArray pbArray;
     pbArray.baseGraph = g;
@@ -340,12 +478,115 @@ bool is_magic_graph(const Graph &g)
         }
     }*/
 
-    if (!pbArray.solve_array_problems())
+    vector<string> errorTriplets = pbArray.solve_array_problems();
+
+    cout << "------------------------------\n";
+    cout << "il y a " << errorTriplets.size() << " vrais soucis\n";
+
+    bool isOk2 = pbArray.can_NN_be_solved_method2();
+    if (isOk2)
+        errorTriplets.clear();
+    if (true || errorTriplets.size() <= 40 || isOk2)
+    {
+        cerr << "printing graph:\n";
+        g.print();
+        cerr << "printing neighbourfood of vertices:\n";
+        int n = pbArray.partitionSets.size();
+        for (int i = 0; i < n; i++)
+        {
+            char name = i+'A';
+            cerr << "set " << name << ": ";
+            for (int x : pbArray.partitionSets[i].neighbInBaseGraph)
+                cerr << x << ", ";
+            cerr << endl;
+        }
+        pbArray.print_array();
+        cerr << "Printing bad triplets :";
+        for (string &x : errorTriplets)
+            cerr << x << ", ";
+        cout << endl << endl;
+    }
+    if (isOk2)
+        return true;
+    if (errorTriplets.size() != 0)
         return false;
 
-    pbArray.print_array();
-    cout << endl << endl;
+
     return true;
+}
+
+sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
+{
+    //TTAADDAA documenter variables, plus parce que taille au dessus
+    vector<sparse_hash_map<vector<char>, vector<Graph>>> deglists2MagicGraphs(NBMAXVERT);
+    vector<vector<char>> degreeLists(NBMAXVERT);
+    for (int i = 0; i < NBMAXVERT; i++)
+        degreeLists[i].resize(i+4);
+
+
+    int nbEdgeCombi = 1<<nbVert;
+
+    stringstream fileName, fileSizeName;
+    fileName << "Alexgraphedelataille" << nbVert << ".txt.gz";
+    fileSizeName << "Alexsizegraphedelataille" << nbVert << ".txt";
+    ifstream fSize(fileSizeName.str());
+
+    if (fSize.peek() == EOF)
+    {
+        cerr << "Lancer avant la taille -1 size \n";
+        cerr << fileSizeName.str() << endl;
+        exit(3);
+    }
+    long long nbGToRead;
+    fSize >> nbGToRead;
+    vector<Graph> listGraphs = load_from_file(fileName.str(), nbGToRead);
+    if (listGraphs.empty())
+    {
+        cerr << "Erreur : lancer avant la génération de la même taille \n";
+        exit(3);
+    }
+    cout << "j'ai généré/trouvé les graphes à " << nbVert << " somets : il y en a " << listGraphs.size() << endl;
+
+    for (int i = 555555; i < NBMAXVERT; i++)
+    {
+        if (i == nbVert)
+            continue;
+        string fileNamee = "Alexmagicdelataille"+to_string(i)+".txt.gz";
+        read_prefixeurs_compute_hash(fileNamee, i ,deglists2MagicGraphs[i]);
+    }
+
+    vector<Graph> magicList;
+    magicList.reserve(1000000);
+    for (const Graph& g : listGraphs)
+        if (is_magic_graph(g, false))
+            magicList.push_back(g);
+
+    /*
+    //TTAADDAA : une fonction pour lancer puis join des fonctions avec liste d'arguments fixée ?
+    long long nbPerProc = listGraphs.size()/nbProc;
+    mutex threadMutex;
+    vector<thread> threads(nbProc-1);
+    for (int iProc = 0; iProc < nbProc-1; iProc++)
+        threads[iProc] = thread(&gen_fixeurs_thread, nbVert, std::cref(listGraphs), isTwinCompat, std::ref(fixeursList), std::cref(deglist2PrefixeursPlus), std::ref(threadMutex), iProc);
+
+    thread lastProc = thread(&gen_fixeurs_thread, nbVert, std::cref(listGraphs), isTwinCompat, std::ref(fixeursList), std::cref(deglist2PrefixeursPlus), std::ref(threadMutex), nbProc-1);
+
+    lastProc.join();
+    for (int iProc = 0; iProc < nbProc-1; iProc++)
+        threads[iProc].join();
+    */
+
+    cout  << "Il y a " << magicList.size() << " fixeurs à " << nbVert << " sommets.\n";
+    string magicGenFileName = "Alexmagicdelataille"+to_string(nbVert)+".txt.gz";
+
+    ogzstream outFile(magicGenFileName.c_str());
+    outFile << magicList.size() << endl;
+    for (const Graph &g : magicList)
+        g.print_in_file(outFile);
+    outFile.close();
+
+    return deglists2MagicGraphs[nbVert];
+
 }
 
 
