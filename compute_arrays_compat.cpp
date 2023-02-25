@@ -14,6 +14,86 @@ bool printGlobal = false;
 
 using namespace std;
 
+void addNewVertWithNeighb(Graph &g, int u, const vector<int> &adj)
+{
+    for (int x : adj)
+        g.add_edge(u, x);
+}
+
+//Takes three sets A, B, C such that A N B, A N C, and B 0 C (or B N C?)
+//Tries to divide A into two subsets: A_{1B} (complete to B) and A_{N0B} (the others, hence
+//any element requires to have at least one non-neighbor in B => implies that B is not empty)
+//Then A_{1B} N C is no longer a problem because A_{1B} 1 B. Tests if A_{NOB} is still N C, or
+//if this implies A_{N0B} 0 C.
+//
+//Tests also the opposite: divide A into A_{0B} (anticomplete to B) and A_{N1B} (the others,
+//hence any element requires to have at least one neighbor in B => implies that B is not empty).
+//Returns true if one of this subdivision can solve the problem
+//TODO: essayer si trueNN une fois le b ajouté
+bool can_NN_be_solved_method1(const Graph &g, const vector<int> &setA, const vector<int> &setB, const vector<int> &setC)
+{
+    const int idThread = 0;//TODO
+    vector<Graph> fooObstructions;
+    sparse_hash_map<vector<char>, vector<Graph>> deglist2PrefixeursPlusPlusPlus;
+
+    int n0 = g.nbVert;
+    Graph gANB;
+    gANB.init(n0+3, g.nbEdge);
+    for (int u = 0; u < g.nbVert; u++)
+        gANB.adjMat[u] = g.adjMat[u];
+
+    int a = n0, b = n0+1, c = n0+2;
+    addNewVertWithNeighb(gANB, a, setA);
+    addNewVertWithNeighb(gANB, b, setB);
+    addNewVertWithNeighb(gANB, c, setC);
+    vector<Graph> graphsANBC;
+    getPossibleFreeNeighourhoods(n0+3, {b}, graphsANBC, gANB, 0, fooObstructions, deglist2PrefixeursPlusPlusPlus, idThread);
+
+    // Testing A_{N0B}
+    bool oneValid = false;
+    for (Graph &gg : graphsANBC)
+    {
+        if (is_graph_ok(gg, fooObstructions, deglist2PrefixeursPlusPlusPlus, false))
+            oneValid = true;
+    }
+    if (!oneValid)
+        return true;
+    oneValid = false;
+    //gANB.add_edge(a,c);
+    for (Graph &gg : graphsANBC)
+    {
+        gg.add_edge(a,c);
+        if (is_graph_ok(gg, fooObstructions, deglist2PrefixeursPlusPlusPlus, false))
+            oneValid = true;
+    }
+    if (!oneValid)
+        return true;
+
+    // Testing A_{N1B}
+    oneValid = false;
+    for (Graph &gg : graphsANBC)
+    {
+        gg.add_edge(a, b);
+        if (is_graph_ok(gg, fooObstructions, deglist2PrefixeursPlusPlusPlus, false))
+            oneValid = true;
+    }
+    if (!oneValid)
+        return true;
+    oneValid = false;
+    //gANB.add_edge(a,c);
+    for (Graph &gg : graphsANBC)
+    {
+        gg.delete_edge(a,c);
+        if (is_graph_ok(gg, fooObstructions, deglist2PrefixeursPlusPlusPlus, false))
+            oneValid = true;
+    }
+    if (!oneValid)
+        return true;
+
+    return false;
+}
+
+
 bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<Graph>> &deglist2PrefixeursPlus, sparse_hash_map<vector<char>, vector<Graph>> &deglist2PrefixeursPlusPlus, int idThread)
 {
     static long long int cptFalseN = 0;
@@ -39,7 +119,7 @@ bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<G
     vector<vector<char>> tableau = compute_cleophee_arrays(g, partitionSets, foo3, foo2, foo, fooObstructions, deglist2PrefixeursPlus, deglist2PrefixeursPlusPlus, idThread);
 
     int n = tableau.size();
-    int nbError = 0;
+    int nbError = 0, nbNNN = 0;
     vector<vector<int>> badPairs;
     for (int i1 = 0; i1 < n; i1++)
     {
@@ -51,30 +131,53 @@ bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<G
             {
                 if (tableau[i1][i3] != 'N')
                     continue;
+                if (tableau[i2][i3] == '-')
+                    continue;
+                /*
+                nbError++; //TODO on ne fait rien
+                badPairs.push_back({i1,i2,i3});
+                continue;
+                */
 
                 if (!isTrueNBetweenTwo(g, partitionSets[i1], partitionSets[i2], fooObstructions))
                 {
-                    cerr << "FALSEN nice " << ++cptFalseN << endl;
+                    cout << "FALSEN nice " << ++cptFalseN << endl;
                 }
                 if (!isTrueNBetweenTwo(g, partitionSets[i1], partitionSets[i3], fooObstructions))
                 {
-                    cerr << "FALSEN nice " << ++cptFalseN << endl;
+                    cout << "FALSEN nice " << ++cptFalseN << endl;
                 }
 
                 if (!isTrueNBetweenTwo(g, partitionSets[i2], partitionSets[i1], fooObstructions))
                 {
-                    cerr << "FALSEN nice " << ++cptFalseN << endl;
+                    cout << "FALSEN nice " << ++cptFalseN << endl;
                 }
                 if (!isTrueNBetweenTwo(g, partitionSets[i3], partitionSets[i1], fooObstructions))
                 {
-                    cerr << "FALSEN nice " << ++cptFalseN << endl;
+                    cout << "FALSEN nice " << ++cptFalseN << endl;
                 }
+                    if (tableau[i2][i3] == 'N')
+                        nbNNN++;
 
+                int t23 = tableau[i2][i3];
                 if (tableau[i2][i3] == '0' || tableau[i2][i3] == 'N')
                 {
                     //TODO tester si A,B,C sont simultanément possibles
                     if (!can_3sets_be_possible(g, &partitionSets[i1], &partitionSets[i2], &partitionSets[i3], fooObstructions))
                     {
+                        cout << " 3sets\n";
+                        continue;
+                    }
+                    return false;
+                    if (can_NN_be_solved_method1(g, partitionSets[i1], partitionSets[i2], partitionSets[i3]))
+                    {
+                        //cout << "CHO\n";
+                        continue;
+                    }
+                    if (can_NN_be_solved_method1(g, partitionSets[i1], partitionSets[i3], partitionSets[i2]))
+                    {
+                        //cout << "CHO\n";
+                        assert(false);
                         continue;
                     }
                     nbError++;
@@ -86,11 +189,11 @@ bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<G
         }
     }
 
-    if (nbError != 0)
+    if (true || nbError != 0)
     {
         int nbVertG = g.nbVert;
-        cerr << "il y a " << nbError << " soucis\n";
-        if (nbError <= 4)
+        cerr << "il y a " << nbError << " soucis (dont " << nbNNN << " NNN\n";
+        if (true || nbError <= 4)
         {
             cerr << "printing graph:\n";
             g.print();
@@ -106,14 +209,14 @@ bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<G
 
             cerr << "printing array\n \t\t";
             for (int i1 = 0; i1 < n; i1++)
-                cerr << (char)(i1+'A') << "\t\t";
+                cerr << (char)(i1+'A') << "\t";
             cerr << "\n";
             for (int i1 = 0; i1 < n; i1++)
             {
                 cerr << (char)(i1+'A');
                 for (int i2 = 0; i2 < n; i2++)
                 {
-                    cerr << "\t\t" << tableau[i1][i2];
+                    cerr << "\t" << tableau[i1][i2];
                 }
                 cerr << "\n";
             }
@@ -123,17 +226,14 @@ bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<G
             cerr << "--------------------------\n";
 
         }
-        return false;
     }
+
+    if (nbError != 0)
+        return false;
 
     return true;
 }
 
-void addNewVertWithNeighb(Graph &g, int u, const vector<int> &adj)
-{
-    for (int x : adj)
-        g.add_edge(u, x);
-}
 
 // Returns true if there can be a \in A, b1 \in B, b2 \in B such that a,b1,b2 coexist, and a is connected to b1 but not to b2. Returns otherwise, i.e. A can be partitionned into A1 = vertices complete to B, and A2 = vertices anticomplete to B.
 bool isTrueNBetweenTwo(const Graph &g, const vector<int> &adjA, const vector<int> &adjB, vector<Graph> &obstructions)
