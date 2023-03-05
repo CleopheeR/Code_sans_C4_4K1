@@ -240,6 +240,20 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
 }
 
 
+bool has_twin(const Graph& g)
+{
+    for (int u = 0; u < g.nbVert; u++)
+    {
+        for (int v = u+1; v < g.nbVert; v++)
+        {
+            if ((g.adjMat[u]^g.adjMat[v]) == ((1<<u) ^ (1<<v)))
+                return true;
+        }
+    }
+
+    return false;
+}
+
 bool has_twin(const Graph &g, int v)
 {
     assert(v == g.nbVert-1);

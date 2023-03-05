@@ -442,10 +442,11 @@ vector<string> ProblemArray::solve_array_problems(void) const
 
 
 //TODO free vertices for base graph
-bool is_magic_graph(const Graph &g, bool special)
+bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2ObstructionsBySize)
 {
     ProblemArray pbArray;
     pbArray.baseGraph = g;
+    pbArray.deglist2ObstructionsBySize = deglist2ObstructionsBySize;
 
 
     pbArray.gen_default_partition();
@@ -547,19 +548,23 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     }
     cout << "j'ai généré/trouvé les graphes à " << nbVert << " somets : il y en a " << listGraphs.size() << endl;
 
-    for (int i = 555555; i < NBMAXVERT; i++)
+    for (int i = 1; i < NBMAXVERT; i++)
     {
-        if (i == nbVert)
-            continue;
+        //if (i == nbVert)
+        //    continue;
         string fileNamee = "Alexmagicdelataille"+to_string(i)+".txt.gz";
         read_prefixeurs_compute_hash(fileNamee, i ,deglists2MagicGraphs[i]);
     }
 
     vector<Graph> magicList;
-    magicList.reserve(1000000);
+    magicList.reserve(1000);
     for (const Graph& g : listGraphs)
-        if (is_magic_graph(g, false))
+    {
+        if (is_magic_graph(g, false, &deglists2MagicGraphs))
+        {
             magicList.push_back(g);
+        }
+    }
 
     /*
     //TTAADDAA : une fonction pour lancer puis join des fonctions avec liste d'arguments fixée ?

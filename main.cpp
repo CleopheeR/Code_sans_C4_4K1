@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     if (argc > 3)
         nbProc = atoi(argv[3]);
 
-    init_adjListGlobal(nbVert+3);
+    init_adjListGlobal(max(14,nbVert+3));
     if (testOrGen == 'G')
     {
         vector<Graph> graphList;

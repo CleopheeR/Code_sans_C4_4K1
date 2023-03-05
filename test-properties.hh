@@ -12,7 +12,9 @@ bool free_C4(const Graph& g, int n);
 
 bool are_isomorphic(const Graph& g1, const Graph& g2, int idThread);
 
-int nb_twin(const Graph& g, int v);
+//int nb_twin(const Graph& g, int v);
+
+bool has_twin(const Graph& g);
 
 bool has_twin(const Graph& g, int v);
 
