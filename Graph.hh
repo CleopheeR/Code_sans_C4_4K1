@@ -78,6 +78,7 @@ class Graph
         //TTAADDAA factoriser avec constructeur ?!
         Graph& operator=(const Graph& g)
         {
+            this->~Graph();
             init(g.nbVert, g.nbEdge);
             for (int u = 0; u < g.nbVert; u++)
                 adjMat[u] = g.adjMat[u];
