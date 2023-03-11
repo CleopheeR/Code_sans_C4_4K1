@@ -236,32 +236,14 @@ bool ProblemArray::is_graph_ok(const Graph &g, bool print) const
     vector<sparse_hash_map<vector<char>, vector<Graph>>> &obstructions = *deglist2ObstructionsBySize;
     int sizeMax = min((int)obstructions.size(), n);
 
-    for (int size = 5; size < sizeMax; size++)
-    {
-        sparse_hash_map<vector<char>, vector<Graph>> &curObstructions = obstructions[size];
-        if (curObstructions.empty())
-            continue;
+    vector<char> hashVect(n+4);
+    Graph gg = g;
+    gg.compute_hashes(hashVect);
 
-        for (const auto& pairObstr : curObstructions)
-        {
-            for (const Graph &gObstr : pairObstr.second)
-            {
-                if (size == g.nbVert)
-                {
-                    if (are_isomorphic(g, gObstr, 0))//TODO idthread
-                        return false;
-                }
-
-                else // size < g.nbVert
-                {
-                    Graph gObstrCopy = gObstr;
-                    if (is_supergraph_of(g, gObstrCopy, 0)) //TODO attention en parallèle les hash, le target graph pas const...
-                                                            //TODO idthread
-                        return false;
-                }
-            }
-        }
-    }
+    sparse_hash_map<vector<char>, vector<Graph>> &curObstructions = obstructions[n];
+    for (const Graph &gObstr : curObstructions[hashVect])
+        if (are_isomorphic(gg, gObstr, 0))//TODO idthread
+            return false;
 
     return true;
 }
@@ -553,9 +535,38 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         //if (i == nbVert)
         //    continue;
         string fileNamee = "Alexmagicdelataille"+to_string(i)+".txt.gz";
+        cerr << fileNamee << " is my file " << endl;
         read_prefixeurs_compute_hash(fileNamee, i ,deglists2MagicGraphs[i]);
     }
 
+    //vector<sparse_hash_map<vector<char>, vector<Graph>>> deglists2MagicGraphs(NBMAXVERT);
+    int cptInflating = 0;
+    for (int i = 1; i < nbVert+5; i++)
+    {
+        cerr << "Trying to inflate size " << i << endl;
+        Graph gBigger;
+        int puissNewVert = (1<< i);
+        vector<char> hashVect(i+5);
+        for (const pair<vector<char>, vector<Graph>>& dToGraphs : deglists2MagicGraphs[i])
+        {
+            for (const Graph &gMagic : dToGraphs.second)
+            {
+                //connected graphs. We generate all graphs with one more vertex containing gMagic
+                for (int idNewEdges = 1; idNewEdges < puissNewVert; idNewEdges++)
+                {
+                    gBigger.copy_and_add_new_vertex_bis(gMagic, adjListGlobal[idNewEdges], puissNewVert, idNewEdges);
+                    if (!free_C4_O4(gBigger, i+1))
+                        continue;
+
+                    gBigger.compute_hashes(hashVect);
+                    if (check_if_seen_and_add(gBigger, hashVect, deglists2MagicGraphs[i+1], 0))// 0 idthread
+                        cptInflating++;
+                    //cerr << "Inflating one more graph " << ++cptInflating << endl;
+                }
+            }
+        }
+    }
+    cerr << "inflated in total " << cptInflating << " graphs\n";
     vector<Graph> magicList;
     magicList.reserve(1000);
     for (const Graph& g : listGraphs)
