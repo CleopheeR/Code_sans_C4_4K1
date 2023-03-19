@@ -541,6 +541,8 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
 
     //vector<sparse_hash_map<vector<char>, vector<Graph>>> deglists2MagicGraphs(NBMAXVERT);
     int cptInflating = 0;
+    vector<long long> pathLength2(NBMAXVERT);
+
     for (int i = 1; i < nbVert+5; i++)
     {
         cerr << "Trying to inflate size " << i << endl;
@@ -551,11 +553,13 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         {
             for (const Graph &gMagic : dToGraphs.second)
             {
+                gen_P2_list(gMagic, pathLength2, i+1);
                 //connected graphs. We generate all graphs with one more vertex containing gMagic
                 for (int idNewEdges = 1; idNewEdges < puissNewVert; idNewEdges++)
                 {
                     gBigger.copy_and_add_new_vertex_bis(gMagic, adjListGlobal[idNewEdges], puissNewVert, idNewEdges);
-                    if (!free_C4_O4(gBigger, i+1))
+
+                    if (detect_C4(pathLength2, idNewEdges) || !free_O4(gBigger, i+1))
                         continue;
 
                     gBigger.compute_hashes(hashVect);
