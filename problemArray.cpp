@@ -13,7 +13,6 @@
 #include "gen-graph.hh"
 
 
-
 using namespace std;
 
 inline string intToSetName (int x)
@@ -98,13 +97,15 @@ bool ProblemArray::is_true_N_between_two(const ProblemArraySet &setA, const Prob
 
 bool ProblemArray::can_NN_be_solved_method1(const ProblemArraySet &setA, const ProblemArraySet &setB, const ProblemArraySet &setC) const
 {
-
+  //TODO même si inclus dans method2 ?
 
 
     return false;
 }
 
 
+/*
+//TODO faire les fusions, puis voir si souci ou pas souci
 bool ProblemArray::can_NN_be_solved_method2(void) const
 {
     string merging1Log = "MergingPhaseOne:\n", merging2Log = "mergingPhaseTwo:\n";
@@ -124,7 +125,7 @@ bool ProblemArray::can_NN_be_solved_method2(void) const
     for (int i = 0; i < nbSet; i++)
     {
         string curMsg;
-        for (int i1 : badNeighbs[i])
+        for (int i1 : badNeighbs[i]) //TODO ii1 indice, et ii2 >= ii1 ?
         {
             if (!is_true_N_between_two(partitionSets[i], partitionSets[i1]))
                 continue;
@@ -142,6 +143,10 @@ bool ProblemArray::can_NN_be_solved_method2(void) const
                     continue;
 
                 curMsg = "";
+
+                //TODO étudier le cas false N between i1 et i2 ! a priori pas souci !
+
+                //
                 //cerr << " CANNOT MERGEFIRST " << (char)('A'+i1) << " AND " << (char)('A'+i2) << ": " << partitionArray[i1][i2] << endl;
                 //return false;
                 nbError++;
@@ -180,8 +185,104 @@ bool ProblemArray::can_NN_be_solved_method2(void) const
 
     //cerr << "trobi1\n";
     cerr << "Soucis réels: " << nbError << endl;
+    //TODO
     return nbError == 0;
+}*/
+
+
+int find(int x, std::vector<int> &uf)
+{
+    if (uf[x] != x)
+        uf[x] = find(uf[x], uf);
+    return uf[x];
 }
+
+
+// New version
+bool ProblemArray::can_NN_be_solved_method2(void) const
+{
+    string merging1Log = "MergingPhaseOne:\n", merging2Log = "mergingPhaseTwo:\n";
+    int nbError = 0;
+    int nbSet = partitionSets.size();
+    vector<pair<int, int>> badTriplet(nbSet);
+    std::vector<std::vector<int>> toMerge(nbSet);
+
+    std::vector<int> unionfind(nbSet);
+    for (int i = 0; i < nbSet; i++)
+      unionfind[i] = i;
+    std::vector<std::set<int>> ufSets(nbSet);
+    for (int i = 0; i < nbSet; i++)
+      ufSets[i].insert(i);
+    for (int i = 0; i < nbSet; i++)
+    {
+        toMerge[i].push_back(i);
+        for (int i1 = 0; i1 < nbSet; i1++)
+        {
+            if (partitionArray[i][i1] != 'N')
+                continue;
+            if (!is_true_N_between_two(partitionSets[i], partitionSets[i1]))
+                continue;
+            for (int i2 = i1+1; i2 < nbSet; i2++)
+            {
+                if (partitionArray[i1][i2] == '-')
+                  continue;
+                if (partitionArray[i][i2] != 'N')
+                    continue;
+                if (!is_true_N_between_two(partitionSets[i], partitionSets[i2]))
+                    continue;
+                if (!can_3sets_be_possible(partitionSets[i], partitionSets[i1], partitionSets[i2]))
+                    continue;
+                if (partitionArray[i1][i2] != '1')
+                    return false;
+                {
+                    int repr1 = find(i1, unionfind);
+                    int repr2 = find(i2, unionfind);
+                    if (repr1 == repr2)
+                      continue;
+                    unionfind[repr1] = repr2;
+                    set<int> &set1 = ufSets[repr1];
+                    set<int> &set2 = ufSets[repr2];
+
+                    set1.clear();
+                    toMerge[i1].push_back(i2);
+                    toMerge[i2].push_back(i1);
+                    //cout << "Triplet bad: " << (char)('A'+i) << (char)('A'+i1) << (char)('A'+i2) << endl;
+                }
+            }
+        }
+    }
+
+
+/*
+    cout << endl << endl;
+    for (const auto& set : ufSets)
+    {
+      if (set.size() == 1)
+        continue;
+      cout << "Il faut fusionner : ";
+      for (int x : set)
+        cout << (char)('A'+x);
+      cout << endl;
+    }
+*/
+    string mergingLog;
+    for (int i = 0; i < nbSet; i++)
+    {
+        for (int i1 : toMerge[i])
+            for (int i2 : toMerge[i])
+                if (partitionArray[i1][i2] != '1' && partitionArray[i1][i2] != '-')
+                    return false;
+        /*mergingLog += "Merging : ";
+        for (int x : toMerge[i])
+            mergingLog = mergingLog + to_string('A'+i) + " ";
+        mergingLog += "\n";*/
+    }
+
+    //cout << mergingLog << endl;
+
+    return true;
+}
+
 
 void ProblemArray::get_possible_free_neighbourhoods(int newVert, const vector<int> &freeVerts, Graph &curG, int pos, vector<Graph> &ret) const
 {
@@ -444,7 +545,6 @@ bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<
     }
     pbArray.compute_partition_array();
     const vector<vector<char>> &tableau = pbArray.partitionArray;
-
     int nbSet = pbArray.partitionSets.size();
     /*
     for (int i1 = 0; i1 < nbSet; i1++)
@@ -484,10 +584,13 @@ bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<
             cerr << endl;
         }
         pbArray.print_array();
+
+        /*
         cerr << "Printing bad triplets :";
         for (string &x : errorTriplets)
             cerr << x << ", ";
-        cout << endl << endl;
+        cout << endl << endl; */
+        cout << "Il y a " << errorTriplets.size() << " bad triplets\n";
     }
     if (isOk2)
         return true;
@@ -503,7 +606,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     //TTAADDAA documenter variables, plus parce que taille au dessus
     vector<sparse_hash_map<vector<char>, vector<Graph>>> deglists2MagicGraphs(NBMAXVERT);
     vector<vector<char>> degreeLists(NBMAXVERT);
-    for (int i = 0; i < NBMAXVERT; i++)
+    for (int i = 0; i < nbVert; i++)
         degreeLists[i].resize(i+4);
 
 
@@ -530,7 +633,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     }
     cout << "j'ai généré/trouvé les graphes à " << nbVert << " somets : il y en a " << listGraphs.size() << endl;
 
-    for (int i = 1; i < NBMAXVERT; i++)
+    for (int i = 1; i < nbVert; i++)
     {
         //if (i == nbVert)
         //    continue;
@@ -543,13 +646,13 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     int cptInflating = 0;
     vector<long long> pathLength2(NBMAXVERT);
 
-    for (int i = 1; i < nbVert+5; i++)
+    for (int i = 1; i < nbVert+4; i++)
     {
         cerr << "Trying to inflate size " << i << endl;
         Graph gBigger;
         int puissNewVert = (1<< i);
         vector<char> hashVect(i+5);
-        for (const pair<vector<char>, vector<Graph>>& dToGraphs : deglists2MagicGraphs[i])
+        for (const pair<const vector<char>, vector<Graph>>& dToGraphs : deglists2MagicGraphs[i])
         {
             for (const Graph &gMagic : dToGraphs.second)
             {

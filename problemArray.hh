@@ -26,6 +26,7 @@ class ProblemArraySet
 {
     public:
 
+        // Advanced means not stantard magic, i.e. special relationships foreseen and enforced for future vertices in specific sets.
         inline bool is_advanced(void) const
         {
             return !(forcedNeighbInOtherSets.empty() && specialAdjSets.empty() && specialNonAdjSets.empty());
@@ -45,11 +46,12 @@ class ProblemArray
     public:
         // Returns a new graphs with nbSets new vertices, their neighbourhood defined by adjVertsToAdd. Does not care about possible adjacencies between the newly added vertices.
         Graph add_vertices_to_base_graph(const ProblemArraySet* adjVertsToAdd[], int nbSets) const;
-        // Tries to split A into A_{N0B} and A_{1B} : the first one contains vertices who *necessarily* have a non-adjacent vertex in B (this implies the existence of a vertex in B). The second one contains vertices which are complete to B (works if B is empty).
+        // Tries to split A into A_{N0B} and A_{1B} : the first one contains vertices which *necessarily* have a non-adjacent vertex in B (this implies the existence of a vertex in B). The second one contains vertices which are complete to B (works if B is empty).
         // Also tries to split A into A_{N1B} and A_{0B} following the same logic: each vertiex in A_{1NB} *has* a neighbour in B, and A_{0B} is anticomplete to B (may be empty).
         bool can_NN_be_solved_method1(const ProblemArraySet &setA, const ProblemArraySet &setB, const ProblemArraySet &setC) const;
 
 
+        // Method 2 : let A N B and A N C (true N's) be *any* problematic thing, we say there is a bad triplet (A,B,C). If B 1 C then we could merge B and C (and others which are N with A) and A is solved. We furthermore require that the intersection of all second and third members of the triplet is empty. This condition makes sure that there is no D such that BC is N with A and D in the end.
         bool can_NN_be_solved_method2(void) const;
 
         // Returns false if A can be split into A_{0B} and A_{1B}, i.e. if having a neighbour in B implies being complete to B, and if having a non-adjacent vertex in B means implies being anticomplete to B.
