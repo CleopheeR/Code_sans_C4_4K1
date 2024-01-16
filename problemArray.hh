@@ -77,6 +77,7 @@ class ProblemArray
         char get_sets_compatibility(int i1, int i2) const;
 
         void print_array(void) const;
+        void print_array_latex(void) const;
 
         // Returns true if two vertices with the adjacency to the base graph defined by set are necessarily adjacent, hence this set is a clique.
         bool check_that_set_is_clique(const ProblemArraySet &set) const;

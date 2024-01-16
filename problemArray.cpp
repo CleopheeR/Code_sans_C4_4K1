@@ -428,6 +428,30 @@ void ProblemArray::print_array(void) const
     cout << endl << endl;
 }
 
+void ProblemArray::print_array_latex(void) const
+{
+    map<char, string> corres;
+    corres['0'] = "$\\ominus$&";
+    corres['1'] = "$\\oplus$&";
+    corres['N'] = "$\\otimes$&";
+    corres['-'] = "$\\oslash$&";
+    int nbSet = partitionSets.size();
+    cout << "\t";
+    for (int i = 0; i < nbSet; i++)
+        cout << (char)('A'+i) << "&\t";
+    cout << "\\\\" <<  endl;
+
+    //printGlobal = true;
+    for (int i1 = 0; i1 < nbSet; i1++)
+    {
+        cout << (char)('A'+i1) << "&\t";
+        for (int i2 = 0; i2 < nbSet; i2++)
+            cout << corres[partitionArray[i1][i2]] << "\t";
+        cout << "\\\\" << endl;
+    }
+    cout << endl << endl;
+}
+
 bool ProblemArray::check_that_set_is_clique(const ProblemArraySet &set) const
 {
     assert(!set.is_advanced());
@@ -584,6 +608,8 @@ bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<
             cerr << endl;
         }
         pbArray.print_array();
+        if (isOk2)
+          pbArray.print_array_latex();
 
         /*
         cerr << "Printing bad triplets :";
