@@ -677,7 +677,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         cerr << "Trying to inflate size " << i << endl;
         Graph gBigger;
         int puissNewVert = (1<< i);
-        vector<char> hashVect(i+5);
+        vector<char> hashVect(i+5); //TODO parallelise?
         for (const pair<const vector<char>, vector<Graph>>& dToGraphs : deglists2MagicGraphs[i])
         {
             for (const Graph &gMagic : dToGraphs.second)
