@@ -42,6 +42,20 @@ bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<v
     return true;
 }
 
+void initialise_subsetBySize(int nbVert)
+{
+    const int nbEdgeCombi = (1<<(nbVert-1));
+    for (int i = 0; i < nbVert-1; i++)
+    {
+        subsetsBySize[i].clear();
+        subsetsBySize[i].reserve(1<<i);
+    }
+
+    //TODO attention pas symmétrique là.
+    for (int code = 1; code < nbEdgeCombi; code++)
+        subsetsBySize[adjListGlobal[code].size()].push_back(code);
+}
+
 //TTAADDAA mieux gérer les variables et print débug/info
 //TTAADDAA changer le type, là on écrit dans un fichier
 //TTAADDAA faire sous-fonction ?
@@ -179,10 +193,11 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
 
     mutex threadMutex;
     vector<thread> threads(nbProc-1);
+    sparse_hash_map<vector<char>, vector<Graph>> *ptrFooNULL = NULL;
     for (int iProc = 0; iProc < nbProc-1; iProc++)
-        threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), iProc, std::ref(threadMutex));
+        threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), iProc, std::ref(threadMutex), ptrFooNULL, false);
 
-    thread lastThread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), nbProc-1, std::ref(threadMutex));
+    thread lastThread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), nbProc-1, std::ref(threadMutex), ptrFooNULL, false);
     lastThread.join();
     for (int i = 0; i < nbProc-1; i++)
         threads[i].join();
@@ -253,7 +268,7 @@ vector<Graph> load_from_file(const string &filename, long long nbGraphToRead)
 
 /** Internal functions **/
 //TTAADDAA peut-être un peu long, splitter en sous-fonctions ?
-vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startingGraphs, int **isTwinCompat, vector<int> &sizesToDo, ogzstream &outFile, int idThread, mutex &lock)
+vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startingGraphs, int **isTwinCompat, vector<int> &sizesToDo, ogzstream &outFile, int idThread, mutex &lock, sparse_hash_map<vector<char>, vector<Graph>> *deglists2GraphsToAdd, bool keepTwins)
 {
     const int nbVert = listMinus[0].nbVert+1;
     const int puissNewVert = (1<<(nbVert-1));
@@ -303,7 +318,7 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
         long long nbGraph = 0;
         for (const Graph& g : listMinus)
         {
-            if (g.nbEdge > m || g.nbEdge + g.nbVert < m)
+            if (g.nbEdge >= m || g.nbEdge + g.nbVert < m) //TODO pour connexité
                 continue;
             //cerr << "\t" << g.nbEdge << endl;
             nbGraph++;
@@ -311,32 +326,37 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
             if (cptGraph%50000 == 0)
                 cout << "Nous sommes sur leeeee " << cptGraph << "-ème graphe sur " << listMinus.size() << " (nbEdges: " << m << ')' << endl;
 
-            twinLists.clear();
-            gen_twin_list(g, twinLists, nbVert);
-            sizeTotalTwinVector += twinLists.size();
+            if (!keepTwins)
+            {
+                twinLists.clear();
+                gen_twin_list(g, twinLists, nbVert);
+                sizeTotalTwinVector += twinLists.size();
+            }
 
             gen_P2_list(g, pathLength2, nbVert);
 
             const vector<int> &ourSubsets = subsetsBySize[m-g.nbEdge];
             for (int code : ourSubsets)
             {
-                bool hasTwin = false;
-                for (int x : adjListGlobal[code])
+                if (!keepTwins)
                 {
-                    if ((g.adjMat[x] ^ code) == (1<<x))
+                    bool hasTwin = false;
+                    for (int x : adjListGlobal[code])
                     {
-                        hasTwin = true;
-                        break;
+                        if ((g.adjMat[x] ^ code) == (1<<x))
+                        {
+                            hasTwin = true;
+                            break;
+                        }
                     }
-                }
-                if (hasTwin)
-                    continue;
-
-                bool refuseBecauseTwins = can_discard_edgelist(twinLists, isTwinCompat[code], nbVert);
-                if (refuseBecauseTwins)
-                {
-                    //cerr << "lol YEAH\n";
-                    continue;
+                    if (hasTwin)
+                        continue;
+                    bool refuseBecauseTwins = can_discard_edgelist(twinLists, isTwinCompat[code], nbVert);
+                    if (refuseBecauseTwins)
+                    {
+                        //cerr << "lol YEAH\n";
+                        continue;
+                    }
                 }
 
 
@@ -363,12 +383,32 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
         cerr << "seen " << nbGraph << " graphs for size " << m << endl;
 
         long long curNbWritten = 0;
-        for (const auto& inDict : deglist2Graphs)
+        if (deglists2GraphsToAdd)
         {
-            curNbWritten += inDict.second.size();
-            for (const Graph &g : inDict.second)
+            for (auto& inDict : deglist2Graphs)
             {
-                g.print_in_file(outFile);
+                auto hash = inDict.first;
+                curNbWritten += inDict.second.size();
+                for (Graph &g : inDict.second)
+                {
+                    check_if_seen_and_add(g, hash, *deglists2GraphsToAdd, idThread);
+                }
+            }
+
+
+
+
+        }
+
+        else
+        {
+            for (const auto& inDict : deglist2Graphs)
+            {
+                curNbWritten += inDict.second.size();
+                for (const Graph &g : inDict.second)
+                {
+                    g.print_in_file(outFile);
+                }
             }
         }
 	    cerr << "finished writing for nbEdges = " << m << endl;

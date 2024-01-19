@@ -12,6 +12,13 @@
 #include "test-properties.hh"
 #include "gen-graph.hh"
 
+//TODO:
+//   1. Écrire dans un fichier inflated-size.tgz les magiques et inflatés.
+//      => Quand on calcule des graphes magiques. Voir, pour chaque taille tq il existait le fichier inflated, si on en génère des nouveaux. Si oui, les écrire à la fin. Partir de ceux-ci pour ajouter à chaque taille supérieure existante (supposer que les inflated sont synchros).
+//
+//   2. Paralléliser la création des inflated :
+//      => ajouter paramètres à gen_graphs_threads : rajouter deglisttotrucs en param, un pointeur. Si pointeur pas null, à la place d'écrire dans ogzstream, locker mutex et écrire dans la map. Aussi, ajouter params pour twins autorisés ou non, maybe pour connexe ou non
+
 
 using namespace std;
 
@@ -342,8 +349,11 @@ bool ProblemArray::is_graph_ok(const Graph &g, bool print) const
     gg.compute_hashes(hashVect);
 
     sparse_hash_map<vector<char>, vector<Graph>> &curObstructions = obstructions[n];
+    if (curObstructions.find(hashVect) == curObstructions.end())
+        return true;
+
     for (const Graph &gObstr : curObstructions[hashVect])
-        if (are_isomorphic(gg, gObstr, 0))//TODO idthread
+        if (are_isomorphic(gg, gObstr, idThread))//TODO idthread
             return false;
 
     return true;
@@ -491,11 +501,15 @@ vector<string> ProblemArray::solve_array_problems(void) const
             for (int i3 = i2+1; i3 < nbSet; i3++)
             {
                 const ProblemArraySet &set3 = partitionSets[i3];
+                string tripletName;
+                for (int x : {i1,i2,i3})
+                    tripletName.push_back((char)('A'+x));
                 if (partitionArray[i1][i3] != 'N')
                     continue;
 
                 if (partitionArray[i2][i3] == '-')
                 {
+                  //cout << "No coexisting triplet: " << tripletName << endl;
                     //cout << "xD\n";
                     continue;
                 }
@@ -514,11 +528,9 @@ vector<string> ProblemArray::solve_array_problems(void) const
                 }
 
 
-                string tripletName;
-                for (int x : {i1,i2,i3})
-                    tripletName.push_back((char)('A'+x));
                 if (partitionArray[i2][i3] == '1')
                 {
+                    //cout << " Mergeable triple: " << tripletName << endl;
                     auto itEnd = badTripletElts.end();
                     if (badTripletElts.find(i1) != itEnd || badTripletElts.find(i2) != itEnd || badTripletElts.find(i3) != itEnd)
                     {
@@ -534,6 +546,7 @@ vector<string> ProblemArray::solve_array_problems(void) const
                     continue; // TODO WARNING EXPERIMENTAL!!!
                 }
 
+                //cout << "Non Mergeable triple: " << tripletName << endl;
                 nbError++;
                 badTriplets.push_back(tripletName);
                 // We did not save this bad triplet...
@@ -549,9 +562,11 @@ vector<string> ProblemArray::solve_array_problems(void) const
 
 
 //TODO free vertices for base graph
-bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2ObstructionsBySize)
+bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2ObstructionsBySize, int idThread)
 {
+    std::cout << "-----\n\n";
     ProblemArray pbArray;
+    pbArray.idThread = idThread;
     pbArray.baseGraph = g;
     pbArray.deglist2ObstructionsBySize = deglist2ObstructionsBySize;
 
@@ -570,6 +585,7 @@ bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<
     pbArray.compute_partition_array();
     const vector<vector<char>> &tableau = pbArray.partitionArray;
     int nbSet = pbArray.partitionSets.size();
+    pbArray.print_array();
     /*
     for (int i1 = 0; i1 < nbSet; i1++)
     {
@@ -587,18 +603,19 @@ bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<
 
     vector<string> errorTriplets = pbArray.solve_array_problems();
 
-    cout << "------------------------------\n";
-    cout << "il y a " << errorTriplets.size() << " vrais soucis\n";
+    //cout << "------------------------------\n";
+    //cout << "il y a " << errorTriplets.size() << " vrais soucis\n";
 
     bool isOk2 = pbArray.can_NN_be_solved_method2();
     if (isOk2)
         errorTriplets.clear();
-    if (true || errorTriplets.size() <= 40 || isOk2)
+    if (false || errorTriplets.size() <= 00 || isOk2)
     {
         cerr << "printing graph:\n";
         g.print();
         cerr << "printing neighbourfood of vertices:\n";
         int n = pbArray.partitionSets.size();
+        std::cerr << "il y a " << n << " sets dans la partition.\n";
         for (int i = 0; i < n; i++)
         {
             char name = i+'A';
@@ -616,7 +633,7 @@ bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<
         for (string &x : errorTriplets)
             cerr << x << ", ";
         cout << endl << endl; */
-        cout << "Il y a " << errorTriplets.size() << " bad triplets\n";
+        //cout << "Il y a " << errorTriplets.size() << " bad triplets\n";
     }
     if (isOk2)
         return true;
@@ -659,7 +676,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     }
     cout << "j'ai généré/trouvé les graphes à " << nbVert << " somets : il y en a " << listGraphs.size() << endl;
 
-    for (int i = 1; i < nbVert; i++)
+    for (int i = 1; i < nbVert+4; i++)
     {
         //if (i == nbVert)
         //    continue;
@@ -669,17 +686,105 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     }
 
     //vector<sparse_hash_map<vector<char>, vector<Graph>>> deglists2MagicGraphs(NBMAXVERT);
-    int cptInflating = 0;
+    int cptInflatingTotal = 0;
     vector<long long> pathLength2(NBMAXVERT);
+    std::mutex threadMutex;
 
     for (int i = 1; i < nbVert+4; i++)
     {
+        int cptInflating = 0;
         cerr << "Trying to inflate size " << i << endl;
         Graph gBigger;
         int puissNewVert = (1<< i);
         vector<char> hashVect(i+5); //TODO parallelise?
+        vector<Graph> listMinus;
+        int degMin = 1000000000, degMax = 0;
         for (const pair<const vector<char>, vector<Graph>>& dToGraphs : deglists2MagicGraphs[i])
         {
+            for (const Graph &g : dToGraphs.second)
+            {
+                listMinus.push_back(g);
+
+                degMin = min(degMin, g.nbEdge);
+                degMax = max(degMax, g.nbEdge);
+            }
+        }
+        if (listMinus.empty())
+            continue;
+
+        vector<int> degreesToDo;
+        degreesToDo.reserve(degMax-degMin+1+nbVert);
+        int moy = (degMax+degMin+nbVert)/2;
+        degreesToDo.push_back(moy);
+        for (int j = 1; ; j++)
+        {
+            int d1 = moy-j;
+            int d2 = moy+j;
+
+            if (d1 >= degMin)
+                degreesToDo.push_back(d1);
+            if (d2 <= degMax+nbVert-1)
+                degreesToDo.push_back(d2);
+            //degreesToDo.push_back(j); TTAADDAA => what ?!
+            if (d1 < degMin && d2 > degMax+nbVert-1)
+                break;
+        }
+
+        vector<Graph> fooEmpty;
+        ogzstream outFileBis("/tmp/toto");
+
+        initialise_subsetBySize(i);
+        cout << "Found " << listMinus.size() << " smaller graphs" << endl;
+        cout << "We have " << nbProc << " threads yeah" << endl;
+        vector<thread> threads(nbProc);
+
+
+        sparse_hash_map<vector<char>, vector<Graph>> *ptrThreadCall = NULL;//&deglists2MagicGraphs[i];
+        for (int iProc = 0; iProc < nbProc; iProc++)
+            threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(fooEmpty), nullptr, std::ref(degreesToDo), std::ref(outFileBis), iProc, std::ref(threadMutex), ptrThreadCall, true);
+        for (int iProc = 0; iProc < nbProc; iProc++)
+            threads[iProc].join();
+
+
+        for (const auto & dToGraphs:deglists2MagicGraphs[i+1])
+            cptInflating += dToGraphs.second.size();
+        cerr << "inflated in total " << cptInflating << " graphs of size" << i+1 << "\n";
+        cptInflatingTotal += cptInflating;
+    }
+    cerr << "inflated in total " << cptInflatingTotal << " graphs\n";
+    vector<Graph> magicList;
+    magicList.reserve(1000);
+
+    long long nbPerProc = listGraphs.size()/nbProc;
+    mutex threadMutexMagic;
+    vector<thread> threads(nbProc);
+    for (int iProc = 0; iProc < nbProc; iProc++)
+        threads[iProc] = thread(&is_magic_graph_thread, std::ref(magicList), std::ref(threadMutexMagic), std::cref(listGraphs), false, &deglists2MagicGraphs, iProc);
+
+
+    for (int iProc = 0; iProc < nbProc; iProc++)
+        threads[iProc].join();
+
+    cout  << "Il y a " << magicList.size() << " fixeurs à " << nbVert << " sommets.\n";
+    string magicGenFileName = "Alexmagicdelataille"+to_string(nbVert)+".txt.gz";
+
+    ogzstream outFile(magicGenFileName.c_str());
+    outFile << magicList.size() << endl;
+    for (const Graph &g : magicList)
+        g.print_in_file(outFile);
+    outFile.close();
+
+    return deglists2MagicGraphs[nbVert];
+}
+
+  //TODO join all
+        //
+        //
+/*
+        //#pragma omp parallel
+        for (const pair<const vector<char>, vector<Graph>>& dToGraphs : deglists2MagicGraphs[i])
+        {
+            //int tid = omp_get_thread_num();
             for (const Graph &gMagic : dToGraphs.second)
             {
                 gen_P2_list(gMagic, pathLength2, i+1);
@@ -698,44 +803,26 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
                 }
             }
         }
-    }
-    cerr << "inflated in total " << cptInflating << " graphs\n";
-    vector<Graph> magicList;
-    magicList.reserve(1000);
-    for (const Graph& g : listGraphs)
+    }*/
+
+
+void is_magic_graph_thread(vector<Graph> &magicListToFill, mutex &lock, const vector<Graph> &graphList, bool special, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2Obstruction, int idThread)
+{
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(idThread+1, &cpuset);
+    assert(sched_setaffinity(0, sizeof(cpuset), &cpuset) == 0);
+
+
+    long long nbGToDo = graphList.size();
+    for (long long iG = idThread; iG < nbGToDo; iG += nbProc)
     {
-        if (is_magic_graph(g, false, &deglists2MagicGraphs))
+        const Graph &g = graphList[iG];
+        if (is_magic_graph(g, special, deglist2Obstruction, idThread))
         {
-            magicList.push_back(g);
+            lock.lock();
+            magicListToFill.push_back(g);
+            lock.unlock();
         }
     }
-
-    /*
-    //TTAADDAA : une fonction pour lancer puis join des fonctions avec liste d'arguments fixée ?
-    long long nbPerProc = listGraphs.size()/nbProc;
-    mutex threadMutex;
-    vector<thread> threads(nbProc-1);
-    for (int iProc = 0; iProc < nbProc-1; iProc++)
-        threads[iProc] = thread(&gen_fixeurs_thread, nbVert, std::cref(listGraphs), isTwinCompat, std::ref(fixeursList), std::cref(deglist2PrefixeursPlus), std::ref(threadMutex), iProc);
-
-    thread lastProc = thread(&gen_fixeurs_thread, nbVert, std::cref(listGraphs), isTwinCompat, std::ref(fixeursList), std::cref(deglist2PrefixeursPlus), std::ref(threadMutex), nbProc-1);
-
-    lastProc.join();
-    for (int iProc = 0; iProc < nbProc-1; iProc++)
-        threads[iProc].join();
-    */
-
-    cout  << "Il y a " << magicList.size() << " fixeurs à " << nbVert << " sommets.\n";
-    string magicGenFileName = "Alexmagicdelataille"+to_string(nbVert)+".txt.gz";
-
-    ogzstream outFile(magicGenFileName.c_str());
-    outFile << magicList.size() << endl;
-    for (const Graph &g : magicList)
-        g.print_in_file(outFile);
-    outFile.close();
-
-    return deglists2MagicGraphs[nbVert];
-
 }
-
-

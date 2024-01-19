@@ -15,6 +15,9 @@
 using spp::sparse_hash_map;
 using namespace std;
 
+// If we want to call gen_graph-threads independently, this sould be called first.
+void initialise_subsetBySize(int nbVert);
+
 vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs);
 
 vector<Graph> load_from_file(const string &filename, long long nbGraphToRead=-1);
@@ -32,7 +35,7 @@ bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<v
 
 /** Internal functions **/
 
-vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startingGraphs, int **isTwinCompat, vector<int> &sizesToDo, ogzstream &outFile, int idThread, mutex &lock); //TTAADDAA à mettre juste dans le .cpp ?
+vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startingGraphs, int **isTwinCompat, vector<int> &sizesToDo, ogzstream &outFile, int idThread, mutex &lock, sparse_hash_map<vector<char>, vector<Graph>> *deglists2GraphsToAdd, bool keepTwins); //TTAADDAA à mettre juste dans le .cpp ?
 
 //TTAADDAA mettre dans misc.hh/cpp ?
 void gen_subsets(int k, int n, vector<vector<int>> &listRes);

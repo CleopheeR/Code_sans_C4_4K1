@@ -9,6 +9,7 @@
 #include <cassert>
 #include <vector>
 #include <set>
+#include <mutex>
 
 #include "sparsepp/spp.h"
 #include "gzstream/gzstream.h"
@@ -98,7 +99,9 @@ class ProblemArray
         int idThread;
 };
 
-bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2ObstructionsBySize = NULL);
+bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2ObstructionsBySize = NULL, int idThread = 0);
+
+void is_magic_graph_thread(vector<Graph> &magicListToFill, mutex &lock, const vector<Graph> &graphList, bool special, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2Obstruction, int idThread);
 
 sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert);
 #endif
