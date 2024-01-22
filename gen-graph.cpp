@@ -291,6 +291,7 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
 
     while (true)
     {
+        int nbSizesLeft;
         lock.lock();
         if (sizesToDo.empty())
         {
@@ -315,16 +316,26 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
             }
         }
 
-        long long nbGraph = 0;
+        long long nbGraph = 0, nbGraphMinus = listMinus.size();
+        int pctDone = -1;
+        int onePercent = max(1ll, nbGraphMinus/100);
         for (const Graph& g : listMinus)
         {
             if (g.nbEdge >= m || g.nbEdge + g.nbVert < m) //TODO pour connexité
                 continue;
             //cerr << "\t" << g.nbEdge << endl;
+            if (nbGraph % onePercent == 0)
+            {
+                pctDone++;
+                nbSizesLeft = sizesToDo.size();
+                string newName = "Gen: still " + to_string(nbSizesLeft) + ", " + to_string(pctDone)+"%";
+                pthread_setname_np(pthread_self(), newName.c_str());
+            }
             nbGraph++;
             cptGraph++;
             if (cptGraph%50000 == 0)
                 cout << "Nous sommes sur leeeee " << cptGraph << "-ème graphe sur " << listMinus.size() << " (nbEdges: " << m << ')' << endl;
+
 
             if (!keepTwins)
             {

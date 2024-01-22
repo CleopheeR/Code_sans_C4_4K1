@@ -815,8 +815,17 @@ void is_magic_graph_thread(vector<Graph> &magicListToFill, mutex &lock, const ve
 
 
     long long nbGToDo = graphList.size();
+    int pctDone = -1, cpt = 0;
+    int onePercent = max(1ll, nbGToDo/(nbProc*100));
     for (long long iG = idThread; iG < nbGToDo; iG += nbProc)
     {
+        if (cpt % onePercent == 0)
+        {
+            pctDone++;
+            string newName = "Magic: " + to_string(pctDone)+"%";
+            pthread_setname_np(pthread_self(), newName.c_str());
+        }
+        cpt++;
         const Graph &g = graphList[iG];
         if (is_magic_graph(g, special, deglist2Obstruction, idThread))
         {
