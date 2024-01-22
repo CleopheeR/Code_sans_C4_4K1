@@ -564,7 +564,7 @@ vector<string> ProblemArray::solve_array_problems(void) const
 //TODO free vertices for base graph
 bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2ObstructionsBySize, int idThread)
 {
-    std::cout << "-----\n\n";
+    //std::cout << "-----\n\n";
     ProblemArray pbArray;
     pbArray.idThread = idThread;
     pbArray.baseGraph = g;
@@ -585,7 +585,7 @@ bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<
     pbArray.compute_partition_array();
     const vector<vector<char>> &tableau = pbArray.partitionArray;
     int nbSet = pbArray.partitionSets.size();
-    pbArray.print_array();
+    //pbArray.print_array();
     /*
     for (int i1 = 0; i1 < nbSet; i1++)
     {
