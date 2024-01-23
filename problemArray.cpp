@@ -739,7 +739,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         vector<thread> threads(nbProc);
 
 
-        sparse_hash_map<vector<char>, vector<Graph>> *ptrThreadCall = NULL;//&deglists2MagicGraphs[i];
+        sparse_hash_map<vector<char>, vector<Graph>> *ptrThreadCall = &deglists2MagicGraphs[i+1];
         for (int iProc = 0; iProc < nbProc; iProc++)
             threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(fooEmpty), nullptr, std::ref(degreesToDo), std::ref(outFileBis), iProc, std::ref(threadMutex), ptrThreadCall, true);
         for (int iProc = 0; iProc < nbProc; iProc++)
