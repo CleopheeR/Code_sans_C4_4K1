@@ -45,8 +45,8 @@ class ProblemArraySet
 class ProblemArray
 {
     public:
-        // Returns a new graphs with nbSets new vertices, their neighbourhood defined by adjVertsToAdd. Does not care about possible adjacencies between the newly added vertices.
-        Graph add_vertices_to_base_graph(const ProblemArraySet* adjVertsToAdd[], int nbSets) const;
+        // Returns a new graphs with nbSets new vertices, their neighbourhood defined by adjVertsToAdd. Does not care about possible adjacencies between the newly added vertices: no edges are created between the new vertices.
+        Graph add_vertices_to_graph(const Graph &g, const ProblemArraySet* adjVertsToAdd[], int nbSets) const;
         // Tries to split A into A_{N0B} and A_{1B} : the first one contains vertices which *necessarily* have a non-adjacent vertex in B (this implies the existence of a vertex in B). The second one contains vertices which are complete to B (works if B is empty).
         // Also tries to split A into A_{N1B} and A_{0B} following the same logic: each vertiex in A_{1NB} *has* a neighbour in B, and A_{0B} is anticomplete to B (may be empty).
         bool can_NN_be_solved_method1(const ProblemArraySet &setA, const ProblemArraySet &setB, const ProblemArraySet &setC) const;

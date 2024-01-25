@@ -29,13 +29,14 @@ inline string intToSetName (int x)
     return s;
 }
 
-Graph ProblemArray::add_vertices_to_base_graph(const ProblemArraySet* adjVertsToAdd[], int nbSet) const
+
+Graph ProblemArray::add_vertices_to_graph(const Graph &g, const ProblemArraySet* adjVertsToAdd[], int nbSet) const
 {
-    int n0 = baseGraph.nbVert;
+    int n0 = g.nbVert;
     Graph gRet;
-    gRet.init(n0+nbSet, baseGraph.nbEdge);
+    gRet.init(n0+nbSet, g.nbEdge);
     for (int u = 0; u < n0; u++)
-        gRet.adjMat[u] = baseGraph.adjMat[u];
+        gRet.adjMat[u] = g.adjMat[u];
 
     for (int uNew = 0; uNew < nbSet; uNew++)
     {
@@ -47,42 +48,33 @@ Graph ProblemArray::add_vertices_to_base_graph(const ProblemArraySet* adjVertsTo
     return gRet;
 }
 
+
 bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const ProblemArraySet &setB, const ProblemArraySet &setC) const
 {
     assert(!setA.is_advanced() && !setB.is_advanced() && !setC.is_advanced());
 
     int n0 = baseGraph.nbVert;
-    /*Graph gABC;
-      gABC.init(n0+3, baseGraph.nbEdge);
-      for (int u = 0; u < baseGraph.nbVert; u++)
-      gABC.adjMat[u] = baseGraph.adjMat[u];
 
-      const ProblemArraySet *adjPtrs[3] = {&setA, &setB, &setB};
-
-      for (int uNew = 0; uNew < 3; uNew++)
-      {
-      const vector<int> &curAdj = adjPtrs[uNew]->neighbInBaseGraph;
-      for (int x : curAdj)
-      gABC.add_edge(n0+uNew, x);
-      }*/
-
-    const ProblemArraySet* sets[3] = {&setA, &setB, &setC};
-    Graph gABC = add_vertices_to_base_graph(sets, 3);
+    const ProblemArraySet* sets[2] = {&setA, &setB};
+    Graph gAB = add_vertices_to_graph(baseGraph, sets, 2);
 
     int uA = n0, uB = n0+1, uC=  n0+2;
-
     vector<Graph> realGABList;
-    Graph fooG = gABC;
-    get_possible_free_neighbourhoods(uB, {uA, uC}, fooG, 0, realGABList);
+    Graph fooG = gAB;
+    get_possible_free_neighbourhoods(uB, {uA}, fooG, 0, realGABList);
 
 
     vector<Graph> realGABCList;
     for (Graph &g : realGABList)
     {
-        Graph fooGG = gABC;
-        get_possible_free_neighbourhoods(uB, {uA, uC}, fooGG, 0, realGABCList);
-        if (!realGABCList.empty())
-            return true;
+        const ProblemArraySet* setBis[1] = {&setC};
+        Graph fooGG = add_vertices_to_graph(g, setBis, 1);
+        //g.print();
+        get_possible_free_neighbourhoods(uC, {uA,uB}, fooGG, 0, realGABCList);
+    }
+    if (realGABCList.size() > 1)
+    {
+        return true;
     }
 
     return false;
@@ -94,7 +86,7 @@ bool ProblemArray::is_true_N_between_two(const ProblemArraySet &setA, const Prob
     assert(!setA.is_advanced() && !setB.is_advanced());
     int n0 = baseGraph.nbVert;
     const ProblemArraySet* sets[3] = {&setB, &setB, &setA};
-    Graph gAB = add_vertices_to_base_graph(sets, 3);
+    Graph gAB = add_vertices_to_graph(baseGraph, sets, 3);
     int uB1 = n0, uB2 = n0+1, uA = n0+2;
     gAB.add_edge(uB1, uB2);
 
@@ -392,7 +384,7 @@ char ProblemArray::get_sets_compatibility(int i1, int i2) const
     int n0 = baseGraph.nbVert;
 
     const ProblemArraySet* sets[2] = {&set1, &set2};
-    Graph gNew = add_vertices_to_base_graph(sets, 2);
+    Graph gNew = add_vertices_to_graph(baseGraph, sets, 2);
 
     bool edgeOk = true, noEdgeOk = true;
 
@@ -467,7 +459,7 @@ bool ProblemArray::check_that_set_is_clique(const ProblemArraySet &set) const
     assert(!set.is_advanced());
     int n = baseGraph.nbVert;
     const ProblemArraySet* sets[2] = {&set, &set};
-    Graph gPlus2 = add_vertices_to_base_graph(sets, 2);
+    Graph gPlus2 = add_vertices_to_graph(baseGraph, sets, 2);
 
     vector<Graph> possibleGraphs;
     get_possible_free_neighbourhoods(n+1, {}, gPlus2, 0, possibleGraphs);
@@ -493,18 +485,15 @@ vector<string> ProblemArray::solve_array_problems(void) const
             const ProblemArraySet &set2 = partitionSets[i2];
             if (partitionArray[i1][i2] != 'N')
                 continue;
-            if (!is_true_N_between_two(set1, set2))
+            /*if (!is_true_N_between_two(set1, set2))
             {
-                cout << " LOL12\n";
+                partitionArray[i1][i2] = 'S';
+                cerr << " LOL12\n";
                 continue;
-            }
+            }*/ //Cannot happen :(
             for (int i3 = i2+1; i3 < nbSet; i3++)
             {
-                const ProblemArraySet &set3 = partitionSets[i3];
-                string tripletName;
-                for (int x : {i1,i2,i3})
-                    tripletName.push_back((char)('A'+x));
-                if (partitionArray[i1][i3] != 'N')
+               if (partitionArray[i1][i3] != 'N')
                     continue;
 
                 if (partitionArray[i2][i3] == '-')
@@ -514,18 +503,24 @@ vector<string> ProblemArray::solve_array_problems(void) const
                     continue;
                 }
 
-                if (!is_true_N_between_two(set1, set3))
+                /*if (!is_true_N_between_two(set1, set3))
                 {
                     cout << " ptdr\n";
                     continue;
-                }
+                }*/ //Cannot happen
 
 
+                const ProblemArraySet &set3 = partitionSets[i3];
                 if (!can_3sets_be_possible(set1, set2, set3))
                 {
-                    cout << " mdr \n";
+                    cout << "false bad 3 sets = "<< (char)('A'+i1) << ","<< (char)('A'+i2)  << "," << (char)('A'+i3) << endl;
+                    //cout << " mdr \n";
                     continue;
-                }
+                } //cannot happen
+
+                string tripletName;
+                for (int x : {i1,i2,i3})
+                    tripletName.push_back((char)('A'+x));
 
 
                 if (partitionArray[i2][i3] == '1')
@@ -625,15 +620,15 @@ bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<
             cerr << endl;
         }
         pbArray.print_array();
-        if (isOk2)
+        if (false && isOk2 && g.nbVert <= 13)
           pbArray.print_array_latex();
 
-        /*
+
         cerr << "Printing bad triplets :";
         for (string &x : errorTriplets)
             cerr << x << ", ";
-        cout << endl << endl; */
-        //cout << "Il y a " << errorTriplets.size() << " bad triplets\n";
+        cout << endl << endl;
+        cout << "Il y a " << errorTriplets.size() << " bad triplets\n";
     }
     if (isOk2)
         return true;
