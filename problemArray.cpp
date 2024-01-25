@@ -557,7 +557,7 @@ vector<string> ProblemArray::solve_array_problems(void) const
 
 
 //TODO free vertices for base graph
-bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2ObstructionsBySize, int idThread)
+bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2ObstructionsBySize, int idThread)
 {
     //std::cout << "-----\n\n";
     ProblemArray pbArray;
@@ -606,6 +606,7 @@ bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<
         errorTriplets.clear();
     if (false || errorTriplets.size() <= 00 || isOk2)
     {
+        lock.lock();
         cerr << "printing graph:\n";
         g.print();
         cerr << "printing neighbourfood of vertices:\n";
@@ -629,6 +630,7 @@ bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<
             cerr << x << ", ";
         cout << endl << endl;
         cout << "Il y a " << errorTriplets.size() << " bad triplets\n";
+        lock.unlock();
     }
     if (isOk2)
         return true;
@@ -822,7 +824,7 @@ void is_magic_graph_thread(vector<Graph> &magicListToFill, mutex &lock, const ve
         }
         cpt++;
         const Graph &g = graphList[iG];
-        if (is_magic_graph(g, special, deglist2Obstruction, idThread))
+        if (is_magic_graph(g, special, lock, deglist2Obstruction, idThread))
         {
             lock.lock();
             magicListToFill.push_back(g);

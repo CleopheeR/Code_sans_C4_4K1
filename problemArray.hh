@@ -99,7 +99,7 @@ class ProblemArray
         int idThread;
 };
 
-bool is_magic_graph(const Graph &g, bool special, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2ObstructionsBySize = NULL, int idThread = 0);
+bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2ObstructionsBySize = NULL, int idThread = 0);
 
 void is_magic_graph_thread(vector<Graph> &magicListToFill, mutex &lock, const vector<Graph> &graphList, bool special, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2Obstruction, int idThread);
 
