@@ -72,7 +72,18 @@ bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const Prob
         //g.print();
         get_possible_free_neighbourhoods(uC, {uA,uB}, fooGG, 0, realGABCList);
     }
-    if (realGABCList.size() > 1)
+
+    int calcLinkBC = 0; // odd if no BC link at least once, greater than 1 if some BC link at least once
+    for (const Graph &g : realGABCList)
+    {
+        if (!are_neighb(g, uB, uC) && calcLinkBC % 2 == 0)
+            calcLinkBC += 1;
+        if (are_neighb(g, uB, uC))
+            calcLinkBC += 2;
+    }
+
+    // TODO maybe possible to have more good cases
+    if ((calcLinkBC > 1 && calcLinkBC % 2 == 1) || realGABCList.size() > 2)
     {
         return true;
     }
@@ -513,7 +524,7 @@ vector<string> ProblemArray::solve_array_problems(void) const
                 const ProblemArraySet &set3 = partitionSets[i3];
                 if (!can_3sets_be_possible(set1, set2, set3))
                 {
-                    cout << "false bad 3 sets = "<< (char)('A'+i1) << ","<< (char)('A'+i2)  << "," << (char)('A'+i3) << endl;
+                    //cout << "false bad 3 sets = "<< (char)('A'+i1) << ","<< (char)('A'+i2)  << "," << (char)('A'+i3) << endl;
                     //cout << " mdr \n";
                     continue;
                 } //cannot happen
