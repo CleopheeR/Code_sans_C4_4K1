@@ -73,17 +73,17 @@ bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const Prob
         get_possible_free_neighbourhoods(uC, {uA,uB}, fooGG, 0, realGABCList);
     }
 
-    int calcLinkBC = 0; // odd if no BC link at least once, greater than 1 if some BC link at least once
+    int nbLinkBC0 = 0, nbLinkBC1 = 0; // number of valid extensions when there is (/no) link between B and C.
     for (const Graph &g : realGABCList)
     {
-        if (!are_neighb(g, uB, uC) && calcLinkBC % 2 == 0)
-            calcLinkBC += 1;
         if (are_neighb(g, uB, uC))
-            calcLinkBC += 2;
+            nbLinkBC1++;
+        else
+            nbLinkBC0++;
     }
 
     // TODO maybe possible to have more good cases
-    if ((calcLinkBC > 1 && calcLinkBC % 2 == 1) || realGABCList.size() > 2)
+    if (nbLinkBC0 > 2 || nbLinkBC1 > 2)
     {
         return true;
     }
