@@ -566,6 +566,99 @@ vector<string> ProblemArray::solve_array_problems(void) const
 }
 
 
+vector<array<int, 3>> ProblemArray::find_bad_triplets(void) const
+{
+    vector<array<int, 3>> badTriplets;
+
+    int nbSet = partitionSets.size();
+    for (int i1 = 0; i1 < nbSet; i1++)
+    {
+        const ProblemArraySet &set1 = partitionSets[i1];
+        for (int i2 = 0; i2 < nbSet; i2++)
+        {
+            const ProblemArraySet &set2 = partitionSets[i2];
+            if (partitionArray[i1][i2] != 'N')
+                continue;
+            /*if (!is_true_N_between_two(set1, set2))
+            {
+                partitionArray[i1][i2] = 'S';
+                cerr << " LOL12\n";
+                continue;
+            }*/ //Cannot happen :(
+            for (int i3 = i2+1; i3 < nbSet; i3++)
+            {
+               if (partitionArray[i1][i3] != 'N')
+                    continue;
+
+                if (partitionArray[i2][i3] == '-')
+                    continue;
+
+                /*if (!is_true_N_between_two(set1, set3))
+                {
+                    cout << " ptdr\n";
+                    continue;
+                }*/ //Cannot happen
+
+                const ProblemArraySet &set3 = partitionSets[i3];
+                if (!can_3sets_be_possible(set1, set2, set3))
+                {
+                    //cout << "false bad 3 sets = "<< (char)('A'+i1) << ","<< (char)('A'+i2)  << "," << (char)('A'+i3) << endl;
+                    continue;
+                }
+
+                badTriplets.push_back({i1, i2, i3});
+
+            }
+        }
+    }
+    return badTriplets;
+}
+
+vector<array<int, 3>> ProblemArray::solve_bad_triplets(const vector<array<int, 3>> &badTriplets) const
+{
+    //TODO si jamais on doit fusionner BCDE pour A, peut-être que si BC N, ABC pas BC N.
+    //string merging1Log = "MergingPhaseOne:\n", merging2Log = "mergingPhaseTwo:\n";
+    int nbError = 0;
+    vector<array<int, 3>> stillBadTriplets;
+    int nbSet = partitionSets.size();
+    vector<pair<int, int>> badTriplet(nbSet);
+
+    std::vector<int> unionfind(nbSet);
+    for (int i = 0; i < nbSet; i++)
+      unionfind[i] = i;
+    std::vector<std::set<int>> ufSets(nbSet);
+    for (int i = 0; i < nbSet; i++)
+      ufSets[i].insert(i);
+
+    for (const auto &triplet : badTriplets)
+    {
+        int curNbError = 0;
+        int i1 = triplet[0], i2 = triplet[1], i3 = triplet[2];
+        int repr1 = find(i1, unionfind);
+        int repr2 = find(i2, unionfind);
+        if (repr1 == repr2)
+            continue;
+        unionfind[repr1] = repr2;
+        set<int> &toMerge1 = ufSets[repr1];
+        set<int> &toMerge2 = ufSets[repr2];
+        for (int ii1 : toMerge1)
+            for (int ii2 : toMerge2)
+                if (partitionArray[ii1][ii2] != '1' && partitionArray[ii1][ii2] != '-')
+                    curNbError++;
+        if (curNbError == 0)
+        {
+            toMerge2.merge(toMerge1);
+            toMerge1.clear();
+        }
+        else
+        {
+            stillBadTriplets.push_back(triplet);
+            nbError++;
+        }
+    }
+    return stillBadTriplets;
+}
+
 
 //TODO free vertices for base graph
 bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_hash_map<vector<char>, vector<Graph>>> *deglist2ObstructionsBySize, int idThread)
@@ -607,15 +700,16 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
         }
     }*/
 
-    vector<string> errorTriplets = pbArray.solve_array_problems();
-
+    vector<std::array<int, 3>> errorTriplets = pbArray.find_bad_triplets();
+    vector<std::array<int, 3>> finalErrors = pbArray.solve_bad_triplets(errorTriplets);
     //cout << "------------------------------\n";
     //cout << "il y a " << errorTriplets.size() << " vrais soucis\n";
 
-    bool isOk2 = pbArray.can_NN_be_solved_method2();
-    if (isOk2)
-        errorTriplets.clear();
-    if (false || errorTriplets.size() <= 00 || isOk2)
+    bool isOk2 = false;//pbArray.can_NN_be_solved_method2();
+
+    //if (isOk2)
+    //    errorTriplets.clear();
+    if (finalErrors.size() <= 00)// || isOk2)
     {
         lock.lock();
         cerr << "printing graph:\n";
@@ -632,24 +726,24 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
             cerr << endl;
         }
         pbArray.print_array();
-        if (false && isOk2 && g.nbVert <= 13)
+        if (false && finalErrors.empty() && g.nbVert <= 13)
           pbArray.print_array_latex();
 
 
         cerr << "Printing bad triplets :";
-        for (string &x : errorTriplets)
-            cerr << x << ", ";
+        for (const auto &x : finalErrors)
+            cerr << intToSetName(x[0]) << intToSetName(x[1]) << intToSetName(x[2]) << ", ";
         cout << endl << endl;
-        cout << "Il y a " << errorTriplets.size() << " bad triplets\n";
+        cout << "Il y a " << finalErrors.size() << " bad triplets\n";
         lock.unlock();
     }
-    if (isOk2)
+    if (finalErrors.empty())
         return true;
-    if (errorTriplets.size() != 0)
-        return false;
+    //if (errorTriplets.size() != 0)
+    //    return false;
 
 
-    return true;
+    return false;
 }
 
 sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)

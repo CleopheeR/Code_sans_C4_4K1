@@ -85,6 +85,9 @@ class ProblemArray
 
         vector<string> solve_array_problems(void) const;
 
+        vector<array<int, 3>> find_bad_triplets(void) const;
+        vector<array<int, 3>> solve_bad_triplets(const vector<array<int, 3>> &badTriplets) const;
+
         ProblemArray(void)
         {
             int idThread = 0;
