@@ -12,6 +12,10 @@
 #include "test-properties.hh"
 #include "gen-graph.hh"
 
+// Faire fusion d'abord tous ceux avec A, puis tous ceux avec B
+// Programme qui regarde et qui fait le tableau, avec ou sans les N, sans fusionner. Mais sans, sans C4/4K1
+
+
 //TODO:
 //   1. Écrire dans un fichier inflated-size.tgz les magiques et inflatés.
 //      => Quand on calcule des graphes magiques. Voir, pour chaque taille tq il existait le fichier inflated, si on en génère des nouveaux. Si oui, les écrire à la fin. Partir de ceux-ci pour ajouter à chaque taille supérieure existante (supposer que les inflated sont synchros).
@@ -21,6 +25,7 @@
 
 
 using namespace std;
+
 
 inline string intToSetName (int x)
 {
@@ -48,6 +53,63 @@ Graph ProblemArray::add_vertices_to_graph(const Graph &g, const ProblemArraySet*
     return gRet;
 }
 
+bool ProblemArray::is_true_badTriple_4sets(const ProblemArraySet &setA, const ProblemArraySet &setB, const ProblemArraySet &setNA, const ProblemArraySet &setNB) const
+{
+    assert(!setA.is_advanced() && !setB.is_advanced() && !setNA.is_advanced() && !setNB.is_advanced());
+
+    int n0 = baseGraph.nbVert;
+
+    int uA = n0, uB = n0+1, uNA = n0+2, uNB = n0+3;
+    const ProblemArraySet* sets[3] = {&setA, &setB, &setNA};
+    Graph gAB = add_vertices_to_graph(baseGraph, sets, 3);
+    // Mandatory edge here because A and B were merged, so they are complete to each other.
+    gAB.add_edge(uA, uB);
+
+    vector<Graph> realGAB_NAList;
+    Graph fooG = gAB;
+    get_possible_free_neighbourhoods(uNA, {uA, uB}, fooG, 0, realGAB_NAList);
+
+    //cout << "öhhhhhh"<<endl;
+
+    const ProblemArraySet* setBis[1] = {&setNB};
+    vector<Graph> realGAB_NA_NBList;
+    for (Graph &g : realGAB_NAList)
+    {
+        Graph fooGG = add_vertices_to_graph(g, setBis, 1);
+        //g.print();
+        get_possible_free_neighbourhoods(uNB, {uA,uB, uNA}, fooGG, 0, realGAB_NA_NBList);
+    }
+
+    int nbLinkNANB0 = 0, nbLinkNANB1 = 0; // number of valid extensions when there is (/no) link between NA and NB.
+    for (const Graph &g : realGAB_NA_NBList)
+    {
+        if (are_neighb(g, uNA, uNB))
+            nbLinkNANB1++;
+        else
+            nbLinkNANB0++;
+    }
+
+    // TODO vérifier que vraiment ça marche
+    // TODO si 3 et 3 et les mêmes...
+    //if ((calcLinkBC > 1 && calcLinkBC % 2 == 1) || realGABCList.size() > 2)
+    if ((nbLinkNANB0 > 2 && nbLinkNANB1 > 2) || nbLinkNANB0 == 4 || nbLinkNANB1 == 4)
+    {
+        cout << "Nb links = " << nbLinkNANB0 << "," << nbLinkNANB1 << endl;
+        //cout << "end" <<endl;
+        //cerr << "#"<< endl;
+        return true;
+    }
+
+
+
+    //realGABCList[0].print();
+
+    //cerr << "@\n";
+    return false;
+}
+
+
+
 
 bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const ProblemArraySet &setB, const ProblemArraySet &setC) const
 {
@@ -63,6 +125,7 @@ bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const Prob
     Graph fooG = gAB;
     get_possible_free_neighbourhoods(uB, {uA}, fooG, 0, realGABList);
 
+    //cout << "öhhhhhh"<<endl;
 
     vector<Graph> realGABCList;
     for (Graph &g : realGABList)
@@ -73,9 +136,37 @@ bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const Prob
         get_possible_free_neighbourhoods(uC, {uA,uB}, fooGG, 0, realGABCList);
     }
 
+    int nbA1B = 0, nbA0B = 0, nbA1C = 0, nbA0C = 0;
+    int nbB1C_A0B = 0, nbB1C_A1B = 0, nbB1C_A0C = 0, nbB1C_A1C = 0;
+    int nbB0C_A0B = 0, nbB0C_A1B = 0, nbB0C_A0C = 0, nbB0C_A1C = 0;
     int nbLinkBC0 = 0, nbLinkBC1 = 0; // number of valid extensions when there is (/no) link between B and C.
     for (const Graph &g : realGABCList)
-    {
+    {/*
+        if (are_neighb(g, uB, uC))
+        {
+            if (are_neighb(g, uA, uB))
+                nbB1C_A1B++;
+            else
+                nbB1C_A0B++;
+
+            if (are_neighb(g, uA, uC))
+                nbB1C_A1C++;
+            else
+                nbB1C_A0C++;
+        }
+
+        else // uB 0 uC
+        {
+            if (are_neighb(g, uA, uB))
+                nbB0C_A1B++;
+            else
+                nbB0C_A0B++;
+
+            if (are_neighb(g, uA, uC))
+                nbB0C_A1C++;
+            else
+                nbB0C_A0C++;
+        }*/
         if (are_neighb(g, uB, uC))
             nbLinkBC1++;
         else
@@ -83,11 +174,19 @@ bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const Prob
     }
 
     // TODO maybe possible to have more good cases
+    //if ((calcLinkBC > 1 && calcLinkBC % 2 == 1) || realGABCList.size() > 2)
     if (nbLinkBC0 > 2 || nbLinkBC1 > 2)
     {
+        //cout << "end" <<endl;
+        //cerr << "#"<< endl;
         return true;
     }
 
+
+
+    //realGABCList[0].print();
+
+    //cerr << "@\n";
     return false;
 }
 
@@ -209,7 +308,7 @@ int find(int x, std::vector<int> &uf)
 
 
 // New version
-bool ProblemArray::can_NN_be_solved_method2(void) const
+bool ProblemArray::can_NN_be_solved_method2(const vector<array<int, 3>> &badTriplets) const
 {
     string merging1Log = "MergingPhaseOne:\n", merging2Log = "mergingPhaseTwo:\n";
     int nbError = 0;
@@ -217,75 +316,87 @@ bool ProblemArray::can_NN_be_solved_method2(void) const
     vector<pair<int, int>> badTriplet(nbSet);
     std::vector<std::vector<int>> toMerge(nbSet);
 
+    vector<vector<int>> setsToNs(nbSet);
+
     std::vector<int> unionfind(nbSet);
     for (int i = 0; i < nbSet; i++)
       unionfind[i] = i;
-    std::vector<std::set<int>> ufSets(nbSet);
+    std::vector<std::vector<int>> ufSets(nbSet);
     for (int i = 0; i < nbSet; i++)
-      ufSets[i].insert(i);
+      ufSets[i].push_back(i);
+
+    // TODO take as argument to avoid again double loop
     for (int i = 0; i < nbSet; i++)
     {
-        toMerge[i].push_back(i);
-        for (int i1 = 0; i1 < nbSet; i1++)
+        for (int j = 0; j < nbSet; j++)
         {
-            if (partitionArray[i][i1] != 'N')
-                continue;
-            if (!is_true_N_between_two(partitionSets[i], partitionSets[i1]))
-                continue;
-            for (int i2 = i1+1; i2 < nbSet; i2++)
-            {
-                if (partitionArray[i1][i2] == '-')
-                  continue;
-                if (partitionArray[i][i2] != 'N')
-                    continue;
-                if (!is_true_N_between_two(partitionSets[i], partitionSets[i2]))
-                    continue;
-                if (!can_3sets_be_possible(partitionSets[i], partitionSets[i1], partitionSets[i2]))
-                    continue;
-                if (partitionArray[i1][i2] != '1')
-                    return false;
-                {
-                    int repr1 = find(i1, unionfind);
-                    int repr2 = find(i2, unionfind);
-                    if (repr1 == repr2)
-                      continue;
-                    unionfind[repr1] = repr2;
-                    set<int> &set1 = ufSets[repr1];
-                    set<int> &set2 = ufSets[repr2];
-
-                    set1.clear();
-                    toMerge[i1].push_back(i2);
-                    toMerge[i2].push_back(i1);
-                    //cout << "Triplet bad: " << (char)('A'+i) << (char)('A'+i1) << (char)('A'+i2) << endl;
-                }
-            }
+            if (partitionArray[i][j] == 'N')
+                setsToNs[i].push_back(j);
         }
     }
 
-
-/*
-    cout << endl << endl;
-    for (const auto& set : ufSets)
+    for (int i = 0; i < badTriplets.size(); i++)
     {
-      if (set.size() == 1)
-        continue;
-      cout << "Il faut fusionner : ";
-      for (int x : set)
-        cout << (char)('A'+x);
-      cout << endl;
+        int i1 = badTriplets[i][0], i2 = badTriplets[i][1], i3 = badTriplets[i][2];
+        if (partitionArray[i1][i2] != '1')
+            return false;
+        {
+            int repr1 = find(i1, unionfind);
+            int repr2 = find(i2, unionfind);
+            if (repr1 == repr2)
+                continue;
+            unionfind[repr1] = repr2;
+            vector<int> &set1 = ufSets[repr1];
+            vector<int> &set2 = ufSets[repr2];
+            set2.insert(set2.end(), set1.begin(), set1.end());
+            set1.clear();
+            toMerge[i1].push_back(i2);
+            toMerge[i2].push_back(i1);
+            //cout << "Triplet bad: " << (char)('A'+i) << (char)('A'+i1) << (char)('A'+i2) << endl;
+        }
     }
-*/
+
     string mergingLog;
     for (int i = 0; i < nbSet; i++)
     {
-        for (int i1 : toMerge[i])
-            for (int i2 : toMerge[i])
-                if (partitionArray[i1][i2] != '1' && partitionArray[i1][i2] != '-')
+        if (ufSets[i].size() <= 1)
+            continue;
+        cerr << "Merging: ";
+        for (int i1 = 0; i1 < ufSets[i].size(); i1++)
+        {
+            int x1 = ufSets[i][i1];
+            cerr << 'A'+x1 << ", ";
+            for (int i2 = i1+1; i2 < ufSets[i].size(); i2++)
+            {
+                int x2 = ufSets[i][i2];
+                if (partitionArray[i1][i2] != '-' && partitionArray[i1][i2] != '1')
+                {
+                    cerr << "Problem merging: I want to merge " << 'A'+x1 << " and " << 'A'+x2 << " but their relation is " << partitionArray[i1][i2] << endl;
                     return false;
+                }
+            }
         /*mergingLog += "Merging : ";
         for (int x : toMerge[i])
             mergingLog = mergingLog + to_string('A'+i) + " ";
         mergingLog += "\n";*/
+        }
+        cerr << "\n";
+    }
+
+    // Checking no new bad pairs... (useless?)
+    for (int i = 0; i < nbSet; i++)
+    {
+        if (ufSets[i].size() <= 1)
+            continue;
+        int idRepr = -1;
+        for (int idSet : ufSets[i])
+        {
+            for (int idN : setsToNs[idSet])
+            {
+                assert(idRepr == -1 || idRepr ==  find(idN, unionfind));
+                idRepr = find(idN, unionfind);
+            }
+        }
     }
 
     //cout << mergingLog << endl;
@@ -338,6 +449,8 @@ void ProblemArray::gen_default_partition(void)
 
 bool ProblemArray::is_graph_ok(const Graph &g, bool print) const
 {
+    //g.print();
+    //cout << "\n\n";
     if (!free_C4_O4(g, g.nbVert))
         return false;
 
@@ -358,7 +471,6 @@ bool ProblemArray::is_graph_ok(const Graph &g, bool print) const
     for (const Graph &gObstr : curObstructions[hashVect])
         if (are_isomorphic(gg, gObstr, idThread))//TODO idthread
             return false;
-
     return true;
 }
 
@@ -481,91 +593,6 @@ bool ProblemArray::check_that_set_is_clique(const ProblemArraySet &set) const
     return true;
 }
 
-vector<string> ProblemArray::solve_array_problems(void) const
-{
-    vector<string> badTriplets;
-    int nbError = 0;
-    bool error = false;
-    set<int> badTripletElts;
-    int nbSet = partitionSets.size();
-    for (int i1 = 0; i1 < nbSet; i1++)
-    {
-        const ProblemArraySet &set1 = partitionSets[i1];
-        for (int i2 = 0; i2 < nbSet; i2++)
-        {
-            const ProblemArraySet &set2 = partitionSets[i2];
-            if (partitionArray[i1][i2] != 'N')
-                continue;
-            /*if (!is_true_N_between_two(set1, set2))
-            {
-                partitionArray[i1][i2] = 'S';
-                cerr << " LOL12\n";
-                continue;
-            }*/ //Cannot happen :(
-            for (int i3 = i2+1; i3 < nbSet; i3++)
-            {
-               if (partitionArray[i1][i3] != 'N')
-                    continue;
-
-                if (partitionArray[i2][i3] == '-')
-                {
-                  //cout << "No coexisting triplet: " << tripletName << endl;
-                    //cout << "xD\n";
-                    continue;
-                }
-
-                /*if (!is_true_N_between_two(set1, set3))
-                {
-                    cout << " ptdr\n";
-                    continue;
-                }*/ //Cannot happen
-
-
-                const ProblemArraySet &set3 = partitionSets[i3];
-                if (!can_3sets_be_possible(set1, set2, set3))
-                {
-                    //cout << "false bad 3 sets = "<< (char)('A'+i1) << ","<< (char)('A'+i2)  << "," << (char)('A'+i3) << endl;
-                    //cout << " mdr \n";
-                    continue;
-                } //cannot happen
-
-                string tripletName;
-                for (int x : {i1,i2,i3})
-                    tripletName.push_back((char)('A'+x));
-
-
-                if (partitionArray[i2][i3] == '1')
-                {
-                    //cout << " Mergeable triple: " << tripletName << endl;
-                    auto itEnd = badTripletElts.end();
-                    if (badTripletElts.find(i1) != itEnd || badTripletElts.find(i2) != itEnd || badTripletElts.find(i3) != itEnd)
-                    {
-                        nbError++;
-                        badTriplets.push_back(tripletName);
-                        continue;
-                    }
-                    //cout << "FUSION" << i1 << "," <<i2 << "," << i3 <<"\n";
-                    //cout << "FUSION" << (char)(i1+'A') << "," <<(char)(i2+'A') << "," << (char)(i3+'A') <<"\n";
-                    badTripletElts.insert(i1);
-                    badTripletElts.insert(i2);
-                    badTripletElts.insert(i3);
-                    continue; // TODO WARNING EXPERIMENTAL!!!
-                }
-
-                //cout << "Non Mergeable triple: " << tripletName << endl;
-                nbError++;
-                badTriplets.push_back(tripletName);
-                // We did not save this bad triplet...
-                // TODO REMETTRE
-                //return false;
-            }
-        }
-    }
-
-    return badTriplets;
-}
-
-
 vector<array<int, 3>> ProblemArray::find_bad_triplets(void) const
 {
     vector<array<int, 3>> badTriplets;
@@ -579,12 +606,12 @@ vector<array<int, 3>> ProblemArray::find_bad_triplets(void) const
             const ProblemArraySet &set2 = partitionSets[i2];
             if (partitionArray[i1][i2] != 'N')
                 continue;
-            /*if (!is_true_N_between_two(set1, set2))
+            if (!is_true_N_between_two(set1, set2))
             {
-                partitionArray[i1][i2] = 'S';
+                //partitionArray[i1][i2] = 'S';
                 cerr << " LOL12\n";
                 continue;
-            }*/ //Cannot happen :(
+            } //Cannot happen :(
             for (int i3 = i2+1; i3 < nbSet; i3++)
             {
                if (partitionArray[i1][i3] != 'N')
@@ -593,16 +620,17 @@ vector<array<int, 3>> ProblemArray::find_bad_triplets(void) const
                 if (partitionArray[i2][i3] == '-')
                     continue;
 
-                /*if (!is_true_N_between_two(set1, set3))
+                const ProblemArraySet &set3 = partitionSets[i3];
+                if (!is_true_N_between_two(set1, set3))
                 {
                     cout << " ptdr\n";
                     continue;
-                }*/ //Cannot happen
+                } //Cannot happen
 
-                const ProblemArraySet &set3 = partitionSets[i3];
                 if (!can_3sets_be_possible(set1, set2, set3))
                 {
-                    //cout << "false bad 3 sets = "<< (char)('A'+i1) << ","<< (char)('A'+i2)  << "," << (char)('A'+i3) << endl;
+                    if (baseGraph.nbVert <= 13)
+                        cerr << "false bad 3 sets = "<< (char)('A'+i1) << ","<< (char)('A'+i2)  << "," << (char)('A'+i3) << endl;
                     continue;
                 }
 
@@ -616,12 +644,24 @@ vector<array<int, 3>> ProblemArray::find_bad_triplets(void) const
 
 vector<array<int, 3>> ProblemArray::solve_bad_triplets(const vector<array<int, 3>> &badTriplets) const
 {
+    //TODO important si je fusionne BC pour A, mais B avait N U et C avait N V alors BC N U et N V souci
+    if (baseGraph.nbVert <= 13)
+        cerr << "--------\n";
     //TODO si jamais on doit fusionner BCDE pour A, peut-être que si BC N, ABC pas BC N.
     //string merging1Log = "MergingPhaseOne:\n", merging2Log = "mergingPhaseTwo:\n";
     int nbError = 0;
     vector<array<int, 3>> stillBadTriplets;
     int nbSet = partitionSets.size();
     vector<pair<int, int>> badTriplet(nbSet);
+    vector<int> setToUniqueNSetId(nbSet,-1);
+
+    vector<vector<int>> setsToNs(nbSet);
+    for (int i = 0; i < nbSet; i++)
+    {
+        for (int i2 = 0; i2 < nbSet; i2++)
+            if (partitionArray[i][i2] == 'N')
+                setsToNs[i].push_back(i2);
+    }
 
     std::vector<int> unionfind(nbSet);
     for (int i = 0; i < nbSet; i++)
@@ -630,31 +670,101 @@ vector<array<int, 3>> ProblemArray::solve_bad_triplets(const vector<array<int, 3
     for (int i = 0; i < nbSet; i++)
       ufSets[i].insert(i);
 
+
+    vector<pair<int, int>> problematicDoubleNs;
+
     for (const auto &triplet : badTriplets)
     {
+        cerr << "Cur triplet: "<< intToSetName(triplet[0]) << intToSetName(triplet[1]) << intToSetName(triplet[2])<<endl;
         int curNbError = 0;
         int i1 = triplet[0], i2 = triplet[1], i3 = triplet[2];
-        int repr1 = find(i1, unionfind);
         int repr2 = find(i2, unionfind);
-        if (repr1 == repr2)
+        int repr3 = find(i3, unionfind);
+        if (repr2 == repr3)
             continue;
-        unionfind[repr1] = repr2;
-        set<int> &toMerge1 = ufSets[repr1];
         set<int> &toMerge2 = ufSets[repr2];
-        for (int ii1 : toMerge1)
-            for (int ii2 : toMerge2)
-                if (partitionArray[ii1][ii2] != '1' && partitionArray[ii1][ii2] != '-')
+        set<int> &toMerge3 = ufSets[repr3];
+        cerr << "Trying to merge:\n";
+        if (baseGraph.nbVert <= 13)
+        {
+            for (int x : toMerge2)
+                cerr << intToSetName(x) << ",";
+            cerr << "  AND  ";
+            for (int x : toMerge3)
+                cerr << intToSetName(x) << ", ";
+            cerr << endl;
+        }
+
+        for (int ii2 : toMerge2)
+            for (int ii3 : toMerge3)
+                if (partitionArray[ii2][ii3] != '1' && partitionArray[ii2][ii3] != '-')
                     curNbError++;
+
+
+        //if (nbTimesGood)
+        //    std::cout << "nbTimesGood = " << nbTimesGood << endl;
         if (curNbError == 0)
         {
-            toMerge2.merge(toMerge1);
-            toMerge1.clear();
+            if (baseGraph.nbVert <= 13)
+            {
+                cerr << "Merging: ";
+                for (int x : toMerge2)
+                    cerr << intToSetName(x) << ",";
+                cerr << "  AND  ";
+                for (int x : toMerge3)
+                    cerr << intToSetName(x) << ", ";
+                cerr << endl;
+            }
+            setToUniqueNSetId[i2] = i1;
+            setToUniqueNSetId[i3] = i1;
+            setToUniqueNSetId[i1] = i3;
+            unionfind[repr2] = repr3;
+            toMerge3.merge(toMerge2);
+            toMerge2.clear();
         }
         else
         {
             stillBadTriplets.push_back(triplet);
             nbError++;
         }
+
+
+   // Checking that non-checked N do not pose problems. For instance, if A is N with B and C but this is a bad triplet, we never check problem related to B and C when merging. The same goes if A is N with only B: when merging A with E, we may create bad triplets.
+        int nbTimesGood = 0;
+        for (int i2 : toMerge2)
+        {
+            if (curNbError)
+                break;
+            for (int i3 : toMerge3)
+            {
+                if (curNbError)
+                    break;
+                for (int iN2 : setsToNs[i2])
+                {
+                    if (curNbError)
+                        break;
+                    for (int iN3 : setsToNs[i3])
+                    {
+                        if (is_true_badTriple_4sets(partitionSets[i2], partitionSets[i3], partitionSets[iN2], partitionSets[iN3]))
+                        {
+                            problematicDoubleNs.push_back({iN2, iN3});
+                            //curNbError++;
+                            //std::cerr << "Error advanced merged for: " << intToSetName(iN2) <<"," << intToSetName(iN3) << ".\n";
+                            //break;
+                        }
+                        else
+                            nbTimesGood++;
+                    }
+                }
+            }
+        }
+    }
+
+    for (const pair<int, int> &pbPair : problematicDoubleNs)
+    {
+        int i1 = pbPair.first, i2 = pbPair.second;
+        if (find(i1, unionfind) != find(i2, unionfind))
+            stillBadTriplets.push_back({-1, i1, i2});
     }
     return stillBadTriplets;
 }
@@ -701,15 +811,16 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
     }*/
 
     vector<std::array<int, 3>> errorTriplets = pbArray.find_bad_triplets();
-    vector<std::array<int, 3>> finalErrors = pbArray.solve_bad_triplets(errorTriplets);
+
+    //vector<std::array<int, 3>> finalErrors = pbArray.solve_bad_triplets(errorTriplets);
     //cout << "------------------------------\n";
     //cout << "il y a " << errorTriplets.size() << " vrais soucis\n";
 
-    bool isOk2 = false;//pbArray.can_NN_be_solved_method2();
+    bool isOk2 = pbArray.can_NN_be_solved_method2(errorTriplets);
 
     //if (isOk2)
     //    errorTriplets.clear();
-    if (finalErrors.size() <= 00)// || isOk2)
+    if (false || errorTriplets.size() <=30 || isOk2)
     {
         lock.lock();
         cerr << "printing graph:\n";
@@ -726,7 +837,7 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
             cerr << endl;
         }
         pbArray.print_array();
-        if (false && finalErrors.empty() && g.nbVert <= 13)
+        /*if (false && finalErrors.empty() && g.nbVert <= 13)
           pbArray.print_array_latex();
 
 
@@ -735,9 +846,11 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
             cerr << intToSetName(x[0]) << intToSetName(x[1]) << intToSetName(x[2]) << ", ";
         cout << endl << endl;
         cout << "Il y a " << finalErrors.size() << " bad triplets\n";
+        */
         lock.unlock();
     }
-    if (finalErrors.empty())
+    //if (finalErrors.empty())
+    if (isOk2)
         return true;
     //if (errorTriplets.size() != 0)
     //    return false;
