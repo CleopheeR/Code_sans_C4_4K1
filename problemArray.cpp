@@ -730,7 +730,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         vector<Graph> fooEmpty;
         ogzstream outFileBis("/tmp/toto");
 
-        initialise_subsetBySize(i);
+        initialise_subsetBySize(i+1);
         cout << "Found " << listMinus.size() << " smaller graphs" << endl;
         cout << "We have " << nbProc << " threads yeah" << endl;
         vector<thread> threads(nbProc);
