@@ -95,6 +95,17 @@ void Graph::print_in_file(ogzstream &f) const
     f << "\n";
 }
 
+void Graph::print_in_string(stringstream& str) const
+{
+    str << nbVert << " " << nbEdge;
+    for (int i = 0; i < nbVert; i++)
+        for (int y : get_neighb(i))
+            if (i > y)
+                str << " " << i << "," << y;
+
+    str << "\n";
+}
+
 /*
  * void Graph::print_in_binfile(ofstream &f) const
 {
@@ -141,14 +152,13 @@ inline int my_hash2(int colours[], const vector<int> &adjList)
     return newCol;
 }
 
-//TTAADDAA : documenter ce qu'il y a dans degreeList dans README global
 void Graph::compute_hashes(vector<char> &degreeList)
 {
     int cols[NBMAXVERT], prevCols[NBMAXVERT];
     for (int u = 0; u < nbVert; u++)
         cols[u] = get_neighb(u).size();
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
         swap(cols, prevCols);
         for (int u = 0; u < nbVert; u++)
@@ -161,9 +171,9 @@ void Graph::compute_hashes(vector<char> &degreeList)
     for (int u = 0; u < nbVert; u++)
     {
         vertsCol[u] = cols[u];
+        degreeList[u] = cols[u];
         xorAll ^= cols[u];
     }
-
     degreeList[nbVert] = xorAll;
     degreeList[nbVert+1] = xorAll >> 8;
     degreeList[nbVert+2] = xorAll >> 16;
@@ -210,12 +220,9 @@ void read_prefixeurs_compute_hash(const string &fName, int nbVert,sparse_hash_ma
         for (long long i = 0; i < nbGraph; i++)
         {
             gLu = Graph(file);
-            for (int u = 0; u < gLu.nbVert; u++)
-                degreeList[u] = gLu.get_neighb(u).size();
-            sort(degreeList.begin(), degreeList.begin()+gLu.nbVert);
             gLu.compute_hashes(degreeList);
+            sort(degreeList.begin(), degreeList.begin()+gLu.nbVert);
             deglist2Graphs[degreeList].push_back(gLu);
-            //gLu.print();
         }
     }
 

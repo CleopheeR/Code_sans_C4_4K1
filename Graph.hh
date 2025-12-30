@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cassert>
 #include <vector>
+#include <sstream>
 
 #include "sparsepp/spp.h"
 #include "gzstream/gzstream.h"
@@ -182,9 +183,13 @@ class Graph
         void add_edge(int u, int v); // Does not change any degreeList
         void delete_edge(int u, int v); // Does not change any degreeList
 
+        // Compute the graph hash, but also writes it to degreeList.
         void compute_hashes(vector<char> &degreeeList);
 
         void print_in_file(ogzstream &f) const;
+        // Adds the graph to the stringstream. Enables to reduce the number of
+        // writes to the gz files, hence to gain time.
+        void print_in_string(stringstream &str) const;
         void print(void) const;
 
 

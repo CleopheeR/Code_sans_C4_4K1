@@ -212,10 +212,8 @@ bool is_pre_or_fixeur(const Graph &g, bool prefixeurTest, const sparse_hash_map<
         bool isGBigPreFixeur = false;
 
         vector<char> &curBigDegreeList = bigDegreeList[idThread];
-        for (int i = 0; i < gWithEdges.nbVert; i++)
-            curBigDegreeList[i] = gWithEdges.get_neighb(i).size();
-        sort(curBigDegreeList.begin(), curBigDegreeList.begin()+gWithEdges.nbVert);
         gWithEdges.compute_hashes(curBigDegreeList);
+        sort(curBigDegreeList.begin(), curBigDegreeList.begin()+gWithEdges.nbVert);
 
         const auto &itPrefixeursPlus1ToTest = prefixeurPlusDict.find(curBigDegreeList);
         if (itPrefixeursPlus1ToTest == prefixeurPlusDict.cend())
@@ -346,10 +344,8 @@ void remove_nonminimal_fixeurs(const Graph &g, sparse_hash_map<vector<char>, vec
         //TTAADDAA : y'a des trucs en commun avec la fonction de is_pre_of_fixeur
         vector<char> &curBigDegreeList = bigDegreeList[idThread];
 
-        for (int i = 0; i < gWithEdges.nbVert; i++)
-            curBigDegreeList[i] = gWithEdges.get_neighb(i).size();
-        sort(curBigDegreeList.begin(), curBigDegreeList.begin()+gWithEdges.nbVert);
         gWithEdges.compute_hashes(curBigDegreeList);
+        sort(curBigDegreeList.begin(), curBigDegreeList.begin()+gWithEdges.nbVert);
 
         const auto &itPrefixeursPlus1ToTest = prefixeurPlusDict.find(curBigDegreeList);
         if (itPrefixeursPlus1ToTest == prefixeurPlusDict.cend())

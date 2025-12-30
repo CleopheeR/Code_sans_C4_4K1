@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     if (argc > 3)
         nbProc = atoi(argv[3]);
 
-    init_adjListGlobal(max(14,nbVert+5));
+    init_adjListGlobal(max(14,nbVert+5)); //TODO depends on magic or not, redefine
     if (testOrGen == 'G')
     {
         vector<Graph> graphList;
@@ -151,6 +151,7 @@ int main(int argc, char* argv[])
         if (!fTest.fail())
         {
             cerr << "Attention, il y a des fichiers de graphes déjà générés :(\n";
+            cout << fNameSizeFirst << endl;
             exit(7);
         }
         fTest.close();
@@ -237,7 +238,7 @@ int main(int argc, char* argv[])
                 cout << "\tYEAH "<< ++cptGood << " was number " << cpt << endl;
                 g.print();
             }
-            if (argv[2][1] == 'n' && is_magic_graph(g, cpt==1))
+            if (false)//argv[2][1] == 'n' && is_magic_graph(g, cpt==1))
             {
                 cout << "\tYEAH "<< ++cptGood << endl;
                 g.print();
@@ -603,13 +604,23 @@ int main(int argc, char* argv[])
 
         vector<char> degreeList1(nbVert+4), degreeList2(nbVert+4);
         Graph &g1=listGraphs[0], &g2= listGraphs[1];
-        g1.compute_hashes(degreeList1);
-        g2.compute_hashes(degreeList2);
-        g1.print();
-        g2.print();
+        for (Graph &g : listGraphs)
+            g.compute_hashes(degreeList1);
 
-        cerr << are_isomorphic(g1, g2, 0);
-
+        int cptIso = 0;
+        for (int i1 = 0; i1 < listGraphs.size(); i1++)
+        {
+            for (int i2 = i1+1; i2 < listGraphs.size(); i2++)
+            {
+                if (are_isomorphic(listGraphs[i1], listGraphs[i2], 0))
+                {
+                    cout << "ERROR ARE ISOM" << ++cptIso << "\n";
+                    listGraphs[i1].print();
+                    listGraphs[i2].print();
+                    cout << "\n\n";
+                }
+            }
+        }
     }
 
 

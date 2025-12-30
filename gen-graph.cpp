@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <thread>
 #include <mutex>
+#include <sstream>
 
 #include <bitset>
 
@@ -23,7 +24,6 @@
 using namespace std;
 using spp::sparse_hash_map;
 
-vector<int> subsetsBySize[NBMAXVERT];
 
 //TODO idée : stocker aussi somme des degrés des voisins ? (bof, peu portable sauf si double indirection...)
 long long nbTotalGraphsWritten = 0;
@@ -42,6 +42,7 @@ bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<v
     return true;
 }
 
+/*
 void initialise_subsetBySize(int nbVert)
 {
     const int nbEdgeCombi = (1<<(nbVert-1));
@@ -55,7 +56,7 @@ void initialise_subsetBySize(int nbVert)
     for (int code = 1; code < nbEdgeCombi; code++)
         subsetsBySize[adjListGlobal[code].size()].push_back(code);
 }
-
+*/
 //TTAADDAA mieux gérer les variables et print débug/info
 //TTAADDAA changer le type, là on écrit dans un fichier
 //TTAADDAA faire sous-fonction ?
@@ -85,7 +86,6 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
     vector<Graph> res;
     vector<char> degreeList;
     degreeList.resize(nbVert+4);
-    sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs;
 
     long long sizeTotalTwinVector = 0;
     vector<long long> twinLists;
@@ -102,17 +102,9 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
     for (int i = 0; i < nbEdgeCombi; i++)
         isTwinCompat[i] = (int*) malloc(sizeof(*isTwinCompat)*NBMAXVERT);
 
-
-    for (int i = 0; i < nbVert-1; i++)
-    {
-        subsetsBySize[i].clear();
-        subsetsBySize[i].reserve(1<<i);
-    }
-
     //TODO attention pas symmétrique là.
     for (int code = 0; code < nbEdgeCombi; code++)
     {
-        subsetsBySize[adjListGlobal[code].size()].push_back(code);
         for (int v1 = 0; v1 < nbVert-2; v1++)
         {
             int curCompat = 0;
@@ -160,30 +152,13 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
     cout << "j'ai généré/trouvé les graphes à " << nbVert-1 << " somets : il y en a " << listMinus.size() << endl;
 
 
-    int degMin = 1000000, degMax = 0;
-    for (const Graph &g : listMinus)
-    {
-        degMin = min(degMin, g.nbEdge);
-        degMax = max(degMax, g.nbEdge);
-    } //TODO in load_from_file...
-
     vector<int> degreesToDo;
-    degreesToDo.reserve(degMax-degMin+1+nbVert);
-    int moy = (degMax+degMin+nbVert)/2;
-    degreesToDo.push_back(moy);
-    for (int i = 1; ; i++)
-    {
-        int d1 = moy-i;
-        int d2 = moy+i;
-
-        if (d1 >= degMin)
-            degreesToDo.push_back(d1);
-        if (d2 <= degMax+nbVert-1)
-            degreesToDo.push_back(d2);
-        //degreesToDo.push_back(i); TTAADDAA => what ?!
-        if (d1 < degMin && d2 > degMax+nbVert-1)
-            break;
-    }
+    long long nbMinus = listMinus.size();
+    long long step = (nbMinus/STEP_RATIO+1);
+    long long nbBatch = nbMinus/max(step,1ll);
+    vector<pair<long long, long long>> indicesToDo(nbBatch+1);
+    for (long long i = 0; i <= nbBatch; i++)
+        indicesToDo[i] = {i*step, min(nbMinus,(i+1)*step)};
 
     stringstream fileName;
     fileName << "Alexgraphedelataille";
@@ -191,23 +166,29 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
 
     ogzstream outFile(fileName.str().c_str());
 
-    mutex threadMutex;
+    mutex threadMutexBatches;
+    vector<mutex> threadMutexes(256*256);
     vector<thread> threads(nbProc-1);
-    sparse_hash_map<vector<char>, vector<Graph>> *ptrFooNULL = NULL;
-    for (int iProc = 0; iProc < nbProc-1; iProc++)
-        threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), iProc, std::ref(threadMutex), ptrFooNULL, false);
 
-    thread lastThread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(degreesToDo), std::ref(outFile), nbProc-1, std::ref(threadMutex), ptrFooNULL, false);
+    vector<sparse_hash_map<vector<char>, vector<Graph>>> graphsForIsomCheck(256*256);
+    sparse_hash_map<vector<char>, vector<Graph>> *ptrFooNULL = &graphsForIsomCheck[0];
+    for (int iProc = 0; iProc < nbProc-1; iProc++)
+        threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(indicesToDo), std::ref(outFile), iProc, std::ref(threadMutexes), std::ref(threadMutexBatches), ptrFooNULL, false);
+
+    thread lastThread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(indicesToDo), std::ref(outFile), nbProc-1, std::ref(threadMutexes), std::ref(threadMutexBatches), ptrFooNULL, false);
     lastThread.join();
     for (int i = 0; i < nbProc-1; i++)
         threads[i].join();
+
+    unsigned long long nbWritten = nbTotalGraphsWritten;
+    graphsForIsomCheck.clear();
     outFile.close();
 
     stringstream fileSizeName;
     fileSizeName << "Alexsizegraphedelataille" << nbVert << ".txt";
     ofstream fileSize(fileSizeName.str());
-    fileSize << nbTotalGraphsWritten << "\n";
-    cerr << "Generated " << nbTotalGraphsWritten << " graphs for size " << nbVert << endl;
+    fileSize << nbWritten << "\n";
+    cerr << "Generated " << nbWritten << " graphs for size " << nbVert << endl;
     fileSize.close();
 
 
@@ -268,14 +249,13 @@ vector<Graph> load_from_file(const string &filename, long long nbGraphToRead)
 
 /** Internal functions **/
 //TTAADDAA peut-être un peu long, splitter en sous-fonctions ?
-vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startingGraphs, int **isTwinCompat, vector<int> &sizesToDo, ogzstream &outFile, int idThread, mutex &lock, sparse_hash_map<vector<char>, vector<Graph>> *deglists2GraphsToAdd, bool keepTwins)
+vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startingGraphs, int **isTwinCompat, vector<pair<long long, long long>> &indicesToDo, ogzstream &outFile, int idThread, vector<mutex> &locksTests, mutex &lockToDo, sparse_hash_map<vector<char>, vector<Graph>> *deglists2GraphsToAdd, bool keepTwins)
 {
     const int nbVert = listMinus[0].nbVert+1;
     const int puissNewVert = (1<<(nbVert-1));
 
     vector<char> degreeList;
     degreeList.resize(nbVert+4);
-    sparse_hash_map<vector<char>, vector<Graph>> deglist2Graphs;
 
     long long sizeTotalTwinVector = 0;
     vector<long long> twinLists;
@@ -288,54 +268,54 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
     long long cptGraph = 0;
     Graph gWithEdges;
     gWithEdges.init(nbVert, -1);
+    long long curNbTotalGraphsWritten = 0;
+
+    stringstream strAllGenGraphs;
+    if (idThread == 0)
+    {
+        for (Graph& gStart : startingGraphs)
+        {
+            for (int i = 0; i < gStart.nbVert; i++)
+                degreeList[i] = gStart.get_neighb(i).size();
+            gStart.compute_hashes(degreeList);
+            sort(degreeList.begin(), degreeList.begin()+gStart.nbVert);
+            int truc = (unsigned char)degreeList[gStart.nbVert]+256*(unsigned char) degreeList[gStart.nbVert+1];
+            locksTests[truc].lock();
+            if (check_if_seen_and_add(gStart, degreeList, deglists2GraphsToAdd[truc], idThread))
+            { //TODO separate the printing out of the lock?
+                curNbTotalGraphsWritten++;
+                gStart.print_in_string(strAllGenGraphs);
+            }
+            locksTests[truc].unlock();
+        }
+    }
+
 
     while (true)
     {
-        int nbSizesLeft;
-        lock.lock();
-        if (sizesToDo.empty())
+        long long nbSizesLeft;
+        lockToDo.lock();
+        if (indicesToDo.empty())
         {
-            lock.unlock();
-            return {};
+            lockToDo.unlock();
+            break;
         }
 
-        int m = sizesToDo.back();
-        //cerr << "doing size " << m << endl;
-        sizesToDo.pop_back();
-        lock.unlock();
-
-        for (Graph &gStart : startingGraphs)
-        {
-            if (gStart.nbEdge == m)
-            {
-                for (int i = 0; i < gStart.nbVert; i++)
-                    degreeList[i] = gStart.get_neighb(i).size();
-                sort(degreeList.begin(), degreeList.begin()+gStart.nbVert);
-                gStart.compute_hashes(degreeList);
-                check_if_seen_and_add(gStart, degreeList, deglist2Graphs, idThread);
-            }
-        }
+        pair<long long, long long> toDo = indicesToDo.back();
+        indicesToDo.pop_back();
+        nbSizesLeft = indicesToDo.size();
+        lockToDo.unlock();
 
         long long nbGraph = 0, nbGraphMinus = listMinus.size();
-        int pctDone = -1;
-        int onePercent = max(1ll, nbGraphMinus/100);
-        for (const Graph& g : listMinus)
+        long long nbSizesTotal = nbGraphMinus/(max(toDo.second-toDo.first,1ll));
+        string newName = "Gen: " + to_string(100-nbSizesLeft*100/nbSizesTotal)+"%";
+        pthread_setname_np(pthread_self(), newName.c_str());
+        for (long iG = toDo.first; iG < toDo.second; iG++)
         {
-            if (g.nbEdge >= m || g.nbEdge + g.nbVert < m) //TODO pour connexité
-                continue;
-            //cerr << "\t" << g.nbEdge << endl;
-            if (nbGraph % onePercent == 0)
-            {
-                pctDone++;
-                nbSizesLeft = sizesToDo.size();
-                string newName = "Gen: still " + to_string(nbSizesLeft) + ", " + to_string(pctDone)+"%";
-                pthread_setname_np(pthread_self(), newName.c_str());
-            }
+            const Graph &g = listMinus[iG];
+
             nbGraph++;
             cptGraph++;
-            if (cptGraph%50000 == 0)
-                cout << "Nous sommes sur leeeee " << cptGraph << "-ème graphe sur " << listMinus.size() << " (nbEdges: " << m << ')' << endl;
-
 
             if (!keepTwins)
             {
@@ -346,8 +326,7 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
 
             gen_P2_list(g, pathLength2, nbVert);
 
-            const vector<int> &ourSubsets = subsetsBySize[m-g.nbEdge];
-            for (int code : ourSubsets)
+            for (int code = 1; code < nbEdgeCombi; code++)
             {
                 if (!keepTwins)
                 {
@@ -379,53 +358,23 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
 
                 if (free_O4(gWithEdges, nbVert))
                 {
-                    for (int i = 0; i < gWithEdges.nbVert; i++)
-                        degreeList[i] = gWithEdges.get_neighb(i).size();
-                    sort(degreeList.begin(), degreeList.begin()+gWithEdges.nbVert);
+                    int m = gWithEdges.nbEdge;
                     gWithEdges.compute_hashes(degreeList);
-                    check_if_seen_and_add(gWithEdges, degreeList, deglist2Graphs, idThread);
+                    sort(degreeList.begin(), degreeList.begin()+gWithEdges.nbVert);
+                    int codeLock = (unsigned char)degreeList[gWithEdges.nbVert]+256*(unsigned char) degreeList[gWithEdges.nbVert+1];
+                    locksTests[codeLock].lock();
+                    if (check_if_seen_and_add(gWithEdges, degreeList, deglists2GraphsToAdd[codeLock], idThread))
+                    {
+                        gWithEdges.print_in_string(strAllGenGraphs); //TODO also here separate printing from lock?
+                        curNbTotalGraphsWritten++;
+                    }
+                    locksTests[codeLock].unlock();
                 }
 
             }
 
             //cout  << "Il y a " << nbGraph << " graphes à " << nbVert << " sommets et " << m << " arêtes .\n";
         }
-        lock.lock(); //TTAADDAA ça dans un équivalent de save_to_file
-        cerr << "seen " << nbGraph << " graphs for size " << m << endl;
-
-        long long curNbWritten = 0;
-        if (deglists2GraphsToAdd)
-        {
-            for (auto& inDict : deglist2Graphs)
-            {
-                auto hash = inDict.first;
-                curNbWritten += inDict.second.size();
-                for (Graph &g : inDict.second)
-                {
-                    check_if_seen_and_add(g, hash, *deglists2GraphsToAdd, idThread);
-                }
-            }
-
-
-
-
-        }
-
-        else
-        {
-            for (const auto& inDict : deglist2Graphs)
-            {
-                curNbWritten += inDict.second.size();
-                for (const Graph &g : inDict.second)
-                {
-                    g.print_in_file(outFile);
-                }
-            }
-        }
-	    cerr << "finished writing for nbEdges = " << m << endl;
-        nbTotalGraphsWritten += curNbWritten;
-        lock.unlock();
-        deglist2Graphs.clear();
     }
 
     /*
@@ -442,6 +391,10 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
        cerr << nbFreeGraphPerComp[i] << " ";
        cerr << endl;
        */
+    lockToDo.lock();
+    nbTotalGraphsWritten+=curNbTotalGraphsWritten;
+    outFile << strAllGenGraphs.str();
+    lockToDo.unlock();
     return {}; //TODO enlever ça en transformer en void
 }
 

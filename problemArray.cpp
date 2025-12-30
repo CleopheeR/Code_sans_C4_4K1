@@ -103,92 +103,6 @@ bool ProblemArray::can_NN_be_solved_method1(const ProblemArraySet &setA, const P
 }
 
 
-/*
-//TODO faire les fusions, puis voir si souci ou pas souci
-bool ProblemArray::can_NN_be_solved_method2(void) const
-{
-    string merging1Log = "MergingPhaseOne:\n", merging2Log = "mergingPhaseTwo:\n";
-    int nbError = 0;
-    int nbSet = partitionSets.size();
-    vector<set<int>> badNeighbs(nbSet);
-    for (int i1 = 0; i1 < nbSet; i1++)
-    {
-        for (int i2 = 0; i2 < nbSet; i2++)
-        {
-            if (partitionArray[i1][i2] == 'N')
-                badNeighbs[i1].insert(i2);
-        }
-    }
-
-
-    for (int i = 0; i < nbSet; i++)
-    {
-        string curMsg;
-        for (int i1 : badNeighbs[i]) //TODO ii1 indice, et ii2 >= ii1 ?
-        {
-            if (!is_true_N_between_two(partitionSets[i], partitionSets[i1]))
-                continue;
-            for (int i2 : badNeighbs[i])
-            {
-                if (i1 == i2)
-                    continue;
-                curMsg = intToSetName(i1)+ "," +intToSetName(i2) + "  ";
-                if (partitionArray[i1][i2] == '1' || partitionArray[i1][i2] == '-')
-                    continue;
-                if (!is_true_N_between_two(partitionSets[i], partitionSets[i2]))
-                    continue;
-
-                if (!can_3sets_be_possible(partitionSets[i], partitionSets[i1], partitionSets[i2]))
-                    continue;
-
-                curMsg = "";
-
-                //TODO étudier le cas false N between i1 et i2 ! a priori pas souci !
-
-                //
-                //cerr << " CANNOT MERGEFIRST " << (char)('A'+i1) << " AND " << (char)('A'+i2) << ": " << partitionArray[i1][i2] << endl;
-                //return false;
-                nbError++;
-            }
-            merging1Log += curMsg+"\n";
-        }
-    }
-    cerr << " Second phase of second method.\n";
-
-    set<int> seen, seenAdvanced; // seenAdvanced also contains the centers of the triplets
-    for (int i = 0; i < nbSet; i++)
-    {
-        if (badNeighbs[i].size() <= 1)
-            continue;
-        merging2Log += "\tSet " + intToSetName(i) + ": merging ";
-        seenAdvanced.insert(i);
-        for (int x : badNeighbs[i])
-        {
-            if (seen.find(x) != seen.end())
-            {
-                //cerr << " CANNOT MERGESECOND " << (char)('A'+i) << " AND " << (char)('A'+x) << ": " << partitionArray[i][x] << endl;
-                nbError++;
-                continue;
-                //return false;
-            }
-            if (seenAdvanced.find(x) != seenAdvanced.end())
-                merging2Log += "WARN:";
-            merging2Log += intToSetName(x) + ", ";
-            seenAdvanced.insert(x);
-            seen.insert(x);
-        }
-        merging2Log += "\n";
-    }
-
-    cerr << "uuu\n" <<merging1Log << "\n" << merging2Log << "\n";
-
-    //cerr << "trobi1\n";
-    cerr << "Soucis réels: " << nbError << endl;
-    //TODO
-    return nbError == 0;
-}*/
-
-
 int find(int x, std::vector<int> &uf)
 {
     if (uf[x] != x)
@@ -198,7 +112,7 @@ int find(int x, std::vector<int> &uf)
 
 
 // New version
-bool ProblemArray::can_NN_be_solved_method2(void) const
+bool ProblemArray::can_NN_be_solved_method2(void)
 {
     string merging1Log = "MergingPhaseOne:\n", merging2Log = "mergingPhaseTwo:\n";
     int nbError = 0;
@@ -220,7 +134,11 @@ bool ProblemArray::can_NN_be_solved_method2(void) const
             if (partitionArray[i][i1] != 'N')
                 continue;
             if (!is_true_N_between_two(partitionSets[i], partitionSets[i1]))
+            {
+                partitionArray[i][i1] = 'F';
+                partitionArray[i1][i] = 'F';
                 continue;
+            }
             for (int i2 = i1+1; i2 < nbSet; i2++)
             {
                 if (partitionArray[i1][i2] == '-')
@@ -228,7 +146,11 @@ bool ProblemArray::can_NN_be_solved_method2(void) const
                 if (partitionArray[i][i2] != 'N')
                     continue;
                 if (!is_true_N_between_two(partitionSets[i], partitionSets[i2]))
+                {
+                    partitionArray[i][i2] = 'F';
+                    partitionArray[i2][i] = 'F';
                     continue;
+                }
                 if (!can_3sets_be_possible(partitionSets[i], partitionSets[i1], partitionSets[i2]))
                     continue;
                 if (partitionArray[i1][i2] != '1')
@@ -242,6 +164,8 @@ bool ProblemArray::can_NN_be_solved_method2(void) const
                     set<int> &set1 = ufSets[repr1];
                     set<int> &set2 = ufSets[repr2];
 
+                    for (int x : set1)
+                        set2.insert(x);
                     set1.clear();
                     toMerge[i1].push_back(i2);
                     toMerge[i2].push_back(i1);
@@ -265,21 +189,50 @@ bool ProblemArray::can_NN_be_solved_method2(void) const
     }
 */
     string mergingLog;
+    int cptBad = 0;
     for (int i = 0; i < nbSet; i++)
     {
-        for (int i1 : toMerge[i])
-            for (int i2 : toMerge[i])
-                if (partitionArray[i1][i2] != '1' && partitionArray[i1][i2] != '-')
-                    return false;
-        /*mergingLog += "Merging : ";
-        for (int x : toMerge[i])
-            mergingLog = mergingLog + to_string('A'+i) + " ";
-        mergingLog += "\n";*/
+        const set<int> &curSet = ufSets[i];
+        if (curSet.size() <= 1)
+            continue;
+        vector<int> v(curSet.begin(), curSet.end());
+        for (int i1 = 0; i1 < v.size(); i1++)
+        {
+            int x1 = v[i1];
+            for (int i2 = i1+1; i2 < v.size(); i2++)
+            {
+                int x2 = v[i2];
+                if (partitionArray[x1][x2] != '1' && partitionArray[x1][x2] != '-')
+                {
+                    /*
+                    mergingLog+= "\tCannot merge ";
+                    mergingLog += (char)('A'+x1);
+                    mergingLog += " and ";
+                    mergingLog += (char) ('A'+x2);
+                    mergingLog += "\n";
+                    */
+                    cptBad++;
+                    //if (cptBad > 20)
+                    //    return false;
+                }
+            }
+        }
+        mergingLog += "Merging : ";
+        for (int x : v)
+            mergingLog = mergingLog + (char)('A'+x) + " ";
+        mergingLog += "\n";
     }
 
+    /*if (cptBad)
+    {
+        cout << cptBad << " non-mergeable bad triplets\n";
+        print_array();
+    }*/
     //cout << mergingLog << endl;
 
-    return true;
+    if (cptBad == 0)
+        cout << mergingLog;
+    return cptBad == 0;
 }
 
 
@@ -299,7 +252,7 @@ void ProblemArray::get_possible_free_neighbourhoods(int newVert, const vector<in
     }
 }
 
-
+//TODO testing 2^n sets but in fact only 100 or less are valid
 void ProblemArray::gen_default_partition(void)
 {
     int nbVert = baseGraph.nbVert+1;
@@ -314,6 +267,7 @@ void ProblemArray::gen_default_partition(void)
         Graph gWithEdges;
         gWithEdges.copy_and_add_new_vertex_bis(baseGraph, newEdgesList, puissNewVert, code);
 
+        //TODO precompute stuff? for Graph C4
         if (is_graph_ok(gWithEdges, false))
         {
             ProblemArraySet newSet;
@@ -336,6 +290,7 @@ bool ProblemArray::is_graph_ok(const Graph &g, bool print) const
     vector<sparse_hash_map<vector<char>, vector<Graph>>> &obstructions = *deglist2ObstructionsBySize;
     int sizeMax = min((int)obstructions.size(), n);
 
+    //TODO disable if no inflate
     vector<char> hashVect(n+4);
     Graph gg = g;
     gg.compute_hashes(hashVect);
@@ -538,7 +493,7 @@ vector<string> ProblemArray::solve_array_problems(void) const
                     badTripletElts.insert(i1);
                     badTripletElts.insert(i2);
                     badTripletElts.insert(i3);
-                    continue; // TODO WARNING EXPERIMENTAL!!!
+                    //disabled continue; // TODO WARNING EXPERIMENTAL!!!
                 }
 
                 //cout << "Non Mergeable triple: " << tripletName << endl;
@@ -596,15 +551,15 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
         }
     }*/
 
-    vector<string> errorTriplets = pbArray.solve_array_problems();
+    //TODO remove since can_NN_be_solves_method2 is more powerful (+make it return bad triplets)
+    //vector<string> errorTriplets = pbArray.solve_array_problems();
 
     //cout << "------------------------------\n";
     //cout << "il y a " << errorTriplets.size() << " vrais soucis\n";
 
     bool isOk2 = pbArray.can_NN_be_solved_method2();
+    //if (isOk2 || errorTriplets.size() <= 20)
     if (isOk2)
-        errorTriplets.clear();
-    if (false || errorTriplets.size() <= 00 || isOk2)
     {
         lock.lock();
         cerr << "printing graph:\n";
@@ -625,20 +580,18 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
           pbArray.print_array_latex();
 
 
-        cerr << "Printing bad triplets :";
+        /*cerr << "Printing bad triplets :";
         for (string &x : errorTriplets)
             cerr << x << ", ";
         cout << endl << endl;
         cout << "Il y a " << errorTriplets.size() << " bad triplets\n";
+        */
         lock.unlock();
     }
     if (isOk2)
         return true;
-    if (errorTriplets.size() != 0)
-        return false;
 
-
-    return true;
+    return false;
 }
 
 sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
@@ -686,7 +639,9 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     int cptInflatingTotal = 0;
     vector<long long> pathLength2(NBMAXVERT);
     std::mutex threadMutex;
+    vector<mutex> threadMutexes(256*256);
 
+    ogzstream fGraph("Alextestmagicisom.txt.gz");
     for (int i = 1; i < nbVert+4; i++)
     {
         int cptInflating = 0;
@@ -695,60 +650,123 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         int puissNewVert = (1<< i);
         vector<char> hashVect(i+5); //TODO parallelise?
         vector<Graph> listMinus;
-        int degMin = 1000000000, degMax = 0;
         for (const pair<const vector<char>, vector<Graph>>& dToGraphs : deglists2MagicGraphs[i])
-        {
             for (const Graph &g : dToGraphs.second)
-            {
                 listMinus.push_back(g);
-
-                degMin = min(degMin, g.nbEdge);
-                degMax = max(degMax, g.nbEdge);
-            }
-        }
         if (listMinus.empty())
             continue;
 
         vector<int> degreesToDo;
-        degreesToDo.reserve(degMax-degMin+1+nbVert);
-        int moy = (degMax+degMin+nbVert)/2;
-        degreesToDo.push_back(moy);
-        for (int j = 1; ; j++)
-        {
-            int d1 = moy-j;
-            int d2 = moy+j;
-
-            if (d1 >= degMin)
-                degreesToDo.push_back(d1);
-            if (d2 <= degMax+nbVert-1)
-                degreesToDo.push_back(d2);
-            //degreesToDo.push_back(j); TTAADDAA => what ?!
-            if (d1 < degMin && d2 > degMax+nbVert-1)
-                break;
-        }
+        //degreesToDo.reserve(degMax-degMin+1+nbVert);
 
         vector<Graph> fooEmpty;
         ogzstream outFileBis("/tmp/toto");
 
-        initialise_subsetBySize(i+1);
         cout << "Found " << listMinus.size() << " smaller graphs" << endl;
         cout << "We have " << nbProc << " threads yeah" << endl;
         vector<thread> threads(nbProc);
 
+        long long nbMinus = listMinus.size();
+        long long step = (nbMinus/STEP_RATIO+1);
+        long long nbBatch = nbMinus/max(step, 1ll);
+        vector<pair<long long, long long>> indicesToDo(nbBatch+1);
+        for (long long i = 0; i <= nbBatch; i++)
+        {
+            indicesToDo[i] = {i*step, min(nbMinus,(i+1)*step)};
+        }
 
-        sparse_hash_map<vector<char>, vector<Graph>> *ptrThreadCall = &deglists2MagicGraphs[i+1];
+    //Temporaire pour test...
+    bool isTwin[NBMAXVERT];
+    bool isInList[NBMAXVERT];
+    int **isTwinCompat = NULL;
+    isTwinCompat = (int**) malloc(sizeof(*isTwinCompat)*nbEdgeCombi);
+    for (int i = 0; i < nbEdgeCombi; i++)
+        isTwinCompat[i] = (int*) malloc(sizeof(*isTwinCompat)*NBMAXVERT);
+
+
+
+    //TODO attention pas symmétrique là.
+    for (int code = 0; code < nbEdgeCombi; code++)
+    {
+        for (int v1 = 0; v1 < nbVert-2; v1++)
+        {
+            int curCompat = 0;
+            if (code & (1<<v1))
+            {
+                isTwinCompat[code][v1] = 0;
+                continue;
+            }
+
+            for (int v2 = v1+1; v2 < nbVert-1; v2++)
+            {
+                if (code & (1<<v2))
+                    curCompat ^= (1<<v2);
+            }
+            isTwinCompat[code][v1] = curCompat;
+        }
+    }
+    //Fin temporaire
+
+
+
+
+        vector<sparse_hash_map<vector<char>, vector<Graph>>> curDeglist2Magic(max(256*256,i*(i+1)/2));
+        sparse_hash_map<vector<char>, vector<Graph>> *ptrThreadCall = &curDeglist2Magic[0];
         for (int iProc = 0; iProc < nbProc; iProc++)
-            threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(fooEmpty), nullptr, std::ref(degreesToDo), std::ref(outFileBis), iProc, std::ref(threadMutex), ptrThreadCall, true);
+            threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(fooEmpty), isTwinCompat, std::ref(indicesToDo), std::ref(outFileBis), iProc, std::ref(threadMutexes), std::ref(threadMutex), ptrThreadCall, false&&true);
         for (int iProc = 0; iProc < nbProc; iProc++)
             threads[iProc].join();
 
+        /* For tests if something goes wrong.
+        vector<pair<Graph, vector<char>>> seenCur;
+        vector<char> degreeListFoo(70);
+        for (const auto & dToGraphs:deglists2MagicGraphs[i+1])
+        {
+            for (const Graph& ggg : dToGraphs.second)
+            {
+                Graph totoG = ggg;
+                totoG.print();
+                totoG.compute_hashes(degreeListFoo);
+                seenCur.push_back({totoG, dToGraphs.first});
+            }
+        }
+        for (int i1 = 0; i1 < seenCur.size(); i1++)
+        {
+            seenCur[i1].first.print_in_file(fGraph);
+
+            if (!free_C4_O4(seenCur[i1].first, seenCur[i1].first.nbVert))
+                cout << "HAS C4 or O4\n" << endl;
+            for (int i2 = i1+1; i2 < seenCur.size(); i2++)
+                if (are_isomorphic(seenCur[i1].first, seenCur[i2].first, 0))
+                {
+                    cout << "ERROR ISOM\n";
+                    cout << "\t";
+                    for (int x : seenCur[i1].second)
+                        cout << x << " ";
+                    cout << "\n\t";
+                    for (int x : seenCur[i2].second)
+                        cout << x << " ";
+                    cout << endl;
+                }
+        }
+        cout << "Real size = " << seenCur.size() << "\n";
+        */
+        for (auto &toto : curDeglist2Magic)
+        {
+            for (auto &x : toto)
+            {
+                swap(x.second, deglists2MagicGraphs[i+1][x.first]);
+            }
+        }
 
         for (const auto & dToGraphs:deglists2MagicGraphs[i+1])
             cptInflating += dToGraphs.second.size();
         cerr << "inflated in total " << cptInflating << " graphs of size" << i+1 << "\n";
         cptInflatingTotal += cptInflating;
     }
-    cerr << "inflated in total " << cptInflatingTotal << " graphs\n";
+    cerr << "inflated in TOTAL " << cptInflatingTotal << " graphs\n";
+    fGraph.close();
+
     vector<Graph> magicList;
     magicList.reserve(1000);
 

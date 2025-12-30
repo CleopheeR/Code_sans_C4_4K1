@@ -99,6 +99,7 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
     static long long nbTimesAborted = 0;
     static long long nbTotalBucketSize = 0;
     static long long nbTimesCalled = 0;
+    static long long nbRetFalse = 0;
 
     //On first run (per thread) we reserve some space to gain time
     //TTAADDAA => this space is never recovered?
@@ -205,11 +206,14 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
         curIndexInIsoOrder[curVertIsoOrderToExplore[i]%1000] = i;
 
     bool toto = gen_iso_matching(g1, g2, 0, idThread); // We look for a full matching.
+    if (!toto)
+        nbRetFalse++;
 
     if (nbTimesCalled % 100000 == 0)
     {
         double avg = nbTotalBucketSize/(double)nbTimesCalled;
-        cerr << nbTimesCalled << "  " << nbTimesAborted << " " << avg << "\n";
+        double avgFalse = nbRetFalse/(double)nbTimesCalled;
+        cerr << nbTimesCalled << "  " << nbTimesAborted << " " << avg  << " " << avgFalse << "\n";
     }
 
 

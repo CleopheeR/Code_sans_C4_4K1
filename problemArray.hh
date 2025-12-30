@@ -53,7 +53,7 @@ class ProblemArray
 
 
         // Method 2 : let A N B and A N C (true N's) be *any* problematic thing, we say there is a bad triplet (A,B,C). If B 1 C then we could merge B and C (and others which are N with A) and A is solved. We furthermore require that the intersection of all second and third members of the triplet is empty. This condition makes sure that there is no D such that BC is N with A and D in the end.
-        bool can_NN_be_solved_method2(void) const;
+        bool can_NN_be_solved_method2(void);
 
         // Returns false if A can be split into A_{0B} and A_{1B}, i.e. if having a neighbour in B implies being complete to B, and if having a non-adjacent vertex in B means implies being anticomplete to B.
         bool is_true_N_between_two(const ProblemArraySet &setA, const ProblemArraySet &setB) const;
