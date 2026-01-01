@@ -603,7 +603,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         degreeLists[i].resize(i+4);
 
 
-    int nbEdgeCombi = 1<<nbVert;
+    long long nbEdgeCombi = 1ll<<nbVert;
 
     stringstream fileName, fileSizeName;
     fileName << "Alexgraphedelataille" << nbVert << ".txt.gz";
@@ -679,14 +679,15 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     bool isTwin[NBMAXVERT];
     bool isInList[NBMAXVERT];
     int **isTwinCompat = NULL;
-    isTwinCompat = (int**) malloc(sizeof(*isTwinCompat)*nbEdgeCombi);
-    for (int i = 0; i < nbEdgeCombi; i++)
+    isTwinCompat = (int**) malloc(sizeof(*isTwinCompat)*puissNewVert);
+    for (int i = 0; i < puissNewVert; i++)
         isTwinCompat[i] = (int*) malloc(sizeof(*isTwinCompat)*NBMAXVERT);
 
+    cout << "nbEdgeCombi = " << puissNewVert<< endl;
 
 
     //TODO attention pas symmétrique là.
-    for (int code = 0; code < nbEdgeCombi; code++)
+    for (int code = 0; code < puissNewVert; code++)
     {
         for (int v1 = 0; v1 < nbVert-2; v1++)
         {
@@ -763,6 +764,10 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
             cptInflating += dToGraphs.second.size();
         cerr << "inflated in total " << cptInflating << " graphs of size" << i+1 << "\n";
         cptInflatingTotal += cptInflating;
+
+        for (int i = 0; i < puissNewVert; i++)
+            free(isTwinCompat[i]);
+        free(isTwinCompat);
     }
     cerr << "inflated in TOTAL " << cptInflatingTotal << " graphs\n";
     fGraph.close();
