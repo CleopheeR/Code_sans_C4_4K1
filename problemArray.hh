@@ -73,6 +73,7 @@ class ProblemArray
 
         // Returns false if the graph contains a C4, a 4K1 or an "obstruction".
         bool is_graph_ok(const Graph &g, bool print) const;
+        bool is_graph_ok_notestC4O4(const Graph &g, bool print) const;
 
         // Returns the compatibility between two sets.
         char get_sets_compatibility(int i1, int i2) const;

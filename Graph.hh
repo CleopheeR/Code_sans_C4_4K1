@@ -170,6 +170,7 @@ class Graph
 
         void init(int n, int m);
 
+        void copy_and_add_new_vertex_noalloc(const Graph& g, const vector<int> &newEdges, int puissNew, int code);
         void copy_and_add_new_vertex_bis(const Graph& g, const vector<int> &newEdges, int puissNew, int code);//TODO ou bien renvoie un Graphe autre
 
         // Removes the vertex passed in argument. Swaps it with last vertex.

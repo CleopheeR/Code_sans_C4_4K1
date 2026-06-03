@@ -352,6 +352,7 @@ int main(int argc, char* argv[])
         for (Graph& g : listGraphs1)
         {
             g.compute_hashes(degreeList);
+            sort(degreeList.begin(), degreeList.begin()+nbVert);
             if (!check_if_seen_and_add(g, degreeList, deglist2Graphs1))
                 cerr << "ERROR" << endl;
         }
@@ -360,6 +361,7 @@ int main(int argc, char* argv[])
         for (Graph& g : listGraphs2)
         {
             g.compute_hashes(degreeList);
+            sort(degreeList.begin(), degreeList.begin()+nbVert);
             if (!check_if_seen_and_add(g, degreeList, deglist2Graphs2))
                 cerr << "ERROR" << endl;
         }

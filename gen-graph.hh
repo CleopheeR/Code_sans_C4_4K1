@@ -47,5 +47,7 @@ bool can_discard_edgelist(const vector<long long> &twinLists, int *isTwinCompat,
 
 void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert);
 bool detect_C4(const vector<long long> &pathList, int code);
+void gen_O3_list(const Graph &g, vector<int> &indepList, int nbVert);
+bool detect_O4(const vector<int> &indepList, int code);
 
 #endif

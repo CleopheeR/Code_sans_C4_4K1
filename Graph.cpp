@@ -18,6 +18,19 @@ void Graph::init(int n, int m)
     vertsCol = NULL;
 }
 
+void Graph::copy_and_add_new_vertex_noalloc(const Graph& g, const vector<int> &newEdges, int puissNew, int code)
+{
+    assert (adjMat != NULL && nbVert == g.nbVert+1);
+    nbVert = g.nbVert+1;
+    nbEdge = g.nbEdge+newEdges.size();
+
+    for (int u = 0; u < g.nbVert; u++)
+        adjMat[u] = g.adjMat[u];
+
+    for (int x : newEdges)
+        adjMat[x] ^= puissNew;
+    adjMat[g.nbVert] = code;
+}
 
 void Graph::copy_and_add_new_vertex_bis(const Graph& g, const vector<int> &newEdges, int puissNew, int code)
 {
@@ -158,7 +171,7 @@ void Graph::compute_hashes(vector<char> &degreeList)
     for (int u = 0; u < nbVert; u++)
         cols[u] = get_neighb(u).size();
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 2; i++)
     {
         swap(cols, prevCols);
         for (int u = 0; u < nbVert; u++)

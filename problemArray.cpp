@@ -260,15 +260,30 @@ void ProblemArray::gen_default_partition(void)
     sparse_hash_map<vector<char>, vector<Graph>> fooObstructions;
 
     assert(!has_twin(baseGraph));
+    Graph gWithEdges;
+    gWithEdges.init(baseGraph.nbVert+1, baseGraph.nbEdge);
+
+    vector<long long> pathLength2;
+    pathLength2.reserve(NBMAXVERT);
+    gen_P2_list(baseGraph, pathLength2, nbVert);
+
+    vector<int> indepSize3;
+    indepSize3.reserve(NBMAXVERT);
+    gen_O3_list(baseGraph, indepSize3, nbVert-1);
 
     for (int code = 0; code < puissNewVert; code++)
     {
+        bool refuseBecauseC4O4 = detect_C4(pathLength2, code) || detect_O4(indepSize3, code);
+        if (refuseBecauseC4O4)
+            continue;
+
         const vector<int> &newEdgesList = adjListGlobal[code];
-        Graph gWithEdges;
+        //gWithEdges.copy_and_add_new_vertex_noalloc(baseGraph, newEdgesList, puissNewVert, code);
+        //Graph gWithEdges;
         gWithEdges.copy_and_add_new_vertex_bis(baseGraph, newEdgesList, puissNewVert, code);
 
         //TODO precompute stuff? for Graph C4
-        if (is_graph_ok(gWithEdges, false))
+        if (is_graph_ok_notestC4O4(gWithEdges, false))
         {
             ProblemArraySet newSet;
             newSet.id = partitionSets.size();
@@ -278,6 +293,35 @@ void ProblemArray::gen_default_partition(void)
     }
 }
 
+bool ProblemArray::is_graph_ok_notestC4O4(const Graph &g, bool print) const
+{
+    if (!free_O4(g, g.nbVert))
+        return false;
+    //if (!free_O4(g, g.nbVert))
+    //    return false;
+
+    if (deglist2ObstructionsBySize == NULL)
+        return true;
+    int n = g.nbVert;
+    vector<sparse_hash_map<vector<char>, vector<Graph>>> &obstructions = *deglist2ObstructionsBySize;
+    int sizeMax = min((int)obstructions.size(), n);
+
+    //TODO disable if no inflate
+    vector<char> hashVect(n+4);
+    Graph gg = g;
+    gg.compute_hashes(hashVect);
+    sort(hashVect.begin(), hashVect.begin()+n);
+
+    sparse_hash_map<vector<char>, vector<Graph>> &curObstructions = obstructions[n];
+    if (curObstructions.find(hashVect) == curObstructions.end())
+        return true;
+
+    for (const Graph &gObstr : curObstructions[hashVect])
+        if (are_isomorphic(gg, gObstr, idThread))//TODO idthread
+            return false;
+
+    return true;
+}
 
 bool ProblemArray::is_graph_ok(const Graph &g, bool print) const
 {
@@ -294,6 +338,7 @@ bool ProblemArray::is_graph_ok(const Graph &g, bool print) const
     vector<char> hashVect(n+4);
     Graph gg = g;
     gg.compute_hashes(hashVect);
+    sort(hashVect.begin(), hashVect.begin()+n); //TODO and noC4O4 problem when not sorted, find that yyyyyyyyyyyy
 
     sparse_hash_map<vector<char>, vector<Graph>> &curObstructions = obstructions[n];
     if (curObstructions.find(hashVect) == curObstructions.end())
@@ -518,7 +563,7 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
     ProblemArray pbArray;
     pbArray.idThread = idThread;
     pbArray.baseGraph = g;
-    pbArray.deglist2ObstructionsBySize = deglist2ObstructionsBySize;
+    //pbArray.deglist2ObstructionsBySize = deglist2ObstructionsBySize; //XXX
 
 
     pbArray.gen_default_partition();
@@ -642,7 +687,8 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     vector<mutex> threadMutexes(256*256);
 
     ogzstream fGraph("Alextestmagicisom.txt.gz");
-    for (int i = 1; i < nbVert+4; i++)
+    for (int i = 100; i < nbVert+4; i++)
+    //for (int i = 1; i < nbVert+4; i++)
     {
         int cptInflating = 0;
         cerr << "Trying to inflate size " << i << endl;
@@ -683,7 +729,6 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     for (int i = 0; i < puissNewVert; i++)
         isTwinCompat[i] = (int*) malloc(sizeof(*isTwinCompat)*NBMAXVERT);
 
-    cout << "nbEdgeCombi = " << puissNewVert<< endl;
 
 
     //TODO attention pas symmétrique là.

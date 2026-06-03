@@ -483,6 +483,68 @@ bool can_discard_edgelist(const vector<long long> &twinLists, int *isTwinCompat,
     return false;
 }
 
+/*void gen_O3_list(const Graph &g, vector<int> &indepList, int nbVert)
+{
+    //g.print();
+    indepList.clear();
+    int maskAllVerts = (1 << nbVert) -1;
+    //cout << "mask = " << maskAllVerts << endl;
+
+    int puissV1 = 1, puissV2, puissV3;
+    for (int v1 = 0; v1 < nbVert-3; v1++)
+    {
+        int maskLowerThanV1 = maskAllVerts ^((puissV1-1)^puissV1);
+        int nonAdj1 = (maskAllVerts ^ g.adjMat[v1]);
+        nonAdj1 &= maskLowerThanV1; //To avoid c1,c2 and c2,c1
+        for (int v2 : adjListGlobal[nonAdj1])
+        {
+            //assert(v2 > v1);
+            //assert(are_neighb(g,v1, v2) == 0);
+            puissV2 = 1 << v2;
+            int lowerThanV2 = puissV2-1;
+            int maskLowerThanV2 = maskAllVerts ^((puissV2-1)^puissV2);
+            int nonAdj2 = (maskAllVerts ^ g.adjMat[v2]);
+            nonAdj2 &= maskLowerThanV2;
+            for (int v3 : adjListGlobal[nonAdj1 & nonAdj2])
+            {
+                //cout << "\t" << v1 << "-" << v2 << "-" << v3 << endl;
+                //assert(v3 > v2);
+                //assert(are_neighb(g, v1, v3) == 0 && are_neighb(g, v2, v3) == 0);
+                puissV3 = 1 << v3;
+                indepList.push_back(puissV1^puissV2^puissV3);
+            }
+        }
+        puissV1 *= 2;
+    }
+
+     * cout << "TADA: ";
+    for (int x : indepList)
+        cout << x << " ";
+    cout << endl << endl;
+
+}*/
+void gen_O3_list(const Graph &g, vector<int> &indepList, int nbVert)
+{
+    //g.print();
+    indepList.clear();
+    //cout << "mask = " << maskAllVerts << endl;
+
+    for (int v1 = 0; v1 < nbVert-3; v1++)
+    {
+        int puissV1 = 1<<v1;
+        for (int v2  = v1+1; v2 < nbVert-2; v2++)
+        {
+                if (are_neighb(g,v1,v2))
+                    continue;
+            int puissV2 = 1<<v2;
+            for (int v3 = v2+1; v3 < nbVert; v3++)
+            {
+                if (!are_neighb(g, v1,v3) && !are_neighb(g, v2, v3))
+                    indepList.push_back((1<<v3) ^ puissV2 ^ puissV1);
+            }
+        }
+    }
+}
 
 void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert)
 {
@@ -522,6 +584,17 @@ bool detect_C4(const vector<long long> &pathList, int code)
         int commonAdj = p2;
 
         if (((code & uv) == uv) && ((code&commonAdj) != commonAdj))
+            return true;
+    }
+    return false;
+}
+
+//Idem new_O4
+bool detect_O4(const vector<int> &indepList, int code)
+{
+    for (int o2 : indepList)
+    {
+        if ((code & o2) == 0)
             return true;
     }
     return false;
