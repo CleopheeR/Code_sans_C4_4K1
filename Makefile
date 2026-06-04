@@ -5,11 +5,11 @@ OBJ= ${SRC:.cpp=.o}
 d_OBJ= ${SRC:.cpp=_d.o}
 p_OBJ= ${SRC:.cpp=_p.o}
 CXX	 = g++
-LFLAGS   = -lboost_thread -lboost_system -lm -lz #-L gurobi/linux64/lib/ -lgurobi_g++5.2 -lgurobi75 #lgurobi_c++ lgurobi_g++5.2
+LFLAGS   = -lboost_thread -lm -lz #-L gurobi/linux64/lib/ -lgurobi_g++5.2 -lgurobi75 #lgurobi_c++ lgurobi_g++5.2
 IMPLFLAGS = -pthread #-DBOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS -DMODE=$(MODE) $(LIBPATH)
-CXXFLAGS = $(IMPLFLAGS) -std=c++17 -Wall -g -O3 -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare -Wno-alloc-size-larger-than#-march=native #-Winline#-D_GLIBCXX_DEBUG
-CXXDEBUGFLAGS = $(IMPLFLAGS) -std=c++17 -Wall -Wextra -g -Wno-sign-compare -D_GLIBCXX_DEBUG -DDEBUG -O0
-CXXPROFILEFLAGS = $(IMPLFLAGS) -std=c++17 -Wall -Wextra -O3 -g -fno-inline
+CXXFLAGS = $(IMPLFLAGS) -std=c++23 -Wall -g -O3 -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-parameter -Wno-sign-compare -Wno-alloc-size-larger-than#-march=native #-Winline#-D_GLIBCXX_DEBUG
+CXXDEBUGFLAGS = $(IMPLFLAGS) -std=c++23 -Wall -Wextra -g -Wno-sign-compare -D_GLIBCXX_DEBUG -DDEBUG -O0
+CXXPROFILEFLAGS = $(IMPLFLAGS) -std=c++23 -Wall -Wextra -O3 -g -fno-inline
 
 
 all : release
