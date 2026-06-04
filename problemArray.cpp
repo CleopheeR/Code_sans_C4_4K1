@@ -115,7 +115,6 @@ int find(int x, std::vector<int> &uf)
 bool ProblemArray::can_NN_be_solved_method2(void)
 {
     string merging1Log = "MergingPhaseOne:\n", merging2Log = "mergingPhaseTwo:\n";
-    int nbError = 0;
     int nbSet = partitionSets.size();
     vector<pair<int, int>> badTriplet(nbSet);
     std::vector<std::vector<int>> toMerge(nbSet);
@@ -335,7 +334,6 @@ bool ProblemArray::is_graph_ok(const Graph &g, bool print) const
         return true;
     int n = g.nbVert;
     vector<sparse_hash_map<vector<char>, vector<Graph>>> &obstructions = *deglist2ObstructionsBySize;
-    int sizeMax = min((int)obstructions.size(), n);
 
     //TODO disable if no inflate
     vector<char> hashVect(n+4);
@@ -358,7 +356,6 @@ bool ProblemArray::is_graph_ok(const Graph &g, bool print) const
 //TODO compute given constraints on forced neighbours and so on in the sets
 void ProblemArray::compute_partition_array(void)
 {
-    int n = baseGraph.nbVert;
     int nbSet = partitionSets.size();
 
     partitionArray.resize(nbSet);
@@ -477,7 +474,6 @@ vector<string> ProblemArray::solve_array_problems(void) const
 {
     vector<string> badTriplets;
     int nbError = 0;
-    bool error = false;
     set<int> badTripletElts;
     int nbSet = partitionSets.size();
     for (int i1 = 0; i1 < nbSet; i1++)
@@ -581,10 +577,11 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
         }
     }
     pbArray.compute_partition_array();
+    /*
     const vector<vector<char>> &tableau = pbArray.partitionArray;
     int nbSet = pbArray.partitionSets.size();
-    //pbArray.print_array();
-    /*
+    pbArray.print_array();
+
     for (int i1 = 0; i1 < nbSet; i1++)
     {
         for (int i2 = 0; i2 < nbSet; i2++)
@@ -651,7 +648,6 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         degreeLists[i].resize(i+4);
 
 
-    long long nbEdgeCombi = 1ll<<nbVert;
 
     stringstream fileName, fileSizeName;
     fileName << "Alexgraphedelataille" << nbVert << ".txt.gz";
@@ -724,9 +720,9 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
             indicesToDo[i] = {i*step, min(nbMinus,(i+1)*step)};
         }
 
-    //Temporaire pour test...
+    /*Temporaire pour test...
     bool isTwin[NBMAXVERT];
-    bool isInList[NBMAXVERT];
+    bool isInList[NBMAXVERT];*/
     int **isTwinCompat = NULL;
     isTwinCompat = (int**) malloc(sizeof(*isTwinCompat)*puissNewVert);
     for (int i = 0; i < puissNewVert; i++)
@@ -823,7 +819,6 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     vector<Graph> magicList;
     magicList.reserve(1000);
 
-    long long nbPerProc = listGraphs.size()/nbProc;
     mutex threadMutexMagic;
     vector<thread> threads(nbProc);
     for (int iProc = 0; iProc < nbProc; iProc++)

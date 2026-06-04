@@ -604,10 +604,9 @@ int main(int argc, char* argv[])
 
         vector<Graph> listGraphs = load_from_file(fname, nbG);
 
-        vector<char> degreeList1(nbVert+4), degreeList2(nbVert+4);
-        Graph &g1=listGraphs[0], &g2= listGraphs[1];
+        vector<char> degreeList(nbVert+4);
         for (Graph &g : listGraphs)
-            g.compute_hashes(degreeList1);
+            g.compute_hashes(degreeList);
 
         int cptIso = 0;
         for (int i1 = 0; i1 < listGraphs.size(); i1++)

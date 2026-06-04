@@ -113,7 +113,6 @@ class Graph
             nbEdge = m; // car ajouté par add_edge
             for (int i = 0; i < m; i++)
             {
-                char virgule;
                 int u, v;
                 u = read_int(totoStr, pos);
                 pos++;
@@ -145,7 +144,6 @@ class Graph
             nbEdge = m;
             for (int i = 0; i < m; i++)
             {
-                char virgule;
                 int u, v;
                 u = read_int(totoStr, pos);
                 pos++;

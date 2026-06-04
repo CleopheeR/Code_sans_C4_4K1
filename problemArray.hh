@@ -88,7 +88,7 @@ class ProblemArray
 
         ProblemArray(void)
         {
-            int idThread = 0;
+            idThread = 0;
             deglist2ObstructionsBySize = NULL;
         }
 
