@@ -303,8 +303,7 @@ bool ProblemArray::is_graph_ok_notestC4O4(const Graph &g, bool print) const
     if (deglist2ObstructionsBySize == NULL)
         return true;
     int n = g.nbVert;
-    vector<sparse_hash_map<vector<char>, vector<Graph>>> &obstructions = *deglist2ObstructionsBySize;
-    int sizeMax = min((int)obstructions.size(), n);
+    const vector<sparse_hash_map<vector<char>, vector<Graph>>> &obstructions = *deglist2ObstructionsBySize;
 
     //TODO disable if no inflate
     vector<char> hashVect(n+4);
@@ -312,11 +311,15 @@ bool ProblemArray::is_graph_ok_notestC4O4(const Graph &g, bool print) const
     gg.compute_hashes(hashVect);
     sort(hashVect.begin(), hashVect.begin()+n);
 
-    sparse_hash_map<vector<char>, vector<Graph>> &curObstructions = obstructions[n];
-    if (curObstructions.find(hashVect) == curObstructions.end())
+
+    const sparse_hash_map<vector<char>, vector<Graph>> &curObstructions = obstructions[n];
+
+    const sparse_hash_map<vector<char>, vector<Graph> >::const_iterator graphsIter = curObstructions.find(hashVect);
+
+    if (graphsIter == curObstructions.cend())
         return true;
 
-    for (const Graph &gObstr : curObstructions[hashVect])
+    for (const Graph &gObstr : graphsIter->second)
         if (are_isomorphic(gg, gObstr, idThread))//TODO idthread
             return false;
 
