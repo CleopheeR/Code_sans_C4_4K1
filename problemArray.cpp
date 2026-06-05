@@ -262,9 +262,11 @@ void ProblemArray::gen_default_partition(void)
     Graph gWithEdges;
     gWithEdges.init(baseGraph.nbVert+1, baseGraph.nbEdge);
 
+    /*
     vector<long long> pathLength2;
     pathLength2.reserve(NBMAXVERT);
     gen_P2_list(baseGraph, pathLength2, nbVert);
+    */
 
     vector<int> indepSize3;
     indepSize3.reserve(NBMAXVERT);
@@ -272,14 +274,15 @@ void ProblemArray::gen_default_partition(void)
 
     for (int code = 0; code < puissNewVert; code++)
     {
-        bool refuseBecauseC4O4 = detect_C4(pathLength2, code) || detect_O4(indepSize3, code);
-        if (refuseBecauseC4O4)
-            continue;
-
+        //bool refuseBecauseC4O4 = detect_C4(pathLength2, code) || detect_O4(indepSize3, code);
         const vector<int> &newEdgesList = adjListGlobal[code];
         //gWithEdges.copy_and_add_new_vertex_noalloc(baseGraph, newEdgesList, puissNewVert, code);
         //Graph gWithEdges;
         gWithEdges.copy_and_add_new_vertex_bis(baseGraph, newEdgesList, puissNewVert, code);
+        bool refuseBecauseC4O4 = !free_C4(gWithEdges, baseGraph.nbVert+1) || detect_O4(indepSize3, code);
+        if (refuseBecauseC4O4)
+            continue;
+
 
         //TODO precompute stuff? for Graph C4
         if (is_graph_ok_notestC4O4(gWithEdges, false))
