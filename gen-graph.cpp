@@ -90,8 +90,8 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
     long long sizeTotalTwinVector = 0;
     vector<long long> twinLists;
     twinLists.reserve(NBMAXVERT*NBMAXVERT);
-    //vector<long long> pathLength2;
-    //pathLength2.reserve(NBMAXVERT);
+    vector<long long> pathLength2;
+    pathLength2.reserve(NBMAXVERT);
 
     const int nbEdgeCombi = (1<<(nbVert-1));
 
@@ -260,8 +260,8 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
     long long sizeTotalTwinVector = 0;
     vector<long long> twinLists;
     twinLists.reserve(NBMAXVERT*NBMAXVERT);
-    //vector<long long> pathLength2;
-    //pathLength2.reserve(NBMAXVERT);
+    vector<long long> pathLength2;
+    pathLength2.reserve(NBMAXVERT);
 
     const int nbEdgeCombi = (1<<(nbVert-1));
 
@@ -324,7 +324,7 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
                 sizeTotalTwinVector += twinLists.size();
             }
 
-            //gen_P2_list(g, pathLength2, nbVert);
+            gen_P2_list(g, pathLength2, nbVert);
 
             for (int code = 1; code < nbEdgeCombi; code++)
             {
@@ -350,11 +350,17 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
                 }
 
 
-                //bool refuseBecauseC4 = detect_C4(pathLength2, code);
+                bool refuseBecauseC4Optim = detect_C4(pathLength2, code);
                 const vector<int> &newEdgesList = adjListGlobal[code];
                 gWithEdges.copy_and_add_new_vertex_bis(g, newEdgesList, puissNewVert, code);
 
                 bool refuseBecauseC4 = !free_C4(gWithEdges, g.nbVert+1);
+                if (refuseBecauseC4Optim != refuseBecauseC4)
+                {
+                    cerr << refuseBecauseC4 << "selon test naif et " << refuseBecauseC4Optim << "selon le test optimisé" << endl;
+                    gWithEdges.print();
+                    assert(false);
+                }
                 if (refuseBecauseC4)
                     continue;
                 if (free_O4(gWithEdges, nbVert))
