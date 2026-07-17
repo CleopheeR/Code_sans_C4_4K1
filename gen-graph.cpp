@@ -30,7 +30,7 @@ long long nbTotalGraphsWritten = 0;
 
 
 //bool check_if_seen_and_add(const Graph& g, unordered_map<vector<int>, vector<Graph>, vector_hash> &dico)
-bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico, int idThread)
+bool check_if_seen_and_add(Graph& g, const vector<char> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico, int idThread)
 {
     for (const Graph& gSeen : dico[degreeList])
     {
@@ -76,6 +76,7 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
 
     nbTotalGraphsWritten = 0;
 
+    //TODO ifdef stats
     const int puissNewVert = (1<<(nbVert-1));
 
     int nbGraphPerComp[5] = {0,0,0,0,0};
@@ -87,16 +88,11 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
     vector<char> degreeList;
     degreeList.resize(nbVert+4);
 
-    long long sizeTotalTwinVector = 0;
-    vector<long long> twinLists;
-    twinLists.reserve(NBMAXVERT*NBMAXVERT);
     vector<long long> pathLength2;
     pathLength2.reserve(NBMAXVERT);
 
     const int nbEdgeCombi = (1<<(nbVert-1));
 
-    bool isTwin[NBMAXVERT];
-    bool isInList[NBMAXVERT];
     int **isTwinCompat = NULL;
     isTwinCompat = (int**) malloc(sizeof(*isTwinCompat)*nbEdgeCombi);
     for (int i = 0; i < nbEdgeCombi; i++)
@@ -145,14 +141,15 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
     {
         cerr << "Lancer avant la taille -1 \n";
         exit(3);
+        /* TODO see if working
         vector<Graph> dummy;
         listMinus = gen_graphs(nbVert-1, dummy);
+        */
     }
 
     cout << "j'ai généré/trouvé les graphes à " << nbVert-1 << " somets : il y en a " << listMinus.size() << endl;
 
 
-    vector<int> degreesToDo;
     long long nbMinus = listMinus.size();
     long long step = (nbMinus/STEP_RATIO+1);
     long long nbBatch = nbMinus/max(step,1ll);
@@ -173,9 +170,9 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
     vector<sparse_hash_map<vector<char>, vector<Graph>>> graphsForIsomCheck(256*256);
     sparse_hash_map<vector<char>, vector<Graph>> *ptrFooNULL = &graphsForIsomCheck[0];
     for (int iProc = 0; iProc < nbProc-1; iProc++)
-        threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(indicesToDo), std::ref(outFile), iProc, std::ref(threadMutexes), std::ref(threadMutexBatches), ptrFooNULL, false);
+        threads[iProc] = thread(&gen_graphs_thread, std::cref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(indicesToDo), std::ref(outFile), iProc, std::ref(threadMutexes), std::ref(threadMutexBatches), ptrFooNULL, false);
 
-    thread lastThread(&gen_graphs_thread, std::ref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(indicesToDo), std::ref(outFile), nbProc-1, std::ref(threadMutexes), std::ref(threadMutexBatches), ptrFooNULL, false);
+    thread lastThread(&gen_graphs_thread, std::cref(listMinus), std::ref(startingGraphs), isTwinCompat, std::ref(indicesToDo), std::ref(outFile), nbProc-1, std::ref(threadMutexes), std::ref(threadMutexBatches), ptrFooNULL, false);
     lastThread.join();
     for (int i = 0; i < nbProc-1; i++)
         threads[i].join();
@@ -249,7 +246,7 @@ vector<Graph> load_from_file(const string &filename, long long nbGraphToRead)
 
 /** Internal functions **/
 //TTAADDAA peut-être un peu long, splitter en sous-fonctions ?
-vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startingGraphs, int **isTwinCompat, vector<pair<long long, long long>> &indicesToDo, ogzstream &outFile, int idThread, vector<mutex> &locksTests, mutex &lockToDo, sparse_hash_map<vector<char>, vector<Graph>> *deglists2GraphsToAdd, bool keepTwins)
+vector<Graph> gen_graphs_thread(const vector<Graph> &listMinus, vector<Graph> &startingGraphs, int **isTwinCompat, vector<pair<long long, long long>> &indicesToDo, ogzstream &outFile, int idThread, vector<mutex> &locksTests, mutex &lockToDo, sparse_hash_map<vector<char>, vector<Graph>> *deglists2GraphsToAdd, bool keepTwins)
 {
     const int nbVert = listMinus[0].nbVert+1;
     const int puissNewVert = (1<<(nbVert-1));
@@ -358,7 +355,6 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
 
                 if (free_O4(gWithEdges, nbVert))
                 {
-                    int m = gWithEdges.nbEdge;
                     gWithEdges.compute_hashes(degreeList);
                     sort(degreeList.begin(), degreeList.begin()+gWithEdges.nbVert);
                     int codeLock = (unsigned char)degreeList[gWithEdges.nbVert]+256*(unsigned char) degreeList[gWithEdges.nbVert+1];
@@ -372,8 +368,6 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
                 }
 
             }
-
-            //cout  << "Il y a " << nbGraph << " graphes à " << nbVert << " sommets et " << m << " arêtes .\n";
         }
     }
 
@@ -398,6 +392,7 @@ vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startin
     return {}; //TODO enlever ça en transformer en void
 }
 
+//Standard generation algorithm found on the internet.
 void gen_subsets(int k, int n, vector<vector<int>> &listRes)
 {
     vector<int> l(k);
@@ -407,10 +402,9 @@ void gen_subsets(int k, int n, vector<vector<int>> &listRes)
     bool end = false;
     assert(k != 0 and k <= n);
 
-    int i;
     while (!end)
     {
-        i = k-1;
+        int i = k-1;
         listRes.push_back(l);
 
         while (i != -1 && l[i] == n-k+i+1)
@@ -434,7 +428,6 @@ void gen_twin_list(const Graph &g, vector<long long> &twinLists, int nbVert)
    for (int v1 = 0; v1 < nbVert-2; v1++)
     {
         int puiss1 = 1<<v1;
-        long long curCompat = v1;
         long long newCompat = 0;
         int puiss2 = (1<<v1);
         for (int v2 = v1+1; v2 < nbVert-1; v2++)
@@ -445,7 +438,7 @@ void gen_twin_list(const Graph &g, vector<long long> &twinLists, int nbVert)
                 newCompat ^= puiss2;
         }
         if (newCompat)
-            twinLists.push_back(curCompat+(newCompat*256));
+            twinLists.push_back(v1+(newCompat*256));
     }
 
 }
@@ -470,7 +463,7 @@ void gen_twin_list2(const Graph &g, vector<long long> &twinLists, int nbVert)
     }
 }
 
-bool can_discard_edgelist(const vector<long long> &twinLists, int *isTwinCompat, int nbVert)
+bool can_discard_edgelist(const vector<long long> &twinLists, const int *isTwinCompat, int nbVert)
 {
     for (const long long &curTwins : twinLists)
     {

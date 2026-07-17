@@ -159,7 +159,6 @@ bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<G
                     if (tableau[i2][i3] == 'N')
                         nbNNN++;
 
-                int t23 = tableau[i2][i3];
                 if (tableau[i2][i3] == '0' || tableau[i2][i3] == 'N')
                 {
                     //TODO tester si A,B,C sont simultanément possibles
@@ -191,7 +190,6 @@ bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<G
 
     if (true || nbError != 0)
     {
-        int nbVertG = g.nbVert;
         cerr << "il y a " << nbError << " soucis (dont " << nbNNN << " NNN\n";
         if (true || nbError <= 4)
         {
@@ -396,11 +394,9 @@ void gen_klmpartition_default_sets(const Graph &g, vector<vector<int>> &listPoss
     vector<long long> pathLength2;
     pathLength2.reserve(NBMAXVERT);
 
-    const int nbEdgeCombi = (1<<(nbVert-1));
+    //const int nbEdgeCombi = (1<<(nbVert-1));
 
-    bool isTwin[NBMAXVERT];
-    bool isInList[NBMAXVERT];
-    int **isTwinCompat = NULL;
+    //int **isTwinCompat = NULL;
 
     printGlobal = false;
 
@@ -515,7 +511,6 @@ bool is_graph_ok(Graph& g, vector<Graph> &obstructions, const sparse_hash_map<ve
     int nbObstruction = obstructions.size();
     if (!free_C4_O4(g, g.nbVert))
         return false;
-    bool containsObstruction = false;
     for (int i = 0; i < nbObstruction; i++)
     {
         if (is_supergraph_of(g, obstructions[i], idThread))
@@ -658,7 +653,7 @@ vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector
             cout << setsNames[i1] << "\t";
         //for (int ii = 0; ii < i1+1; ii++)
         //    cout << "\t";
-        const vector<int> &curAdj1 = adjSets[i1];
+        //const vector<int> &curAdj1 = adjSets[i1];
 
 
         for (int i2 = 0; i2 < nbSets; i2++)

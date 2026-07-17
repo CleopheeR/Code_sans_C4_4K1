@@ -148,7 +148,7 @@ void Graph::print(void) const
 
 
 //J'avais testé, c'est plus rapide overall si on hashe en triant
-inline int my_hash2(int colours[], const vector<int> &adjList)
+inline int my_hash2(const int colours[], const vector<int> &adjList)
 {
     int tmpVals[NBMAXVERT];
     for (int i = 0; i < adjList.size(); i++)
@@ -219,11 +219,12 @@ void free_adjListGlobal(void)
 
 void read_prefixeurs_compute_hash(const string &fName, int nbVert,sparse_hash_map<vector<char>, vector<Graph>> &deglist2Graphs)
 {
-    vector<char> degreeList(nbVert+4);
-    long long nbGraph;
     igzstream file(fName.c_str());
     if (file.peek() != EOF)
     {
+        vector<char> degreeList(nbVert+4);
+        long long nbGraph;
+
         Graph gLu;
         file >> nbGraph;
         string toto;

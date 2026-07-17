@@ -22,7 +22,6 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
     sparse_hash_map<vector<char>, vector<Graph>> deglist2Fixeurs;
     sparse_hash_map<vector<char>, vector<Graph>> deglist2PrefixeursPlus;
     vector<char> degreeList(nbVert+4);
-    vector<char> degreeListPlus(nbVert+5);
 
 
     int nbEdgeCombi = 1<<nbVert;
@@ -97,7 +96,6 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
     fixeursList.reserve(1000000);
 
     //TTAADDAA : une fonction pour lancer puis join des fonctions avec liste d'arguments fixée ?
-    long long nbPerProc = listGraphs.size()/nbProc;
     mutex threadMutex;
     vector<thread> threads(nbProc-1);
     for (int iProc = 0; iProc < nbProc-1; iProc++)
@@ -155,8 +153,6 @@ bool is_pre_or_fixeur(const Graph &g, bool prefixeurTest, const sparse_hash_map<
 
     vector<long long> twinLists2;
     twinLists2.reserve(NBMAXVERT*NBMAXVERT);
-    bool isTwin[NBMAXVERT];
-    bool isInList[NBMAXVERT];
     vector<long long> pathLength2;
     pathLength2.reserve(NBMAXVERT);
 
@@ -248,11 +244,6 @@ void gen_fixeurs_thread(int nbVert, const vector<Graph> &graphList, int** isTwin
     CPU_SET(idThread+1, &cpuset);
     assert(sched_setaffinity(0, sizeof(cpuset), &cpuset) == 0);
 
-    vector<char> degreeListPlus(nbVert+5);
-    int nbEdgeCombi = 1<<nbVert;
-    vector<Graph> ourFixeurs;
-
-
     long long cptGraph = 0;
     long long nbGToDo = graphList.size();
 
@@ -299,7 +290,6 @@ void remove_nonminimal_fixeurs(const Graph &g, sparse_hash_map<vector<char>, vec
     //TTEEDDEE : refaire benchmark trop long ?
     //vector<long long> twinLists2;
     //twinLists2.reserve(NBMAXVERT*NBMAXVERT);
-    bool isTwin[NBMAXVERT];
     vector<long long> pathLength2;
     pathLength2.reserve(NBMAXVERT);
 
@@ -368,7 +358,6 @@ void remove_nonminimal_fixeurs(const Graph &g, sparse_hash_map<vector<char>, vec
 
 void save_to_file(const string &filename, const sparse_hash_map<vector<char>, vector<Graph>> &graphList, long long nbGraph)
 {
-    vector<Graph> res;
     ogzstream file(filename.c_str());
 
     file << nbGraph << endl;

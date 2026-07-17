@@ -58,6 +58,8 @@ class Graph
         Graph() {
             adjMat = NULL;
             vertsCol = NULL;
+            nbVert = 0;
+            nbEdge = 0;
         }
 
         Graph(const Graph& g)

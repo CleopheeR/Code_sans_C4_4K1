@@ -190,7 +190,7 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
             int u2 = uniqueMatchVertices[i2];
             int v2 = curV1ToV2Matches[u2];
 	    // We test the isomorphism for the vertices of g1 that are uniquely matched.
-            if (!are_neighb(g1, u1, u2) ^ !are_neighb(g2, v1, v2))
+            if ((!are_neighb(g1, u1, u2)) ^ (!are_neighb(g2, v1, v2)))
             {
                 nbTimesAborted++;
                 return false;
@@ -305,7 +305,7 @@ int nb_connected_comp(const Graph& g)
 bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread)
 {
     vector<int> *curV1ToV2PossibleMatches = v1ToV2PossibleMatches[idThread];
-    int *curVertIsoOrderToExplore = vertIsoOrderToExplore[idThread];
+    const int *curVertIsoOrderToExplore = vertIsoOrderToExplore[idThread];
     /*cerr << "---------------\n";
       g1.print();
       g2.print();
@@ -325,7 +325,7 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread)
     bool *curIsMatched = isMatched[idThread];
     int *curV1ToV2Matches = v1ToV2Matches[idThread];
     bool *curCheckeVoisins = checkeVoisins[idThread]; // To check in linear time that we match the neighbours to the neighbours of the match
-    int *curIndexInIsoOrder = indexInIsoOrder[idThread]; //This guy should be used instead of the other one and %1000
+    const int *curIndexInIsoOrder = indexInIsoOrder[idThread]; //This guy should be used instead of the other one and %1000
     // We try, for each candidate, to match it to v1 and recurse.
     for (int match : curV1ToV2PossibleMatches[v1])
     {
@@ -335,7 +335,6 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread)
         curIsMatched[match] = true;
 
         int u2 = match; //TODO useful?!
-        int nbNeighb = g1.get_neighb(u1).size();
         memset(curCheckeVoisins, 0, g1.nbVert);
 
         int nbGreater = 0; // We count how many neighbours we haven't matched yet

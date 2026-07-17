@@ -392,7 +392,7 @@ int main(int argc, char* argv[])
 
         vector<Graph> listGraphs = load_from_file(fname, nbG);
 
-        for (Graph& g : listGraphs)
+        for (const Graph& g : listGraphs)
         {
             bool stop = false;
             for (int u = 0; u < nbVert && !stop; u++)
@@ -421,13 +421,10 @@ int main(int argc, char* argv[])
         cerr << nbVert << " zut \n";
         string fname(argv[3]);
         cerr << "file = " << fname << endl;
-        int nbEdge;
-        string strNbVert = to_string(nbVert);
         igzstream fTableau(fname.c_str());
 
         Graph g = Graph(fTableau);
         nbVert = g.nbVert;
-        nbEdge = g.nbEdge;
 
         /*
         vector<vector<int>> setsPartition;
@@ -600,7 +597,6 @@ int main(int argc, char* argv[])
         cerr << nbVert << " zut \n";
         string fname(argv[3]);
         int nbG = -1;
-        string strNbVert = to_string(nbVert);
 
         vector<Graph> listGraphs = load_from_file(fname, nbG);
 

@@ -25,7 +25,7 @@ vector<Graph> load_from_file(const string &filename, long long nbGraphToRead=-1)
 
 
 //bool check_if_seen_and_add(const Graph& g, unordered_map<vector<int>, vector<Graph>, vector_hash> &dico);
-bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico, int idThread = 0);
+bool check_if_seen_and_add(Graph& g, const vector<char> &degreeList, sparse_hash_map<vector<char>, vector<Graph>> &dico, int idThread = 0);
 
 
 //void save_to_file(const string &filename, const unordered_map<vector<int>, vector<Graph>, vector_hash> &graphList, int nbGraph);
@@ -36,14 +36,14 @@ bool check_if_seen_and_add(Graph& g, vector<char> &degreeList, sparse_hash_map<v
 
 /** Internal functions **/
 
-vector<Graph> gen_graphs_thread(vector<Graph> &listMinus, vector<Graph> &startingGraphs, int **isTwinCompat, vector<pair<long long, long long>> &indicesToDo, ogzstream &outFile, int idThread, vector<mutex> &locksTests, mutex &lockToDo, sparse_hash_map<vector<char>, vector<Graph>> *deglists2GraphsToAdd, bool keepTwins);
+vector<Graph> gen_graphs_thread(const vector<Graph> &listMinus, vector<Graph> &startingGraphs, int **isTwinCompat, vector<pair<long long, long long>> &indicesToDo, ogzstream &outFile, int idThread, vector<mutex> &locksTests, mutex &lockToDo, sparse_hash_map<vector<char>, vector<Graph>> *deglists2GraphsToAdd, bool keepTwins);
 
 //TTAADDAA mettre dans misc.hh/cpp ?
 void gen_subsets(int k, int n, vector<vector<int>> &listRes);
 
 void gen_twin_list(const Graph &g, vector<long long> &twinLists, int nbVert);
 void gen_twin_list2(const Graph &g, vector<long long> &twinLists, int nbVert);
-bool can_discard_edgelist(const vector<long long> &twinLists, int *isTwinCompat, int nbVert);
+bool can_discard_edgelist(const vector<long long> &twinLists, const int *isTwinCompat, int nbVert);
 
 void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert);
 bool detect_C4(const vector<long long> &pathList, int code);

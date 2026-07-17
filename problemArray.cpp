@@ -65,7 +65,7 @@ bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const Prob
 
 
     vector<Graph> realGABCList;
-    for (Graph &g : realGABList)
+    for (const Graph &g : realGABList)
     {
         const ProblemArraySet* setBis[1] = {&setC};
         Graph fooGG = add_vertices_to_graph(g, setBis, 1);
@@ -621,7 +621,7 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
             cerr << endl;
         }
         pbArray.print_array();
-        if (false && isOk2 && g.nbVert <= 13)
+        if (false && g.nbVert <= 13)
           pbArray.print_array_latex();
 
 
@@ -632,10 +632,8 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
         cout << "Il y a " << errorTriplets.size() << " bad triplets\n";
         */
         lock.unlock();
-    }
-    if (isOk2)
         return true;
-
+    }
     return false;
 }
 
@@ -701,9 +699,6 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         if (listMinus.empty())
             continue;
 
-        vector<int> degreesToDo;
-        //degreesToDo.reserve(degMax-degMin+1+nbVert);
-
         vector<Graph> fooEmpty;
         ogzstream outFileBis("/tmp/toto");
 
@@ -715,9 +710,9 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         long long step = (nbMinus/STEP_RATIO+1);
         long long nbBatch = nbMinus/max(step, 1ll);
         vector<pair<long long, long long>> indicesToDo(nbBatch+1);
-        for (long long i = 0; i <= nbBatch; i++)
+        for (long long j = 0; j <= nbBatch; j++)
         {
-            indicesToDo[i] = {i*step, min(nbMinus,(i+1)*step)};
+            indicesToDo[j] = {j*step, min(nbMinus,(j+1)*step)};
         }
 
     /*Temporaire pour test...
@@ -725,8 +720,8 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     bool isInList[NBMAXVERT];*/
     int **isTwinCompat = NULL;
     isTwinCompat = (int**) malloc(sizeof(*isTwinCompat)*puissNewVert);
-    for (int i = 0; i < puissNewVert; i++)
-        isTwinCompat[i] = (int*) malloc(sizeof(*isTwinCompat)*NBMAXVERT);
+    for (int j = 0; j < puissNewVert; j++)
+        isTwinCompat[j] = (int*) malloc(sizeof(*isTwinCompat)*NBMAXVERT);
 
 
 
@@ -809,8 +804,8 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         cerr << "inflated in total " << cptInflating << " graphs of size" << i+1 << "\n";
         cptInflatingTotal += cptInflating;
 
-        for (int i = 0; i < puissNewVert; i++)
-            free(isTwinCompat[i]);
+        for (int j = 0; j < puissNewVert; j++)
+            free(isTwinCompat[j]);
         free(isTwinCompat);
     }
     cerr << "inflated in TOTAL " << cptInflatingTotal << " graphs\n";
