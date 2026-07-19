@@ -718,42 +718,14 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
     /*Temporaire pour test...
     bool isTwin[NBMAXVERT];
     bool isInList[NBMAXVERT];*/
-    int **isTwinCompat = NULL;
-    isTwinCompat = (int**) malloc(sizeof(*isTwinCompat)*puissNewVert);
-    for (int j = 0; j < puissNewVert; j++)
-        isTwinCompat[j] = (int*) malloc(sizeof(*isTwinCompat)*NBMAXVERT);
 
 
-
-    //TODO attention pas symmétrique là.
-    for (int code = 0; code < puissNewVert; code++)
-    {
-        for (int v1 = 0; v1 < nbVert-2; v1++)
-        {
-            int curCompat = 0;
-            if (code & (1<<v1))
-            {
-                isTwinCompat[code][v1] = 0;
-                continue;
-            }
-
-            for (int v2 = v1+1; v2 < nbVert-1; v2++)
-            {
-                if (code & (1<<v2))
-                    curCompat ^= (1<<v2);
-            }
-            isTwinCompat[code][v1] = curCompat;
-        }
-    }
-    //Fin temporaire
-
-
-
+   //Fin temporaire
 
         vector<sparse_hash_map<vector<char>, vector<Graph>>> curDeglist2Magic(max(256*256,i*(i+1)/2));
         sparse_hash_map<vector<char>, vector<Graph>> *ptrThreadCall = &curDeglist2Magic[0];
         for (int iProc = 0; iProc < nbProc; iProc++)
-            threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(fooEmpty), isTwinCompat, std::ref(indicesToDo), std::ref(outFileBis), iProc, std::ref(threadMutexes), std::ref(threadMutex), ptrThreadCall, false&&true);
+            threads[iProc] = thread(&gen_graphs_thread, std::ref(listMinus), std::ref(fooEmpty), std::ref(indicesToDo), std::ref(outFileBis), iProc, std::ref(threadMutexes), std::ref(threadMutex), ptrThreadCall, false&&true);
         for (int iProc = 0; iProc < nbProc; iProc++)
             threads[iProc].join();
 
@@ -804,9 +776,6 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         cerr << "inflated in total " << cptInflating << " graphs of size" << i+1 << "\n";
         cptInflatingTotal += cptInflating;
 
-        for (int j = 0; j < puissNewVert; j++)
-            free(isTwinCompat[j]);
-        free(isTwinCompat);
     }
     cerr << "inflated in TOTAL " << cptInflatingTotal << " graphs\n";
     fGraph.close();

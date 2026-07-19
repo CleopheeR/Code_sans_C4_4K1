@@ -394,69 +394,13 @@ void gen_klmpartition_default_sets(const Graph &g, vector<vector<int>> &listPoss
     vector<long long> pathLength2;
     pathLength2.reserve(NBMAXVERT);
 
-    //const int nbEdgeCombi = (1<<(nbVert-1));
-
-    //int **isTwinCompat = NULL;
 
     printGlobal = false;
-
-    /*
-     * isTwinCompat = (int**) malloc(sizeof(*isTwinCompat)*nbEdgeCombi);
-     for (int i = 0; i < nbEdgeCombi; i++)
-     isTwinCompat[i] = (int*) malloc(sizeof(*isTwinCompat)*NBMAXVERT);
-
-
-
-    //TODO attention pas symmétrique là.
-    for (int code = 0; code < nbEdgeCombi; code++)
-    {
-    for (int v1 = 0; v1 < nbVert-2; v1++)
-    {
-    int curCompat = 0;
-    if (code & (1<<v1))
-    {
-    isTwinCompat[code][v1] = 0;
-    continue;
-    }
-
-    for (int v2 = v1+1; v2 < nbVert-1; v2++)
-    {
-    if (code & (1<<v2))
-    curCompat ^= (1<<v2);
-    }
-    isTwinCompat[code][v1] = curCompat;
-    }
-    }
-    */
-
-    twinLists.clear();
-    gen_twin_list(g, twinLists, nbVert);
-
     gen_P2_list(g, pathLength2, nbVert);
 
     const int puissNewVert = 1<<(nbVert-1);
     for (int code = 0; code < puissNewVert; code++)
     {
-        bool hasTwin = false;
-
-        for (int x : adjListGlobal[code])
-        {
-            if ((g.adjMat[x] ^ code) == (1<<x))
-            {
-                hasTwin = true;
-                break;
-            }
-        }
-        //if (hasTwin) //TODO peut-être pas...
-        //    continue;
-
-        bool refuseBecauseTwins = false;//can_discard_edgelist(twinLists, isTwinCompat[code], nbVert+1);
-        if (false && refuseBecauseTwins) //TODO peut-être pas
-        {
-            //cerr << "lol YEAH\n";
-            continue;
-        }
-
         const vector<int> &newEdgesList = adjListGlobal[code];
 
         //if (newEdgesList.size() == 6 && newEdgesList[0] == 0 && newEdgesList[1] == 1 && newEdgesList[2] == 2 && newEdgesList[3] == 3 && newEdgesList[4] == 4 && newEdgesList[5] == 7)
