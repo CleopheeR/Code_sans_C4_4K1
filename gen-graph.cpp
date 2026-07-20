@@ -44,21 +44,6 @@ bool check_if_seen_and_add(Graph& g, const vector<char> &degreeList, sparse_hash
     return true;
 }
 
-/*
-void initialise_subsetBySize(int nbVert)
-{
-    const int nbEdgeCombi = (1<<(nbVert-1));
-    for (int i = 0; i < nbVert-1; i++)
-    {
-        subsetsBySize[i].clear();
-        subsetsBySize[i].reserve(1<<i);
-    }
-
-    //TODO attention pas symmétrique là.
-    for (int code = 1; code < nbEdgeCombi; code++)
-        subsetsBySize[adjListGlobal[code].size()].push_back(code);
-}
-*/
 //TTAADDAA mieux gérer les variables et print débug/info
 //TTAADDAA changer le type, là on écrit dans un fichier
 //TTAADDAA faire sous-fonction ?
@@ -78,8 +63,6 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
 
     nbTotalGraphsWritten = 0;
 
-    const int puissNewVert = (1<<(nbVert-1));
-
 #ifdef STATS_GEN
     int nbGraphPerComp[5] = {0,0,0,0,0};
     int nbFreeGraphPerComp[5] = {0,0,0,0,0};
@@ -93,8 +76,6 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
 
     vector<long long> pathLength2;
     pathLength2.reserve(NBMAXVERT);
-
-    const int nbEdgeCombi = (1<<(nbVert-1));
 
     stringstream fileMinusName, fileSizeMinusName;
     fileMinusName << "Alexgraphedelataille";
@@ -298,6 +279,7 @@ vector<Graph> gen_graphs_thread(const vector<Graph> &listMinus, vector<Graph> &s
 
             for (int code = 1; code < nbEdgeCombi; code++)
             {
+                //TYDY hint to compiler will always be false almost
                 if (graphNeighbsToBool[code])
                 {
                     continue;
@@ -318,8 +300,8 @@ vector<Graph> gen_graphs_thread(const vector<Graph> &listMinus, vector<Graph> &s
                     locksTests[codeLock].lock();
                     if (check_if_seen_and_add(gWithEdges, degreeList, deglists2GraphsToAdd[codeLock], idThread))
                     {
-                        gWithEdges.print_in_string(strAllGenGraphs); //TODO also here separate printing from lock?
                         curNbTotalGraphsWritten++;
+                        gWithEdges.print_in_string(strAllGenGraphs); //TODO also here separate printing from lock?
                     }
                     locksTests[codeLock].unlock();
                 }
@@ -459,11 +441,14 @@ void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert)
             puissV2 *= 2;
             int adj2 = g.adjMat[v2];
 
-            if ((adj1 & puissV2) == 0 && (adj2 & puissV1) == 0)
+            // Checking that the possible P_2 is not a C_3: v1 and v2 are not neighbours
+            if ((adj1 & puissV2) == 0 && (adj2 & puissV1) == 0) //TYDY second check useless
             {
+                // commonAdj's i-th bit is 1 iff v1-i-v2 is an induced P_2
                 int commonAdj = adj1 & adj2;
                 if (commonAdj)
                 {
+                    // We encode u and v, and their common adjacency (the middle of the P_2)
                     long long truc = puissV1^puissV2;
                     truc = (truc << 32) + commonAdj;
                     pathList.push_back(truc);
@@ -474,7 +459,6 @@ void gen_P2_list(const Graph &g, vector<long long> &pathList, int nbVert)
     }
 }
 
-//TTAADDAA renomer en detect_newC4_from_P2list
 bool detect_C4(const vector<long long> &pathList, int code)
 {
     for (long long p2 : pathList)
@@ -482,6 +466,8 @@ bool detect_C4(const vector<long long> &pathList, int code)
         int uv = p2 >> 32;
         int commonAdj = p2;
 
+        // Cchecking if the new neighbourhood code contains u,v and at least one
+        // vertex not in the common adjacency (it would make a C_3).
         if (((code & uv) == uv) && ((code&commonAdj) != commonAdj))
             return true;
     }
