@@ -1,6 +1,6 @@
 MODE= 0
 
-SRC=  main.cpp Graph.cpp gen-graph.cpp fixage.cpp test-properties.cpp compute_arrays_compat.cpp compare_with_cleophee.cpp problemArray.cpp misc.cpp gzstream/gzstream.cpp
+SRC=  main.cpp Graph.cpp gen-graph.cpp test-properties.cpp compute_arrays_compat.cpp compare_with_cleophee.cpp problemArray.cpp misc.cpp gzstream/gzstream.cpp #fixace.cpp
 OBJ= ${SRC:.cpp=.o}
 d_OBJ= ${SRC:.cpp=_d.o}
 p_OBJ= ${SRC:.cpp=_p.o}
