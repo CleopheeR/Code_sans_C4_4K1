@@ -112,8 +112,8 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
     }
     /*
        cout << " Comparing a pair of graphs\n";
-       g1.print();
-       g2.print();
+       g1.pretty_print();
+       g2.pretty_print();
        for (int x : g1.degreeList)
        cout << x  << "; ";
        cout << " ===== ";
@@ -235,9 +235,9 @@ bool are_isomorphic(const Graph &g1, const Graph &g2, int idThread)
                 gbis.add_edge(u2, v2);
             }
         }
-        gbis.print();
+        gbis.pretty_print();
         cout << "olololo\n";
-        g2.print();
+        g2.pretty_print();
         cout << "oeoureoiuezouroizeurioezuoizuoiezruo\n";
     }
     return toto;
@@ -307,8 +307,8 @@ bool gen_iso_matching(const Graph &g1, const Graph &g2, int i, int idThread)
     vector<int> *curV1ToV2PossibleMatches = v1ToV2PossibleMatches[idThread];
     const int *curVertIsoOrderToExplore = vertIsoOrderToExplore[idThread];
     /*cerr << "---------------\n";
-      g1.print();
-      g2.print();
+      g1.pretty_print();
+      g2.pretty_print();
     */
     //TODO vertIsoOrder, on avait un autre truc sans besoin du %1000 défini dans la fin de are_isomorphic
     // We pass the vertices which were matched because unique possible candidate.
@@ -388,8 +388,8 @@ bool is_supergraph_of_aux(Graph &g, const Graph &targetGraph, const vector<char>
                 for (int x : swapsSubgraphList)
                     cerr << x << " ";
                 cerr << endl;
-                g.print();
-                targetGraph.print();
+                g.pretty_print();
+                targetGraph.pretty_print();
                 cerr << "YEAH\n\n";
             }
             return true;
@@ -451,9 +451,9 @@ bool is_supergraph_of(const Graph &g, Graph &targetGraph, int idThread)
     {
         if (false)
         {
-            g.print();
+            g.pretty_print();
             cerr << " ^^^^ was the graph tested against \n";
-            targetGraph.print();
+            targetGraph.pretty_print();
             cerr << "\n\n";
         }
         return true;

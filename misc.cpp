@@ -40,7 +40,7 @@ void compare_two_fixeurs_sets(const sparse_hash_map<vector<char>, vector<Graph>>
                 nbIncluded++;
             else
             {
-                g1.print();
+                g1.pretty_print();
                 nbExcluded++;
             }
         }

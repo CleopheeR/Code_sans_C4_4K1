@@ -166,6 +166,7 @@ bool is_pre_or_fixeur(const Graph &g, bool prefixeurTest, const sparse_hash_map<
 
     for (int code = 0; code < nbEdgeCombi; code++)
     {
+        //TYDY useful?
         const vector<int> &newEdgesList = adjListGlobal[code];
         if (newEdgesList.size() == g.nbVert)
             continue;
@@ -180,11 +181,11 @@ bool is_pre_or_fixeur(const Graph &g, bool prefixeurTest, const sparse_hash_map<
         bool hasC4 = detect_C4(pathLength2, code);
         if (hasC4)
             continue;
-        gWithEdges.copy_and_add_new_vertex_bis(g, newEdgesList, puissNewVert, code);
+        gWithEdges.copy_and_add_new_vertex_noalloc(g, puissNewVert, code);
 
         if (printDebug)
         {
-            gWithEdges.print();
+            gWithEdges.pretty_print();
             cout << "-----------------";
         }
 
@@ -301,8 +302,6 @@ void remove_nonminimal_fixeurs(const Graph &g, sparse_hash_map<vector<char>, vec
 
     for (int code = 0; code < nbEdgeCombi; code++)
     {
-        const vector<int> &newEdgesList = adjListGlobal[code];
-
         /*bool refuseBecauseTwins = can_discard_edgelist(twinLists2, isTwinCompat[code], nbVert);
         if (refuseBecauseTwins)
         {
@@ -314,11 +313,11 @@ void remove_nonminimal_fixeurs(const Graph &g, sparse_hash_map<vector<char>, vec
         bool hasC4 = detect_C4(pathLength2, code);
         if (hasC4)
             continue;
-        gWithEdges.copy_and_add_new_vertex_bis(g, newEdgesList, puissNewVert, code);
+        gWithEdges.copy_and_add_new_vertex_noalloc(g, puissNewVert, code);
 
         if (printDebug)
         {
-            gWithEdges.print();
+            gWithEdges.pretty_print();
             cout << "-----------------";
         }
 

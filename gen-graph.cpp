@@ -169,7 +169,7 @@ vector<Graph> load_from_file(const string &filename, long long nbGraphToRead)
     res.resize(nbGraph);
     for (long long i = 0; i < nbGraph; i++)
     {
-        res[i].fill_from_file(file);
+        res[i] = Graph(file);//.fill_from_file(file);
     }
     file.close();
 
@@ -289,8 +289,7 @@ vector<Graph> gen_graphs_thread(const vector<Graph> &listMinus, vector<Graph> &s
                 if (refuseBecauseC4)
                     continue;
 
-                const vector<int> &newEdgesList = adjListGlobal[code];
-                gWithEdges.copy_and_add_new_vertex_bis(g, newEdgesList, puissNewVert, code);
+                gWithEdges.copy_and_add_new_vertex_noalloc(g, puissNewVert, code);
 
                 if (free_O4(gWithEdges, nbVert))
                 {
@@ -366,7 +365,7 @@ void gen_subsets(int k, int n, vector<vector<int>> &listRes)
 
 /*void gen_O3_list(const Graph &g, vector<int> &indepList, int nbVert)
 {
-    //g.print();
+    //g.pretty_print();
     indepList.clear();
     int maskAllVerts = (1 << nbVert) -1;
     //cout << "mask = " << maskAllVerts << endl;
@@ -406,7 +405,7 @@ void gen_subsets(int k, int n, vector<vector<int>> &listRes)
 }*/
 void gen_O3_list(const Graph &g, vector<int> &indepList, int nbVert)
 {
-    //g.print();
+    //g.pretty_print();
     indepList.clear();
     //cout << "mask = " << maskAllVerts << endl;
 

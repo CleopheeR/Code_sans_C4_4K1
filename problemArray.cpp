@@ -69,7 +69,7 @@ bool ProblemArray::can_3sets_be_possible(const ProblemArraySet &setA, const Prob
     {
         const ProblemArraySet* setBis[1] = {&setC};
         Graph fooGG = add_vertices_to_graph(g, setBis, 1);
-        //g.print();
+        //g.pretty_print();
         get_possible_free_neighbourhoods(uC, {uA,uB}, fooGG, 0, realGABCList);
     }
     if (realGABCList.size() > 1)
@@ -276,10 +276,9 @@ void ProblemArray::gen_default_partition(void)
         if (refuseBecauseC4O4)
             continue;
 
-        const vector<int> &newEdgesList = adjListGlobal[code];
         //gWithEdges.copy_and_add_new_vertex_noalloc(baseGraph, newEdgesList, puissNewVert, code);
         //Graph gWithEdges;
-        gWithEdges.copy_and_add_new_vertex_bis(baseGraph, newEdgesList, puissNewVert, code);
+        gWithEdges.copy_and_add_new_vertex_noalloc(baseGraph, puissNewVert, code);
 
         //TODO precompute stuff? for Graph C4
         if (is_graph_ok_notestC4O4(gWithEdges, false))
@@ -608,7 +607,7 @@ bool is_magic_graph(const Graph &g, bool special, mutex &lock, vector<sparse_has
     {
         lock.lock();
         cerr << "printing graph:\n";
-        g.print();
+        g.pretty_print();
         cerr << "printing neighbourfood of vertices:\n";
         int n = pbArray.partitionSets.size();
         std::cerr << "il y a " << n << " sets dans la partition.\n";
@@ -737,7 +736,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
             for (const Graph& ggg : dToGraphs.second)
             {
                 Graph totoG = ggg;
-                totoG.print();
+                totoG.pretty_print();
                 totoG.compute_hashes(degreeListFoo);
                 seenCur.push_back({totoG, dToGraphs.first});
             }
@@ -818,6 +817,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
                 //connected graphs. We generate all graphs with one more vertex containing gMagic
                 for (int idNewEdges = 1; idNewEdges < puissNewVert; idNewEdges++)
                 {
+                    //TODO noalloc
                     gBigger.copy_and_add_new_vertex_bis(gMagic, adjListGlobal[idNewEdges], puissNewVert, idNewEdges);
 
                     if (detect_C4(pathLength2, idNewEdges) || !free_O4(gBigger, i+1))

@@ -108,7 +108,7 @@ bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<G
             cout << u << " ";
         cout << endl;
         for (Graph& r : z)
-            r.print();
+            r.pretty_print();
         cout << "ENDENDEND\n\n";
     }*/
 
@@ -194,7 +194,7 @@ bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<G
         if (true || nbError <= 4)
         {
             cerr << "printing graph:\n";
-            g.print();
+            g.pretty_print();
             cerr << "printing neighbourfood of vertices:\n";
             for (int i = 0; i < n; i++)
             {
@@ -397,6 +397,8 @@ void gen_klmpartition_default_sets(const Graph &g, vector<vector<int>> &listPoss
 
     printGlobal = false;
     gen_P2_list(g, pathLength2, nbVert);
+    Graph gWithEdges;
+    gWithEdges.init(g.nbVert+1, g.nbEdge);
 
     const int puissNewVert = 1<<(nbVert-1);
     for (int code = 0; code < puissNewVert; code++)
@@ -409,11 +411,10 @@ void gen_klmpartition_default_sets(const Graph &g, vector<vector<int>> &listPoss
         bool refuseBecauseC4 = detect_C4(pathLength2, code);
         if (refuseBecauseC4)
             continue;
-        Graph gWithEdges;
-        gWithEdges.copy_and_add_new_vertex_bis(g, newEdgesList, puissNewVert, code);
+        gWithEdges.copy_and_add_new_vertex_noalloc(g, puissNewVert, code);
 
         //if (newEdgesList.size() == 6 && newEdgesList[0] == 0 && newEdgesList[1] == 1 && newEdgesList[2] == 2 && newEdgesList[3] == 3 && newEdgesList[4] == 4 && newEdgesList[5] == 7)
-        //    gWithEdges.print();
+        //    gWithEdges.pretty_print();
         //if (free_O4(gWithEdges, nbVert))
 
         //assert(!deglist2PrefixeursPlus.empty());
@@ -432,7 +433,7 @@ void getPossibleFreeNeighourhoods(int nbVert, const vector<int> &freeVerts, vect
         else if (verbose == 2)
         {
             cerr << " was graph testing for sets, printing the graph:\n";
-            curG.print();
+            curG.pretty_print();
         }
     }
 

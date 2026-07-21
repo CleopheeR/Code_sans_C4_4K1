@@ -48,12 +48,12 @@ int main(int argc, char* argv[])
             if (!free_O4(g, nbVert))
             {
                 cout << "Horreur, un O4 !\n";
-                g.print();
+                g.pretty_print();
             }
             if (!free_C4(g, nbVert))
             {
                 cout << "Sapristi, un C4 !\n";
-                g.print();
+                g.pretty_print();
             }
             if (!check_if_seen_and_add(g, deglist2Graphs))
                 cout << "Oh no, two are isomorphic\n";
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
             if (check_if_seen_and_add(gg, deglist2Graphs))
             {
                 cout << "Ohlalalala, mon graphe superflu !\n";
-                gg.print();
+                gg.pretty_print();
             }
         }
 
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
             for (const Graph &g : pairDegG.second)
             {
                 nbMinimal++;
-                g.print();
+                g.pretty_print();
                 g.print_in_file(fileMinimal);
             }
         }
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
         for (int i = 0; i < nbStartingGraphs; i++)
         {
             Graph gLu = Graph(graphsFile);
-            gLu.print();
+            gLu.pretty_print();
             startingGraphsBySize[gLu.nbVert].push_back(gLu);
             minDegStarting = min(gLu.nbVert, minDegStarting);
         }
@@ -329,7 +329,7 @@ int main(int argc, char* argv[])
                     if ((g.adjMat[u]^g.adjMat[v]) == ((1<<u) ^ (1<< v)))
                     {
                         stop = true;
-                        g.print();
+                        g.pretty_print();
                         cerr << "ERROR " << u << "," << v << endl;
                         break;
                     }
@@ -473,7 +473,7 @@ int main(int argc, char* argv[])
             forcedNeighoursSetsNames.push_back(curForcedNeighbNames);
         }
 
-        g.print();
+        g.pretty_print();
         cerr << adjSets.size() << " sets and " << setsNames.size() << " names\n";
         for (int i = 0; i < adjSets.size(); i++)
         {
@@ -493,7 +493,7 @@ int main(int argc, char* argv[])
         for (int i = 0; i < nbObstruction; i++)
         {
             obstructions[i] = Graph(fObstructions);
-            obstructions[i].print();
+            obstructions[i].pretty_print();
         }
         fObstructions.close();
 
@@ -539,8 +539,8 @@ int main(int argc, char* argv[])
                 if (are_isomorphic(listGraphs[i1], listGraphs[i2], 0))
                 {
                     cout << "ERROR ARE ISOM" << ++cptIso << "\n";
-                    listGraphs[i1].print();
-                    listGraphs[i2].print();
+                    listGraphs[i1].pretty_print();
+                    listGraphs[i2].pretty_print();
                     cout << "\n\n";
                 }
             }

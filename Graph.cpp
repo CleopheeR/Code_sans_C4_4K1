@@ -9,7 +9,6 @@
 
 vector<int> *adjListGlobal;
 
-
 void Graph::init(int n, int m)
 {
     nbVert = n;
@@ -18,29 +17,13 @@ void Graph::init(int n, int m)
     vertsCol = NULL;
 }
 
-void Graph::copy_and_add_new_vertex_noalloc(const Graph& g, const vector<int> &newEdges, int puissNew, int code)
+void Graph::copy_and_add_new_vertex_noalloc(const Graph& g, int puissNew, int code)
 {
     assert (adjMat != NULL && nbVert == g.nbVert+1);
-    nbVert = g.nbVert+1;
+
+    // Getting the set of neighbours represented by code.
+    const vector<int> &newEdges = adjListGlobal[code];
     nbEdge = g.nbEdge+newEdges.size();
-
-    for (int u = 0; u < g.nbVert; u++)
-        adjMat[u] = g.adjMat[u];
-
-    for (int x : newEdges)
-        adjMat[x] ^= puissNew;
-    adjMat[g.nbVert] = code;
-}
-
-void Graph::copy_and_add_new_vertex_bis(const Graph& g, const vector<int> &newEdges, int puissNew, int code)
-{
-    if (adjMat == NULL)
-        init(g.nbVert+1, g.nbEdge+newEdges.size());
-    else
-    {
-        nbVert = g.nbVert+1;
-        nbEdge = g.nbEdge+newEdges.size();
-    }
 
     for (int u = 0; u < g.nbVert; u++)
         adjMat[u] = g.adjMat[u];
@@ -59,8 +42,11 @@ Graph Graph::subgraph_removing_vertex(int idToRemove) const
 
     for (int u = 0; u < n; u++)
     {
+        // Skipping the vertex to remove.
         if (u == idToRemove)
             continue;
+
+        // Otherwise, adding an edge to the graph, and decreasing the id of the vertices by 1 if they are >= idToRemove
         for (int v : get_neighb(u))
         {
             if (v > u && v != idToRemove)
@@ -119,22 +105,7 @@ void Graph::print_in_string(stringstream& str) const
     str << "\n";
 }
 
-/*
- * void Graph::print_in_binfile(ofstream &f) const
-{
-    //TODO coder pour de vrai !
-    f << nbVert << " " << nbEdge;
-    for (int i = 0; i < nbVert; i++)
-    {
-        for (int y : get_neighb(i))
-            if (i > y)
-                f << " " << i << "," << y;
-    }
-    f << "\n";
-}
-*/
-
-void Graph::print(void) const
+void Graph::pretty_print(void) const
 {
     cerr << nbVert << " vertices and " << nbEdge << " edges.\n";
     for (int i = 0; i < nbVert; i++)
@@ -147,7 +118,7 @@ void Graph::print(void) const
 }
 
 
-//J'avais testé, c'est plus rapide overall si on hashe en triant
+// After trying, the program is faster if we sort the values and do a non-associative hashing.
 inline int my_hash2(const int colours[], const vector<int> &adjList)
 {
     int tmpVals[NBMAXVERT];
@@ -160,6 +131,7 @@ inline int my_hash2(const int colours[], const vector<int> &adjList)
     {
         //newCol = (newCol + (324723947 + tmpVals[i])) ^93485734985;
         newCol ^= (newCol << 7) + (newCol >> 2) + tmpVals[i];
+        //try this: ret ^= x + 0x9e3779b9 + (ret << 6) + (ret >> 2) ???
         //newCol ^= std::hash<int>()(tmpVals[i]);
     }
     return newCol;
@@ -180,6 +152,9 @@ void Graph::compute_hashes(vector<char> &degreeList)
     }
     if (vertsCol == NULL)
         vertsCol = (char*) malloc(nbVert*sizeof(char));
+
+    //TYDY remove xorall...
+    // Xor of all colours, consisting of a 32-bits fingerprint, we add to the array.
     int xorAll = 0;
     for (int u = 0; u < nbVert; u++)
     {
@@ -187,6 +162,7 @@ void Graph::compute_hashes(vector<char> &degreeList)
         degreeList[u] = cols[u];
         xorAll ^= cols[u];
     }
+    // Copying the four bytes in two four cells of this char array.
     degreeList[nbVert] = xorAll;
     degreeList[nbVert+1] = xorAll >> 8;
     degreeList[nbVert+2] = xorAll >> 16;
@@ -225,7 +201,7 @@ void read_prefixeurs_compute_hash(const string &fName, int nbVert,sparse_hash_ma
         vector<char> degreeList(nbVert+4);
         long long nbGraph;
 
-        Graph gLu;
+        Graph gRead;
         file >> nbGraph;
         string toto;
         getline(file, toto);
@@ -233,10 +209,10 @@ void read_prefixeurs_compute_hash(const string &fName, int nbVert,sparse_hash_ma
 
         for (long long i = 0; i < nbGraph; i++)
         {
-            gLu = Graph(file);
-            gLu.compute_hashes(degreeList);
-            sort(degreeList.begin(), degreeList.begin()+gLu.nbVert);
-            deglist2Graphs[degreeList].push_back(gLu);
+            gRead = Graph(file);
+            gRead.compute_hashes(degreeList);
+            sort(degreeList.begin(), degreeList.begin()+gRead.nbVert);
+            deglist2Graphs[degreeList].push_back(gRead);
         }
     }
 
