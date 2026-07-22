@@ -28,6 +28,7 @@ int main(int argc, char* argv[])
         nbProc = atoi(argv[3]);
 
     init_adjListGlobal(max(14,nbVert+5)); //TODO depends on magic or not, redefine
+
     if (testOrGen == 'G')
     {
         vector<Graph> graphList;
@@ -72,10 +73,10 @@ int main(int argc, char* argv[])
     }
 
 
-    else if (testOrGen == 'F')
+    /*else if (testOrGen == 'F')
     {
         gen_fixeurs(nbVert);
-    }
+    }*/
 
     else if (testOrGen == 'M') // Find minimal prefixers
     {
