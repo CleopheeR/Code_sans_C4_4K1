@@ -12,9 +12,9 @@ using namespace std;
 //TYDY: see if very useful
 // To avoid reallocating. One vector/graph per thread.
 vector<char> bigDegreeList[NBMAXPROC];
-Graph isPreOrFixeurGWithEdges[NBMAXPROC];
+Graph tempGraphs[NBMAXPROC];
 
-void compare_two_fixeurs_sets(const sparse_hash_map<vector<char>, vector<Graph>> &list1,
+void compare_two_graphs_sets(const sparse_hash_map<vector<char>, vector<Graph>> &list1,
         const sparse_hash_map<vector<char>, vector<Graph>> &list2)
 {
     int nbIncluded = 0, nbExcluded = 0, nbInvalid = 0; // invalid = C4 or 4K1
@@ -24,7 +24,8 @@ void compare_two_fixeurs_sets(const sparse_hash_map<vector<char>, vector<Graph>>
         const vector<char> &hashVector1 = sublist1.first;
         const auto &it2  = list2.find(hashVector1);
         const vector<Graph> emptyVect;
-        const vector<Graph> &sameHashList2 = it2 != list2.cend() ? it2->second : emptyVect; // The hash is present in the second list.
+        // Assigns the list of graphs with the same fingerprint, or the empty vector if none are found.
+        const vector<Graph> &sameHashList2 = it2 != list2.cend() ? it2->second : emptyVect;
 
         for (const Graph &g1 : sublist1.second)
         {
@@ -33,6 +34,7 @@ void compare_two_fixeurs_sets(const sparse_hash_map<vector<char>, vector<Graph>>
                 nbInvalid++;
                 continue;
             }
+
             bool found = false;
             for (const Graph& g2 : sameHashList2)
             {
@@ -60,55 +62,46 @@ void compare_two_fixeurs_sets(const sparse_hash_map<vector<char>, vector<Graph>>
     cout << "\t" << nbExcluded << " are uniquely in this list" << endl;
 }
 
-void get_minimal_fixeurs(const vector<Graph> &prefixeurMinusList, sparse_hash_map<vector<char>, vector<Graph>> &prefixeurPlusDict)
+void get_minimal_fixeurs(const vector<Graph> &smallGraphs, sparse_hash_map<vector<char>, vector<Graph>> &biggerGraphs)
 {
-    for (const Graph &g : prefixeurMinusList)
-        remove_nonminimal_fixeurs(g, prefixeurPlusDict, NULL, 0);
+    for (const Graph &g : smallGraphs)
+        remove_nonminimal_fixeurs(g, biggerGraphs, 0);
 
 
     int nbMinimal = 0;
-    for (const auto& inDict : prefixeurPlusDict)
+    for (const auto& inDict : biggerGraphs)
         nbMinimal += inDict.second.size();
 
     cout << "Il y a " << nbMinimal << " prefixeurs minimaux.\n";
 }
 
 
-void remove_nonminimal_fixeurs(const Graph &g, sparse_hash_map<vector<char>, vector<Graph>> &prefixeurPlusDict, int **isTwinCompat, int idThread)
+void remove_nonminimal_fixeurs(const Graph &g, sparse_hash_map<vector<char>, vector<Graph>> &biggerGraphs, int idThread)
 {
+    assert(g.nbVert != 0);
     int nbVert = g.nbVert+1;
     const int puissNewVert = (1<<(nbVert-1));
     const int nbEdgeCombi = (1<<(nbVert-1));
 
-    if (bigDegreeList[idThread].empty())
-        bigDegreeList[idThread].resize(g.nbVert+5);
-    Graph &gWithEdges = isPreOrFixeurGWithEdges[idThread];
+    bigDegreeList[idThread].resize(g.nbVert+5);
+    Graph &gWithEdges = tempGraphs[idThread];
+
     if (gWithEdges.adjMat == NULL)
         gWithEdges.init(g.nbVert+1, -1);
+
     bool printDebug = false;
 
-    //TTEEDDEE : refaire benchmark trop long ?
-    //vector<long long> twinLists2;
-    //twinLists2.reserve(NBMAXVERT*NBMAXVERT);
     vector<long long> pathLength2;
     pathLength2.reserve(NBMAXVERT);
-
-    if (g.nbVert == 0)
-        exit(78);
     gen_P2_list(g, pathLength2, nbVert);
 
+    //TYDY : also try to check for twins
 
-
-    for (int code = 0; code < nbEdgeCombi; code++)
+    // Adding a new vertex with all possible neighbourhood, and removing it from the bigger graphs.
+    for (int code = 1; code < nbEdgeCombi; code++)
     {
-        /*bool refuseBecauseTwins = can_discard_edgelist(twinLists2, isTwinCompat[code], nbVert);
-        if (refuseBecauseTwins)
-        {
-            //cerr << "lol YEAH\n";
-            continue;
-        }*/
-
-
+        // It is useless to test graphs containing a C4 or a 4K1.
+        // But maybe faster to test them nonetheless?
         bool hasC4 = detect_C4(pathLength2, code);
         if (hasC4)
             continue;
@@ -120,35 +113,32 @@ void remove_nonminimal_fixeurs(const Graph &g, sparse_hash_map<vector<char>, vec
             cout << "-----------------";
         }
 
-        //TTAADDAA : pourquoi on reteste C4 ???!!!
-        if (!free_C4(gWithEdges, gWithEdges.nbVert) || !free_O4(gWithEdges, gWithEdges.nbVert))
-        //if (!free_O4(gWithEdges, gWithEdges.nbVert))
+        if (!free_O4(gWithEdges, gWithEdges.nbVert))
         {
             if (printDebug)
                 cerr << "cond1\n";
             continue;
         }
 
-        //TTAADDAA : y'a des trucs en commun avec la fonction de is_pre_of_fixeur
         vector<char> &curBigDegreeList = bigDegreeList[idThread];
 
         gWithEdges.compute_hashes(curBigDegreeList);
         sort(curBigDegreeList.begin(), curBigDegreeList.begin()+gWithEdges.nbVert);
 
-        const auto &itPrefixeursPlus1ToTest = prefixeurPlusDict.find(curBigDegreeList);
-        if (itPrefixeursPlus1ToTest == prefixeurPlusDict.cend())
+        const auto &itBiggerGraphsToTest = biggerGraphs.find(curBigDegreeList);
+        if (itBiggerGraphsToTest == biggerGraphs.cend())
             continue;
 
-        vector<Graph> &prefixeursPlus1ToTest = itPrefixeursPlus1ToTest->second;
+        vector<Graph> &biggerGraphsToTest = itBiggerGraphsToTest->second;
         int iG = 0;
-        for (;iG < prefixeursPlus1ToTest.size(); iG++)
+        for (;iG < biggerGraphsToTest.size(); iG++)
         {
-            const Graph& gSeen = prefixeursPlus1ToTest[iG];
-            if (are_isomorphic(gWithEdges, gSeen, idThread))
+            const Graph& gSeen = biggerGraphsToTest[iG];
+            if (are_isomorphic(gWithEdges, gSeen, idThread)) // We found the (unique) isomorphic copy.
                 break;
         }
 
-        if (iG < prefixeursPlus1ToTest.size())
-            prefixeursPlus1ToTest.erase(prefixeursPlus1ToTest.begin()+iG);
+        if (iG < biggerGraphsToTest.size()) // We remove this graph: it is not minimal.
+            biggerGraphsToTest.erase(biggerGraphsToTest.begin()+iG);
     }
 }

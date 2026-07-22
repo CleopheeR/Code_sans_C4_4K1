@@ -296,10 +296,10 @@ int main(int argc, char* argv[])
         cerr << listGraphs2.size() << " mdr2 " << endl;
 
         cout << "This list = " << fname1 << " and other list = " << fname2 << endl;
-        compare_two_fixeurs_sets(deglist2Graphs1, deglist2Graphs2);
+        compare_two_graphs_sets(deglist2Graphs1, deglist2Graphs2);
         cout << "\n------------------------\n\n";
         cout << "This list = " << fname2 << " and other list = " << fname1 << endl;
-        compare_two_fixeurs_sets(deglist2Graphs2, deglist2Graphs1);
+        compare_two_graphs_sets(deglist2Graphs2, deglist2Graphs1);
 
     }
 
