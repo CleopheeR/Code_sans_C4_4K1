@@ -14,21 +14,19 @@ bool printGlobal = false;
 
 using namespace std;
 
-void addNewVertWithNeighb(Graph &g, int u, const vector<int> &adj)
-{
-    for (int x : adj)
-        g.add_edge(u, x);
-}
 
-//Takes three sets A, B, C such that A N B, A N C, and B 0 C (or B N C?)
-//Tries to divide A into two subsets: A_{1B} (complete to B) and A_{N0B} (the others, hence
-//any element requires to have at least one non-neighbor in B => implies that B is not empty)
-//Then A_{1B} N C is no longer a problem because A_{1B} 1 B. Tests if A_{NOB} is still N C, or
-//if this implies A_{N0B} 0 C.
-//
-//Tests also the opposite: divide A into A_{0B} (anticomplete to B) and A_{N1B} (the others,
-//hence any element requires to have at least one neighbor in B => implies that B is not empty).
-//Returns true if one of this subdivision can solve the problem
+/* Takes three sets A, B, C such that A N B, A N C, and B 0 C (or B N C?). Therefore B and C cannot
+ * be merged.
+ * Tries to divide A into two subsets: A_{1B} (complete to B) and A_{N0B} (the others, hence
+ * any element requires to have at least one non-neighbor in B (*implies that B is not empty*))
+ * Then A_{1B} N C is no longer a problem because A_{1B} 1 B. Tests if A_{NOB} is still N C, or
+ * if this implies A_{N0B} 0 C.
+
+ * Also tests the opposite: divides A into A_{0B} (anticomplete to B) and A_{N1B} (the others,
+ * hence any element requires at least one neighbor in B => implies that B is not empty).
+
+ * Returns true if one of this subdivision can solve the problem.
+*/
 //TODO: essayer si trueNN une fois le b ajouté
 bool can_NN_be_solved_method1(const Graph &g, const vector<int> &setA, const vector<int> &setB, const vector<int> &setC)
 {
@@ -43,9 +41,9 @@ bool can_NN_be_solved_method1(const Graph &g, const vector<int> &setA, const vec
         gANB.adjMat[u] = g.adjMat[u];
 
     int a = n0, b = n0+1, c = n0+2;
-    addNewVertWithNeighb(gANB, a, setA);
-    addNewVertWithNeighb(gANB, b, setB);
-    addNewVertWithNeighb(gANB, c, setC);
+    gANB.add_new_edges(a, setA);
+    gANB.add_new_edges(b, setB);
+    gANB.add_new_edges(c, setC);
     vector<Graph> graphsANBC;
     getPossibleFreeNeighourhoods(n0+3, {b}, graphsANBC, gANB, 0, fooObstructions, deglist2PrefixeursPlusPlusPlus, idThread);
 
@@ -139,20 +137,20 @@ bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<G
                 continue;
                 */
 
-                if (!isTrueNBetweenTwo(g, partitionSets[i1], partitionSets[i2], fooObstructions))
+                if (!is_true_N_between_two(g, partitionSets[i1], partitionSets[i2], fooObstructions))
                 {
                     cout << "FALSEN nice " << ++cptFalseN << endl;
                 }
-                if (!isTrueNBetweenTwo(g, partitionSets[i1], partitionSets[i3], fooObstructions))
+                if (!is_true_N_between_two(g, partitionSets[i1], partitionSets[i3], fooObstructions))
                 {
                     cout << "FALSEN nice " << ++cptFalseN << endl;
                 }
 
-                if (!isTrueNBetweenTwo(g, partitionSets[i2], partitionSets[i1], fooObstructions))
+                if (!is_true_N_between_two(g, partitionSets[i2], partitionSets[i1], fooObstructions))
                 {
                     cout << "FALSEN nice " << ++cptFalseN << endl;
                 }
-                if (!isTrueNBetweenTwo(g, partitionSets[i3], partitionSets[i1], fooObstructions))
+                if (!is_true_N_between_two(g, partitionSets[i3], partitionSets[i1], fooObstructions))
                 {
                     cout << "FALSEN nice " << ++cptFalseN << endl;
                 }
@@ -234,7 +232,7 @@ bool is_quasi_fixer(const Graph &g, const sparse_hash_map<vector<char>, vector<G
 
 
 // Returns true if there can be a \in A, b1 \in B, b2 \in B such that a,b1,b2 coexist, and a is connected to b1 but not to b2. Returns otherwise, i.e. A can be partitionned into A1 = vertices complete to B, and A2 = vertices anticomplete to B.
-bool isTrueNBetweenTwo(const Graph &g, const vector<int> &adjA, const vector<int> &adjB, vector<Graph> &obstructions)
+bool is_true_N_between_two(const Graph &g, const vector<int> &adjA, const vector<int> &adjB, vector<Graph> &obstructions)
 {
     //Devrait être donné en paramètre si sert à qqch (tests avant sans cette optimisation, rajouter plusplusplus ne servait à rien
     sparse_hash_map<vector<char>, vector<Graph>> deglist2PrefixeursPlusPlusPlus;
@@ -253,9 +251,9 @@ bool isTrueNBetweenTwo(const Graph &g, const vector<int> &adjA, const vector<int
             gABB.add_edge(n0+uNew, x);
     }
     /*
-    addNewVertWithNeighb(gABB, n0, adjA);
-    addNewVertWithNeighb(gABB, n0+1, adjB);
-    addNewVertWithNeighb(gABB, n0+2, adjB);
+    gABB.add_new_edges(n0, adjA);
+    gABB.add_new_edges(n0+1, adjB);
+    gABB.add_new_edges(n0+2, adjB);
     return true;
     */
     const int a = n0, b1 = n0+1, b2 = n0+2;
@@ -428,13 +426,13 @@ void getPossibleFreeNeighourhoods(int nbVert, const vector<int> &freeVerts, vect
 {
     if (pos == freeVerts.size())
     {
-        if (is_graph_ok(curG, obstructions, deglist2PrefixeursPlus, verbose == 2))
+        //if (is_graph_ok(curG, obstructions, deglist2PrefixeursPlus, verbose == 2))
             ret.push_back(curG);
-        else if (verbose == 2)
+        /*else if (verbose == 2)
         {
             cerr << " was graph testing for sets, printing the graph:\n";
             curG.pretty_print();
-        }
+        }*/
     }
 
     else
@@ -661,45 +659,3 @@ vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector
 
     return tableau;
 }
-
-
-/*
-   void compute_N_melted_graph(const Graph &g, int **tabCompat)
-   {
-   int n = g.nbVert;
-   vector<int> oldVertId2NewId(n, -1);
-   int lastId = 0;
-
-   for (int x : listNVerts)
-   {
-   oldVertId2NewId[x] = lastId;
-   lastId++;
-   }
-
-   Graph gOnlyNVerts;
-   gOnlyNVerts.init(listNVerts.size(), 0);
-   for (int x : listNVerts)
-   {
-   int newId = oldVertId2NewId[x];
-   const vector<int> neighbs = g.get_neighb(x);
-
-   for (int y : neighbs)
-   {
-   int neighbNewId = oldVertId2NewId[y];
-   if (neighbNewId != -1)
-   gOnlyNVerts.add_edge(newId, neighbNewId);
-   }
-
-
-
-
-   }
-
-
-
-
-
-
-   }
-
-*/

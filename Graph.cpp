@@ -73,12 +73,20 @@ void Graph::add_edge(int u, int v)
     adjMat[v] ^= (1<<u);
 }
 
+
 void Graph::delete_edge(int u, int v)
 {
     nbEdge--;
 
     adjMat[u] ^= (1<<v);
     adjMat[v] ^= (1<<u);
+}
+
+
+void Graph::add_new_edges(int u, const vector<int> &adj)
+{
+    for (int x : adj)
+        add_edge(u, x);
 }
 
 

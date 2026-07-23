@@ -25,9 +25,11 @@ vector<vector<char>> compute_cleophee_arrays(const Graph &g, const vector<vector
 bool is_graph_ok(Graph& g, vector<Graph> &obstructions, const sparse_hash_map<vector<char>, vector<Graph>> &deglist2PrefixeursPlus, int idThread, bool print = false);
 
 
+/** Internal functions **/
+
 // Given the original graphs and the adjacencies of A, B, C, determines if vertices a \in A, b \in B, c \in C can exist simulaneously
 bool can_3sets_be_possible(const Graph &g, const vector<int> *adjA, const vector<int> *adjB, const vector<int> *adjC, vector<Graph> &obstructions);
 
 //See .cpp for explanation => TODO put here
-bool isTrueNBetweenTwo(const Graph &g, const vector<int> &adjA, const vector<int> &adjB, vector<Graph> &obstructions);
+bool is_true_N_between_two(const Graph &g, const vector<int> &adjA, const vector<int> &adjB, vector<Graph> &obstructions);
 #endif
