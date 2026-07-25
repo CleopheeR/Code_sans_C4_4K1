@@ -201,7 +201,7 @@ void free_adjListGlobal(void)
     free(adjListGlobal);
 }
 
-void read_prefixeurs_compute_hash(const string &fName, int nbVert,sparse_hash_map<vector<char>, vector<Graph>> &deglist2Graphs)
+void read_magic_graphs_compute_hash(const string &fName, int nbVert,sparse_hash_map<vector<char>, vector<Graph>> &deglist2Graphs)
 {
     igzstream file(fName.c_str());
     if (file.peek() != EOF)
@@ -213,7 +213,7 @@ void read_prefixeurs_compute_hash(const string &fName, int nbVert,sparse_hash_ma
         file >> nbGraph;
         string toto;
         getline(file, toto);
-        cerr << "I want to see " << nbGraph << " plus one prefixeurs" << endl;
+        cerr << "I want to see " << nbGraph << " plus one magic graphs" << endl;
 
         for (long long i = 0; i < nbGraph; i++)
         {

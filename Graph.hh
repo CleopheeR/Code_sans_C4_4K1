@@ -191,7 +191,7 @@ void free_adjListGlobal(void);
 
 // Reads a list of graphs from the file named fName. Adds them to the collection deglist2Graphs,
 // Indexed by their fingerprint, that the function computes.
-void read_prefixeurs_compute_hash(const string &fName, int nbVert, sparse_hash_map<vector<char>, vector<Graph>> &deglist2Graphs);
+void read_magic_graphs_compute_hash(const string &fName, int nbVert, sparse_hash_map<vector<char>, vector<Graph>> &deglist2Graphs);
 
 
 

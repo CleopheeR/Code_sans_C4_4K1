@@ -17,7 +17,7 @@ using spp::sparse_hash_map;
 using namespace std;
 
 // Generate supergraphs of the generated graphs of size nbVert-1 (inside a file), and adds possible ones in startingGraphs.
-vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs);
+void gen_graphs(int nbVert, vector<Graph> &startingGraphs);
 
 vector<Graph> load_from_file(const string &filename, long long nbGraphToRead=-1);
 

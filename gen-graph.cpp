@@ -45,9 +45,8 @@ bool check_if_seen_and_add(Graph& g, const vector<char> &degreeList, sparse_hash
 }
 
 //TTAADDAA mieux gérer les variables et print débug/info
-//TTAADDAA changer le type, là on écrit dans un fichier
 //TTAADDAA faire sous-fonction ?
-vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
+void gen_graphs(int nbVert, vector<Graph> &startingGraphs)
 {
     if (nbVert == 1)
     {
@@ -58,7 +57,6 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
         ogzstream fGraph("Alexgraphedelataille1.txt.gz");
         fGraph << "1 0\n";
         fGraph.close();
-        return {};
     }
 
     nbTotalGraphsWritten = 0;
@@ -143,9 +141,6 @@ vector<Graph> gen_graphs(int nbVert, vector<Graph> &startingGraphs)
     fileSize << nbWritten << "\n";
     cerr << "Generated " << nbWritten << " graphs for size " << nbVert << endl;
     fileSize.close();
-
-
-    return res;
 }
 
 

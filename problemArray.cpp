@@ -375,7 +375,7 @@ void ProblemArray::compute_partition_array(void)
     }
 }
 
-//TODO free vertices...
+//TODO Implement free vertices
 char ProblemArray::get_sets_compatibility(int i1, int i2) const
 {
     const ProblemArraySet &set1 = partitionSets[i1], &set2 = partitionSets[i2];
@@ -397,7 +397,7 @@ char ProblemArray::get_sets_compatibility(int i1, int i2) const
     {
         if (!is_true_N_between_two(set1, set2))
         {
-            cerr << "yyyyyyyyyyyyyyyyy\n";
+            cerr << "Found FALSE N" << endl;
             return 'B';
         }
         return 'N';
@@ -673,7 +673,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_magic_graphs(int nbVert)
         //    continue;
         string fileNamee = "Alexmagicdelataille"+to_string(i)+".txt.gz";
         cerr << fileNamee << " is my file " << endl;
-        read_prefixeurs_compute_hash(fileNamee, i ,deglists2MagicGraphs[i]);
+        read_magic_graphs_compute_hash(fileNamee, i ,deglists2MagicGraphs[i]);
     }
 
     //vector<sparse_hash_map<vector<char>, vector<Graph>>> deglists2MagicGraphs(NBMAXVERT);

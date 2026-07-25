@@ -50,7 +50,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
     fileNamePlus << "Alexfixeursdelataille";
     fileNamePlus << nbVert+1 << ".txt.gz";
 
-    read_prefixeurs_compute_hash(fileNamePlus.str(), nbVert+1 ,deglist2PrefixeursPlus);
+    read_magic_graphs_compute_hash(fileNamePlus.str(), nbVert+1 ,deglist2PrefixeursPlus);
 
     cout << "j'ai généré/trouvé les graphes à " << nbVert << " somets : il y en a " << listGraphs.size() << endl;
 
@@ -59,7 +59,7 @@ sparse_hash_map<vector<char>, vector<Graph>> gen_fixeurs(int nbVert)
     fileNamePlus << "Alexfixeursdelataille";
     fileNamePlus << nbVert+2 << ".txt.gz";
 
-    read_prefixeurs_compute_hash(fileNamePlusPlus.str(), nbVert+2 ,deglist2PrefixeursPlusPlus);
+    read_magic_graphs_compute_hash(fileNamePlusPlus.str(), nbVert+2 ,deglist2PrefixeursPlusPlus);
 
 
     int **isTwinCompat = NULL;
