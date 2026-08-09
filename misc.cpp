@@ -62,10 +62,10 @@ void compare_two_graphs_sets(const sparse_hash_map<vector<char>, vector<Graph>> 
     cout << "\t" << nbExcluded << " are uniquely in this list" << endl;
 }
 
-void get_minimal_fixeurs(const vector<Graph> &smallGraphs, sparse_hash_map<vector<char>, vector<Graph>> &biggerGraphs)
+void get_minimal_graphs(const vector<Graph> &smallGraphs, sparse_hash_map<vector<char>, vector<Graph>> &biggerGraphs)
 {
     for (const Graph &g : smallGraphs)
-        remove_nonminimal_fixeurs(g, biggerGraphs, 0);
+        remove_nonminimal_graphs(g, biggerGraphs, 0);
 
 
     int nbMinimal = 0;
@@ -76,7 +76,7 @@ void get_minimal_fixeurs(const vector<Graph> &smallGraphs, sparse_hash_map<vecto
 }
 
 
-void remove_nonminimal_fixeurs(const Graph &g, sparse_hash_map<vector<char>, vector<Graph>> &biggerGraphs, int idThread)
+void remove_nonminimal_graphs(const Graph &g, sparse_hash_map<vector<char>, vector<Graph>> &biggerGraphs, int idThread)
 {
     assert(g.nbVert != 0);
     int nbVert = g.nbVert+1;

@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 
         cerr << listGraphsMinus.size() << " magical graphs minus seen\n";
 
-        get_minimal_fixeurs(listGraphsMinus, magicGraphs);
+        get_minimal_graphs(listGraphsMinus, magicGraphs);
         int nbMinimal = 0;
 
         stringstream fileNameMinimal;

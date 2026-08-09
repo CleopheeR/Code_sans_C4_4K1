@@ -23,5 +23,5 @@ void get_minimal_graphs(const vector<Graph> &smallGraphs, sparse_hash_map<vector
 /** Internal functions **/
 
 // Removes from biggerGraphs any graph which is a supergraph of g. They must have precisely one more vertex than g.
-void remove_nonminimal_fixeurs(const Graph &g, sparse_hash_map<vector<char>, vector<Graph>> &biggerGraphs, int idThread);
+void remove_nonminimal_graphs(const Graph &g, sparse_hash_map<vector<char>, vector<Graph>> &biggerGraphs, int idThread);
 #endif
